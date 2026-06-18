@@ -1,7 +1,8 @@
-﻿import streamlit as st
+import streamlit as st
 import csv
 import random
 import re
+import base64  # NAYA: Photo ko text (code) me badalne ke liye
 
 # Auto-Math-Fixer: ^2 ko power aur _2 ko base banayega
 def format_math_symbols(text):
@@ -9,7 +10,14 @@ def format_math_symbols(text):
     text = re.sub(r'_([0-9a-zA-Z]+)', r'<sub>\1</sub>', text)
     return text
 
-# Web Page ka Title aur Layout Set karna
+# Photo ko Base64 me badalne ka jaadu
+def get_image_base64(image_path):
+    try:
+        with open(image_path, "rb") as img_file:
+            return base64.b64encode(img_file.read()).decode('utf-8')
+    except Exception:
+        return ""
+
 st.set_page_config(page_title="PAATHSALA DPP Generator", page_icon="📚", layout="centered")
 
 st.title("📚 PAATHSALA DPP Generator")
@@ -26,7 +34,6 @@ except FileNotFoundError:
     st.error("❌ 'question_bank.csv' file nahi mili! Kripya ise same folder me rakhein.")
 
 if questions:
-    # --- SMART DROPDOWNS (Streamlit Style) ---
     st.subheader("1. Paper Details Select Karein")
     
     all_classes = sorted(list(set(q['Class'].strip() for q in questions)))
@@ -40,7 +47,6 @@ if questions:
 
     st.subheader("2. Questions ki Sankhya (Number) Batayein")
     
-    # Inputs ko ek hi line me 3 hisso me baatna
     col1, col2, col3 = st.columns(3)
     with col1:
         n_mcq = st.number_input("No. of MCQs:", min_value=0, value=10)
@@ -49,11 +55,9 @@ if questions:
     with col3:
         n_long = st.number_input("No. of Long Qs:", min_value=0, value=2)
 
-    # --- GENERATE BUTTON ---
     st.markdown("---")
     if st.button("🚀 Generate My DPP", type="primary", use_container_width=True):
         
-        # Questions filter karna
         chapter_pool = [q for q in questions if q['Class'].strip().lower() == selected_class.lower() and q['Subject'].strip().lower() == selected_subject.lower() and q['Chapter'].strip().lower() == selected_chapter.lower()]
         
         mcq_pool = [q for q in chapter_pool if q['Type'].strip().upper() == 'MCQ']
@@ -64,7 +68,6 @@ if questions:
         selected_shorts = random.sample(short_pool, min(n_short, len(short_pool)))
         selected_longs = random.sample(long_pool, min(n_long, len(long_pool)))
         
-        # HTML Chunks Banana
         mcq_html = ""
         ans_html_mcq = ""
         q_num = 1
@@ -98,6 +101,10 @@ if questions:
             long_html += f'<div class="question"><div class="q-num">{q_num}.</div><div class="q-text">{formatted_q}</div></div>\n'
             ans_html_short_long += f'<tr><td style="text-align: center;">{q_num}</td><td>{formatted_ans}</td></tr>\n'
             q_num += 1
+
+        # Logo ko encode karke HTML ke liye taiyaar karna
+        logo_base64 = get_image_base64("1000086036.png")
+        logo_img_tag = f'<img src="data:image/png;base64,{logo_base64}" class="logo-img" alt="PAATHSALA Logo">' if logo_base64 else '<h2>PAATHSALA</h2>'
 
         # Pura HTML Template
         html_template = f"""
@@ -137,7 +144,7 @@ if questions:
                         <div><strong>Subject:</strong> {selected_subject}</div>
                     </td>
                     <td class="logo-cell">
-                        <img src="1000086036.png" class="logo-img" alt="PAATHSALA Logo">
+                        {logo_img_tag}
                     </td>
                 </tr>
             </table>
@@ -175,7 +182,6 @@ if questions:
         
         st.success(f"🎉 Yay! Aapka '{selected_chapter}' ka DPP ban gaya hai!")
         
-        # Web page par hi ek Download Button de diya jayega!
         file_name = f"DPP_{selected_class.replace(' ', '')}_{selected_chapter.replace(' ', '')}.html"
         st.download_button(
             label="📥 Click Here to Download Your DPP",
