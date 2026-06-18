@@ -1,0 +1,77 @@
+﻿Class,Subject,Chapter,Section,Type,Question,Answer
+Class 10,Science,Acid Base and Salt,Section A,MCQ,What is the pH of a neutral solution? a) 0 b) 7 c) 14 d) 1,b) 7
+Class 10,Science,Acid Base and Salt,Section A,MCQ,Which acid is present in sour milk? a) Citric acid b) Lactic acid c) Acetic acid d) Tartaric acid,b) Lactic acid
+Class 10,Science,Acid Base and Salt,Section A,MCQ,A solution turns red litmus blue its pH is likely to be? a) 1 b) 4 c) 5 d) 10,d) 10
+Class 10,Science,Acid Base and Salt,Section A,MCQ,Which of the following is a strong acid? a) Acetic acid b) Citric acid c) Hydrochloric acid d) Tartaric acid,c) Hydrochloric acid
+Class 10,Science,Acid Base and Salt,Section B,SHORT ANSWER,What is a neutralization reaction? Give one example.,The reaction between an acid and a base to give salt and water is called a neutralization reaction. Example: NaOH + HCl -> NaCl + H2O
+Class 10,Science,Acid Base and Salt,Section B,SHORT ANSWER,What are olfactory indicators? Give one example.,Substances whose odour changes in acidic or basic media are called olfactory indicators. Example: Vanilla extract.
+Class 10,Science,Acid Base and Salt,Section C,LONG ANSWER,Explain the chlor-alkali process with a chemical equation.,When electricity is passed through an aqueous solution of sodium chloride (brine) it decomposes to form sodium hydroxide. The process is called the chlor-alkali process. Equation: 2NaCl(aq) + 2H2O(l) -> 2NaOH(aq) + Cl2(g) + H2(g)
+Class 10,Science,Acid Base and Salt,Section C,LONG ANSWER,What is baking soda? Write its chemical formula and two uses.,Baking soda is Sodium Hydrogen Carbonate. Formula: NaHCO3. Uses: 1) Used in baking powder to make cakes soft and spongy. 2) Used as an antacid in medicine to remove acidity of the stomach.
+Class 10,Science,Light,Section A,MCQ,The focal length of a plane mirror is? a) 0 b) Infinite c) 25 cm d) -25 cm,b) Infinite
+Class 10,Science,Light,Section A,MCQ,The image formed by a convex mirror is always? a) Virtual and erect b) Real and inverted c) Virtual and inverted d) Real and erect,a) Virtual and erect
+Class 10,Science,Light,Section A,MCQ,Which of the following materials cannot be used to make a lens? a) Water b) Glass c) Plastic d) Clay,d) Clay
+Class 10,Science,Light,Section A,MCQ,Twinkling of stars is due to atmospheric? a) Dispersion b) Refraction c) Scattering d) Internal reflection,b) Refraction
+Class 11,Physics,Kinematics,Section A,MCQ,A particle moves with constant velocity. Its acceleration is? a) Positive b) Negative c) Zero d) Variable,c) Zero
+Class 11,Physics,Kinematics,Section A,MCQ,The slope of a velocity-time graph gives? a) Distance b) Displacement c) Acceleration d) Speed,c) Acceleration
+Class 11,Physics,Kinematics,Section B,SHORT ANSWER,Define uniform motion.,An object is said to be in uniform motion if it covers equal distances in equal intervals of time.
+Class 11,Physics,Kinematics,Section C,LONG ANSWER,Derive the first equation of motion using graphical method.,By definition acceleration a = dv/dt. Therefore dv = a dt. Integrating both sides from time 0 to t and velocity u to v gives v - u = at or v = u + at.
+Class 11,Chemistry,Structure of Atom,Section A,MCQ,Which subatomic particle has no charge? a) Electron b) Proton c) Neutron d) Positron,c) Neutron
+Class 11,Chemistry,Structure of Atom,Section A,MCQ,The maximum number of electrons in a principal shell is given by? a) n^2 b) 2n c) 2n^2 d) n,c) 2n^2
+Class 11,Chemistry,Structure of Atom,Section B,SHORT ANSWER,What is an isotope? Give one example.,Isotopes are atoms of the same element having the same atomic number but different mass numbers. Example Carbon-12 and Carbon-14.
+Class 11,Chemistry,Structure of Atom,Section C,LONG ANSWER,Explain Bohrs model of an atom.,Electrons revolve around the nucleus in fixed circular paths called orbits. They do not radiate energy while in these discrete orbits.
+Class 8,Science,Force and Pressure,Section A,MCQ,The SI unit of force is? a) Pascal b) Newton c) Joule d) Watt,b) Newton
+Class 8,Science,Force and Pressure,Section A,MCQ,Pressure is defined as? a) Force x Area b) Force / Area c) Area / Force d) Mass x Acceleration,b) Force / Area
+Class 8,Science,Force and Pressure,Section B,SHORT ANSWER,What is atmospheric pressure?,The pressure exerted by the weight of the air above us is called atmospheric pressure.
+Class 8,Science,Force and Pressure,Section C,LONG ANSWER,Differentiate between contact and non-contact forces with examples.,Contact forces act when objects touch each other (e.g. friction). Non-contact forces act from a distance without touching (e.g. magnetic force).
+Class 8,Maths,Linear Equations,Section A,MCQ,The solution of 2x - 3 = 7 is? a) 2 b) 5 c) -5 d) 10,b) 5
+Class 8,Maths,Linear Equations,Section A,MCQ,A linear equation in one variable has? a) Only one solution b) Two solutions c) No solution d) Infinite solutions,a) Only one solution
+Class 8,Maths,Linear Equations,Section B,SHORT ANSWER,Solve for x if 3x/2 = 6.,Multiplying both sides by 2 gives 3x = 12. Dividing by 3 gives x = 4.
+Class 8,Maths,Linear Equations,Section C,LONG ANSWER,The sum of three consecutive multiples of 8 is 888. Find the multiples.,Let the multiples be x and x+8 and x+16. Their sum is 3x + 24 = 888. Solving gives x=288. Multiples are 288 and 296 and 304.
+Class 10,Science,Light,Section B,SHORT ANSWER,Define the principal focus of a concave mirror.,Light rays that are parallel to the principal axis of a concave mirror converge at a specific point on its principal axis after reflecting from the mirror. This point is called the principal focus.
+Class 10,Science,Light,Section B,SHORT ANSWER,Why do we prefer a convex mirror as a rear-view mirror in vehicles?,We prefer a convex mirror because it always gives an erect though diminished image and it has a wider field of view as it is curved outwards.
+Class 10,Science,Light,Section C,LONG ANSWER,State the laws of reflection of light.,1) The angle of incidence is equal to the angle of reflection. 2) The incident ray the normal to the mirror at the point of incidence and the reflected ray all lie in the same plane.
+Class 10,Science,Light,Section C,LONG ANSWER,What is refraction of light? State Snell's law of refraction.,The bending of light when it passes from one transparent medium to another is called refraction. Snell's law states that the ratio of sine of angle of incidence to the sine of angle of refraction is a constant for the light of a given colour and for the given pair of media.
+Class 10,Maths,Polynomials,Section A,MCQ,A quadratic polynomial can have at most how many zeroes? a) 0 b) 1 c) 2 d) 3,c) 2
+Class 10,Maths,Polynomials,Section A,MCQ,If alpha and beta are zeroes of x^2 - 4x + 3 then alpha + beta is? a) 3 b) -4 c) 4 d) -3,c) 4
+Class 10,Maths,Polynomials,Section A,MCQ,The zeroes of the quadratic polynomial x^2 + 7x + 10 are? a) 2 and 5 b) -2 and -5 c) -2 and 5 d) 2 and -5,b) -2 and -5
+Class 10,Maths,Polynomials,Section B,SHORT ANSWER,Find a quadratic polynomial whose zeroes are -3 and 2.,The polynomial is x^2 - (sum of zeroes)x + (product of zeroes) = x^2 - (-3+2)x + (-3*2) = x^2 + x - 6.
+Class 10,Maths,Polynomials,Section B,SHORT ANSWER,What is the degree of a zero polynomial?,The degree of a zero polynomial is not defined.
+Class 10,Maths,Polynomials,Section C,LONG ANSWER,Divide the polynomial p(x) = x^3 - 3x^2 + 5x - 3 by g(x) = x^2 - 2 and find quotient and remainder.,By performing long division we get Quotient = x - 3 and Remainder = 7x - 9.
+Class 9,Science,Matter in Our Surroundings,Section A,MCQ,What is the physical state of water at 100°C? a) Solid b) Liquid c) Gas d) Both b and c,d) Both b and c
+Class 9,Science,Matter in Our Surroundings,Section A,MCQ,The process of changing of a solid directly into vapors is called? a) Evaporation b) Sublimation c) Condensation d) Melting,b) Sublimation
+Class 9,Science,Matter in Our Surroundings,Section B,SHORT ANSWER,Why does a desert cooler cool better on a hot dry day?,On a hot dry day the temperature is high and humidity is low. This increases the rate of evaporation of water. Since evaporation causes cooling the desert cooler cools better.
+Class 9,Science,Matter in Our Surroundings,Section C,LONG ANSWER,What is evaporation? State the various factors which affect evaporation.,Evaporation is the phenomenon of change of a liquid into vapors at any temperature below its boiling point. Factors affecting it are: 1) Surface area 2) Temperature 3) Humidity 4) Wind speed.
+Class 9,Maths,Number Systems,Section A,MCQ,Every rational number is a? a) Natural number b) Integer c) Real number d) Whole number,c) Real number
+Class 9,Maths,Number Systems,Section B,SHORT ANSWER,Find two rational numbers between 3 and 4.,We can write 3 as 30/10 and 4 as 40/10. So two rational numbers between them are 31/10 and 32/10.
+Class 7,Maths,Exponents and Powers,Section A,MCQ,What is the base in the expression 5^4? a) 4 b) 5 c) 20 d) 9,b) 5
+Class 7,Maths,Exponents and Powers,Section A,MCQ,What is the value of 2^3? a) 6 b) 5 c) 8 d) 16,c) 8
+Class 7,Maths,Exponents and Powers,Section A,MCQ,The value of (-1)^10 is? a) -1 b) 1 c) 10 d) -10,b) 1
+Class 7,Maths,Exponents and Powers,Section A,MCQ,By using laws of exponents simplify 3^2 * 3^4. a) 3^6 b) 3^8 c) 9^6 d) 9^8,a) 3^6
+Class 7,Maths,Exponents and Powers,Section A,MCQ,Simplify 7^8 / 7^3. a) 7^11 b) 1^5 c) 7^5 d) 49^5,c) 7^5
+Class 7,Maths,Exponents and Powers,Section A,MCQ,What is the value of (2^3)^2? a) 2^5 b) 2^6 c) 4^5 d) 4^6,b) 2^6
+Class 7,Maths,Exponents and Powers,Section A,MCQ,The value of 100^0 is? a) 0 b) 100 c) 1 d) 10,c) 1
+Class 7,Maths,Exponents and Powers,Section A,MCQ,Express 10000 in exponential form. a) 10^2 b) 10^3 c) 10^4 d) 10^5,c) 10^4
+Class 7,Maths,Exponents and Powers,Section A,MCQ,Which of the following is equal to a^m * b^m? a) (a+b)^m b) (ab)^m c) (ab)^(m+m) d) a^(m*m),b) (ab)^m
+Class 7,Maths,Exponents and Powers,Section A,MCQ,Evaluate 2^0 + 3^0 + 4^0. a) 0 b) 1 c) 3 d) 9,c) 3
+Class 7,Maths,Exponents and Powers,Section A,MCQ,Evaluate (2^0 * 3^0 * 4^0). a) 0 b) 1 c) 3 d) 24,b) 1
+Class 7,Maths,Exponents and Powers,Section A,MCQ,Write 343 as a power of 7. a) 7^2 b) 7^3 c) 7^4 d) 7^5,b) 7^3
+Class 7,Maths,Exponents and Powers,Section A,MCQ,What is the standard form of 85000? a) 8.5 * 10^4 b) 85 * 10^3 c) 0.85 * 10^5 d) 8.5 * 10^5,a) 8.5 * 10^4
+Class 7,Maths,Exponents and Powers,Section A,MCQ,In standard form 15240000 is written as 1.524 * 10^n. What is the value of n? a) 6 b) 7 c) 8 d) 5,b) 7
+Class 7,Maths,Exponents and Powers,Section A,MCQ,Simplify (x^a / x^b). a) x^(a+b) b) x^(a*b) c) x^(a-b) d) x^(a/b),c) x^(a-b)
+Class 7,Maths,Exponents and Powers,Section A,MCQ,If 2^x = 32 what is the value of x? a) 4 b) 5 c) 6 d) 3,b) 5
+Class 7,Maths,Exponents and Powers,Section A,MCQ,Which is greater 2^3 or 3^2? a) 2^3 b) 3^2 c) Both are equal d) Cannot be determined,b) 3^2
+Class 7,Maths,Exponents and Powers,Section A,MCQ,Find the value of (-3)^3. a) 27 b) -27 c) 9 d) -9,b) -27
+Class 7,Maths,Exponents and Powers,Section A,MCQ,Simplify 5^4 * 8^4. a) 40^8 b) 40^4 c) 13^4 d) 13^8,b) 40^4
+Class 7,Maths,Exponents and Powers,Section A,MCQ,The value of (5^2)^3 is the same as? a) 5^5 b) 5^6 c) 25^3 d) Both b and c,d) Both b and c
+Class 7,Maths,Exponents and Powers,Section B,SHORT ANSWER,Express 512 as a power of 2.,We know that 2 * 2 * 2 * 2 * 2 * 2 * 2 * 2 * 2 = 512. Therefore 512 can be written as 2^9.
+Class 7,Maths,Exponents and Powers,Section B,SHORT ANSWER,Simplify using laws of exponents: (2^3 * 2^4) / 2^5.,Using product law numerator becomes 2^(3+4) = 2^7. Using quotient law 2^7 / 2^5 = 2^(7-5) = 2^2 which is equal to 4.
+Class 7,Maths,Exponents and Powers,Section B,SHORT ANSWER,Express the number 39087.8 in standard form.,To express in standard form the decimal point is moved 4 places to the left. Hence it becomes 3.90878 * 10^4.
+Class 7,Maths,Exponents and Powers,Section B,SHORT ANSWER,Write the expanded form of 279404.,The expanded form is (2 * 10^5) + (7 * 10^4) + (9 * 10^3) + (4 * 10^2) + (0 * 10^1) + (4 * 10^0).
+Class 7,Maths,Exponents and Powers,Section B,SHORT ANSWER,Evaluate (-4)^3 * (-5)^2.,(-4)^3 = -64 and (-5)^2 = 25. Therefore -64 * 25 = -1600.
+Class 7,Maths,Exponents and Powers,Section B,SHORT ANSWER,Simplify (3^0 + 4^0) * 5^0.,Any non-zero number to the power 0 is 1. So (1 + 1) * 1 = 2 * 1 = 2.
+Class 7,Maths,Exponents and Powers,Section B,SHORT ANSWER,Identify the greater number between 4^3 and 3^4.,4^3 = 4 * 4 * 4 = 64. 3^4 = 3 * 3 * 3 * 3 = 81. Since 81 is greater than 64 we can say 3^4 is greater than 4^3.
+Class 7,Maths,Exponents and Powers,Section B,SHORT ANSWER,If a=2 and b=3 find the value of (a^b + b^a).,Substituting values we get (2^3 + 3^2) = 8 + 9 = 17.
+Class 7,Maths,Exponents and Powers,Section C,LONG ANSWER,Simplify [(5^2)^3 * 5^4] / 5^7.,First solve power of a power: (5^2)^3 = 5^(2*3) = 5^6. Then multiply: 5^6 * 5^4 = 5^(6+4) = 5^10. Finally divide: 5^10 / 5^7 = 5^(10-7) = 5^3 = 125.
+Class 7,Maths,Exponents and Powers,Section C,LONG ANSWER,Find the prime factorization of 108 * 192 and express the result in exponential form.,108 = 2^2 * 3^3. 192 = 2^6 * 3^1. Multiplying them gives (2^2 * 3^3) * (2^6 * 3^1) = 2^(2+6) * 3^(3+1) = 2^8 * 3^4.
+Class 7,Maths,Exponents and Powers,Section C,LONG ANSWER,Find the value of x if ((-3)^4 * (-3)^5) = (-3)^(3x).,Using product law on LHS we get (-3)^(4+5) = (-3)^9. So (-3)^9 = (-3)^(3x). Equating the exponents we get 3x = 9 which means x = 3.
+Class 7,Maths,Exponents and Powers,Section C,LONG ANSWER,Compare the numbers 2.7 * 10^12 and 1.5 * 10^8.,The first number has a power of 10 as 12 while the second number has a power of 10 as 8. Since 10^12 is much greater than 10^8 the number 2.7 * 10^12 is significantly larger than 1.5 * 10^8.
