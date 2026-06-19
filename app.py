@@ -14,12 +14,20 @@ def format_math_symbols(text):
 
 st.set_page_config(page_title="PAATHSALA", page_icon="📚", layout="centered")
 
-# --- 100% FOOLPROOF FULL BACKGROUND WATERMARK CODE ---
+# --- 1. FULL BACKGROUND WATERMARK CODE ---
 watermark_html = """
 <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; opacity: 0.08; pointer-events: none; background-image: url('https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png'); background-size: 250px; background-repeat: repeat;"></div>
 """
 st.markdown(watermark_html, unsafe_allow_html=True)
-# --------------------------------------
+
+# --- 2. FLOATING TOP LOGO (STICKY HEADER) CODE ---
+floating_logo_html = """
+<div style="position: fixed; top: 12px; left: 50px; z-index: 999999;">
+    <img src="https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png" style="height: 45px;">
+</div>
+"""
+st.markdown(floating_logo_html, unsafe_allow_html=True)
+# ------------------------------------------------
 
 # Yahan 2 Tabs banaye gaye hain
 tab1, tab2 = st.tabs(["📝 DPP Generator", "📞 Contact Us"])
@@ -28,13 +36,13 @@ tab1, tab2 = st.tabs(["📝 DPP Generator", "📞 Contact Us"])
 with tab1:
     st.write("Apna Class, Subject aur Chapter chunein aur turant DPP banayein!")
     
-    # Google Sheets se data laana (Ultra-Smart Method)
+    # Google Sheets se data laana
     questions = []
     try:
         # 🔴 YAHAN APNA GOOGLE SHEET KA LINK PASTE KAREIN 🔴
         sheet_url = "https://docs.google.com/spreadsheets/d/1dc5ychco_3BXn_XcY0BGyxAlGDbczSuEel67VHYR-m4/edit?usp=sharing"
         
-        # Link ko theek karne ka jaadu (Regex)
+        # Link ko theek karne ka jaadu
         match = re.search(r'/d/([a-zA-Z0-9-_]+)', str(sheet_url))
         if match:
             sheet_id = match.group(1)
