@@ -14,30 +14,14 @@ def format_math_symbols(text):
 
 st.set_page_config(page_title="PAATHSALA", page_icon="📚", layout="centered")
 
-# --- ASLI WATERMARK BACKGROUND (OVERLAY) KA CODE ---
-watermark_css = """
-<style>
-[data-testid="stAppViewContainer"]::before {
-    content: "";
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-image: url("https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png");
-    background-size: 350px; /* Logo ka size background mein */
-    background-position: center;
-    background-repeat: no-repeat;
-    opacity: 0.08; /* Opacity 8% rakhi hai taaki ekdum halka overlay dikhe */
-    z-index: -1;
-    pointer-events: none; /* Isse buttons kaam karte rahenge */
-}
-</style>
+# --- 100% FOOLPROOF WATERMARK CODE ---
+watermark_html = """
+<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 9999; opacity: 0.10; pointer-events: none;">
+    <img src="https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png" width="350">
+</div>
 """
-st.markdown(watermark_css, unsafe_allow_html=True)
-# ---------------------------------------------------
-
-# NOTE: Yahan se top par image dikhane wali line ko bilkul hata diya gaya hai!
+st.markdown(watermark_html, unsafe_allow_html=True)
+# --------------------------------------
 
 # Yahan 2 Tabs banaye gaye hain
 tab1, tab2 = st.tabs(["📝 DPP Generator", "📞 Contact Us"])
