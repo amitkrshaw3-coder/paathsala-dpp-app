@@ -4,9 +4,7 @@ import random
 import re
 import urllib.request
 import io
-import os
-import platform
-import pdfkit 
+import streamlit.components.v1 as components # Naya powerful tool!
 
 # Auto-Math-Fixer
 def format_math_symbols(text):
@@ -15,28 +13,9 @@ def format_math_symbols(text):
     text = re.sub(r'_([0-9a-zA-Z]+)', r'<sub>\1</sub>', text)
     return text
 
-# 🚀 THE ULTIMATE JUGAAD: Auto-Install PDF Engine in Background 🚀
-@st.cache_resource
-def get_pdf_engine():
-    if platform.system() == "Linux":
-        bin_path = "/tmp/wkhtmltox/usr/local/bin/wkhtmltopdf"
-        if not os.path.exists(bin_path):
-            with st.spinner("⏳ System PDF Engine Update kar raha hai (Sirf pehli baar 10 second lagenge)..."):
-                os.system("wget https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox_0.12.6.1-2.jammy_amd64.deb -O /tmp/wk.deb")
-                os.system("dpkg -x /tmp/wk.deb /tmp/wkhtmltox")
-                os.system("chmod +x /tmp/wkhtmltox/usr/local/bin/wkhtmltopdf")
-        return bin_path
-    return None
-
 st.set_page_config(page_title="PAATHSALA", page_icon="📚", layout="centered")
 
-# --- 1. FULL BACKGROUND WATERMARK CODE ---
-watermark_html = """
-<div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; opacity: 0.05; pointer-events: none; background-image: url('https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png'); background-size: 250px; background-repeat: repeat;"></div>
-"""
-st.markdown(watermark_html, unsafe_allow_html=True)
-
-# --- 2. ULTRA-PREMIUM UI CSS ---
+# --- GLOBAL MASTER UI CSS (FOR BOTH MOBILE & COMPUTER) ---
 custom_ui_css = """
 <style>
 header {visibility: hidden !important;}
@@ -131,7 +110,7 @@ with tab1:
         st.markdown("<br>", unsafe_allow_html=True)
         
         if st.button("🚀 Generate Direct PDF", type="primary", use_container_width=True):
-            with st.spinner("Apka direct PDF ban raha hai, please 10 seconds wait karein..."):
+            with st.spinner("Apka shandar DPP ready ho raha hai..."):
                 chapter_pool = [q for q in questions if q.get('Class') and q.get('Subject') and q.get('Chapter') and q['Class'].strip().lower() == selected_class.lower() and q['Subject'].strip().lower() == selected_subject.lower() and q['Chapter'].strip().lower() == selected_chapter.lower()]
                 
                 mcq_pool = [q for q in chapter_pool if q.get('Type') and q['Type'].strip().upper() == 'MCQ']
@@ -174,93 +153,122 @@ with tab1:
                     q_num += 1
 
                 logo_img_tag = '<img src="https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png" style="width: 150px; max-height: 80px;">' 
+                
+                clean_filename = f"DPP_{selected_class.replace(' ', '')}_{selected_chapter.replace(' ', '')}.pdf"
 
-                # HTML FOR PDF ENGINE
+                # 🚀 100% CLIENT-SIDE PDF RENDERER (NO BACKEND ERRORS) 🚀
                 html_template = f"""
                 <!DOCTYPE html>
                 <html lang="en">
                 <head>
                     <meta charset="UTF-8">
-                    <title>PAATHSALA DPP - {selected_chapter}</title>
-                    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+                    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+                    
                     <script type="text/x-mathjax-config">
-                      MathJax.Hub.Config({{ tex2jax: {{inlineMath: [['$','$'], ['\\\\(','\\\\)']], displayMath: [['$$','$$'], ['\\\\[','\\\\]']]}} }});
+                      MathJax.Hub.Config({{
+                        jax: ["input/TeX", "output/SVG"],
+                        tex2jax: {{inlineMath: [['$','$'], ['\\\\(','\\\\)']], displayMath: [['$$','$$'], ['\\\\[','\\\\]']]}}
+                      }});
                     </script>
+                    <script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js"></script>
+                    
                     <style>
-                        @page {{ size: A4; margin: 15mm 20mm; }}
-                        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #111; }}
+                        body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #111; padding: 10px; }}
                         .header-table {{ width: 100%; border-collapse: collapse; margin-bottom: 10px; }}
                         .student-info {{ width: 50%; font-size: 11pt; vertical-align: top; }}
                         .logo-cell {{ width: 50%; text-align: right; vertical-align: top; }}
                         .title-section {{ text-align: center; margin: 20px 0 10px 0; }}
-                        .title-section h1 {{ font-size: 24pt; margin: 0; text-transform: uppercase; letter-spacing: 2px; }}
+                        .title-section h1 {{ font-size: 24pt; margin: 0; text-transform: uppercase; letter-spacing: 2px; color: #0b2265; }}
                         .section-title {{ font-size: 12pt; font-weight: bold; background-color: #f4f4f4; padding: 6px 12px; border-left: 5px solid #fce803; margin: 15px 0 10px 0; }}
                         .question {{ margin-bottom: 15px; font-size: 11pt; display: table; width: 100%; }}
                         .q-num {{ display: table-cell; width: 30px; font-weight: bold; vertical-align: top; }}
                         .q-text {{ display: table-cell; vertical-align: top; }}
                         .opt-row {{ margin-top: 4px; display: block; }}
                         .opt-box {{ display: inline-block; width: 48%; vertical-align: top; }}
-                        .answer-key-page {{ page-break-before: always; padding-top: 20px; }}
                         .ans-table {{ width: 100%; border-collapse: collapse; margin-top: 15px; }}
                         .ans-table th, .ans-table td {{ border: 1px solid #ccc; padding: 8px; font-size: 10.5pt; text-align: left; }}
                         .ans-table th {{ background-color: #fce803; font-weight: bold; text-align: center; }}
+                        
+                        /* Premium Download Button Styling */
+                        .download-btn-container {{ text-align: center; margin-bottom: 30px; margin-top: 10px; }}
+                        .download-btn {{
+                            background: linear-gradient(135deg, #0b2265, #2563eb);
+                            color: white; padding: 14px 28px; border: none; border-radius: 10px;
+                            font-size: 18px; font-weight: bold; cursor: pointer;
+                            box-shadow: 0 8px 15px rgba(37, 99, 235, 0.3);
+                            transition: transform 0.2s, box-shadow 0.2s;
+                            font-family: Arial, sans-serif;
+                        }}
+                        .download-btn:hover {{ transform: translateY(-2px); box-shadow: 0 12px 20px rgba(37, 99, 235, 0.4); }}
+                        
+                        /* Watermark inside PDF */
+                        .pdf-watermark {{ position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.05; background-image: url('https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png'); background-size: 250px; background-repeat: repeat; }}
                     </style>
                 </head>
                 <body>
-                    <table class="header-table">
-                        <tr>
-                            <td class="student-info">
-                                <div><strong>Name:</strong> ___________________________</div>
-                                <div><strong>Date:</strong> ___________________________</div>
-                                <div><strong>Class:</strong> {selected_class}</div>
-                                <div><strong>Subject:</strong> {selected_subject}</div>
-                            </td>
-                            <td class="logo-cell">{logo_img_tag}</td>
-                        </tr>
-                    </table>
-                    <div class="title-section"><h1>{selected_chapter}</h1><p><strong>Daily Practice Problem (DPP)</strong></p></div>
-                    <div class="section-title">Section A: Multiple Choice Questions</div>{mcq_html}
-                    <div class="section-title">Section B: Short Answer Type Questions</div>{short_html}
-                    <div class="section-title">Section C: Long Answer Type Questions</div>{long_html}
-                    <div class="answer-key-page">
-                        <div class="title-section"><h2>ANSWER KEY</h2></div>
-                        <div class="section-title">Section A (MCQs)</div><table class="ans-table"><tr><th width="15%">Q.No.</th><th width="85%">Answer</th></tr>{ans_html_mcq}</table>
-                        <div class="section-title">Section B & C (Subjective)</div><table class="ans-table"><tr><th width="15%">Q.No.</th><th width="85%">Key Points / Answers</th></tr>{ans_html_short_long}</table>
+                    
+                    <div class="download-btn-container">
+                        <button class="download-btn" onclick="downloadPDF()">
+                            📥 Click Here to Download True PDF
+                        </button>
+                        <p style="font-size: 12px; color: #64748b; margin-top: 8px;">(Button dabate hi direct PDF save hogi, no black screen!)</p>
                     </div>
+
+                    <div id="pdf-content" style="position: relative; padding: 10px; background-color: white;">
+                        <div class="pdf-watermark"></div>
+                        
+                        <table class="header-table">
+                            <tr>
+                                <td class="student-info">
+                                    <div><strong>Name:</strong> ___________________________</div>
+                                    <div><strong>Date:</strong> ___________________________</div>
+                                    <div><strong>Class:</strong> {selected_class}</div>
+                                    <div><strong>Subject:</strong> {selected_subject}</div>
+                                </td>
+                                <td class="logo-cell">{logo_img_tag}</td>
+                            </tr>
+                        </table>
+                        <div class="title-section"><h1>{selected_chapter}</h1><p><strong>Daily Practice Problem (DPP)</strong></p></div>
+                        <div class="section-title">Section A: Multiple Choice Questions</div>{mcq_html}
+                        <div class="section-title">Section B: Short Answer Type Questions</div>{short_html}
+                        <div class="section-title">Section C: Long Answer Type Questions</div>{long_html}
+                        <div style="page-break-before: always; padding-top: 20px;">
+                            <div class="title-section"><h2>ANSWER KEY</h2></div>
+                            <div class="section-title">Section A (MCQs)</div><table class="ans-table"><tr><th width="15%">Q.No.</th><th width="85%">Answer</th></tr>{ans_html_mcq}</table>
+                            <div class="section-title">Section B & C (Subjective)</div><table class="ans-table"><tr><th width="15%">Q.No.</th><th width="85%">Key Points / Answers</th></tr>{ans_html_short_long}</table>
+                        </div>
+                    </div>
+
+                    <script>
+                        function downloadPDF() {{
+                            const element = document.getElementById('pdf-content');
+                            
+                            // Download button ko hide karo taaki print me na aaye
+                            document.querySelector('.download-btn-container').style.display = 'none';
+                            
+                            var opt = {{
+                                margin:       10,
+                                filename:     '{clean_filename}',
+                                image:        {{ type: 'jpeg', quality: 0.98 }},
+                                html2canvas:  {{ scale: 2, useCORS: true }},
+                                jsPDF:        {{ unit: 'mm', format: 'a4', orientation: 'portrait' }}
+                            }};
+                            
+                            // PDF Generate aur Save karo
+                            html2pdf().set(opt).from(element).save().then(function() {{
+                                // Save hone ke baad button wapas dikhao
+                                document.querySelector('.download-btn-container').style.display = 'block';
+                            }});
+                        }}
+                    </script>
                 </body>
                 </html>
                 """
                 
-                try:
-                    # PDF Options for MathJax
-                    options = {
-                        'page-size': 'A4',
-                        'margin-top': '15mm', 'margin-right': '20mm', 'margin-bottom': '15mm', 'margin-left': '20mm',
-                        'encoding': "UTF-8",
-                        'javascript-delay': '3000', 
-                        'enable-local-file-access': "", 'no-stop-slow-scripts': ""
-                    }
-                    
-                    engine_path = get_pdf_engine()
-                    if engine_path:
-                        config = pdfkit.configuration(wkhtmltopdf=engine_path)
-                        pdf_bytes = pdfkit.from_string(html_template, False, options=options, configuration=config)
-                    else:
-                        pdf_bytes = pdfkit.from_string(html_template, False, options=options)
-                    
-                    st.success("🎉 Mubaarak ho! Aapka Direct PDF ban gaya hai!")
-                    file_name = f"DPP_{selected_class.replace(' ', '')}_{selected_chapter.replace(' ', '')}.pdf"
-                    
-                    # ASLI DIRECT PDF DOWNLOAD BUTTON!
-                    st.download_button(
-                        label="📥 Click Here to Download True PDF",
-                        data=pdf_bytes,
-                        file_name=file_name,
-                        mime="application/pdf",
-                        use_container_width=True
-                    )
-                except Exception as e:
-                    st.error(f"❌ PDF Engine ne thodi gadbadi ki: {e}")
+                st.success("🎉 Mubaarak ho! Niche box mein PDF taiyar hai.")
+                
+                # Naya Powerful Component jo App ke andar PDF viewer aur button banayega
+                components.html(html_template, height=800, scrolling=True)
 
 # TAB 2: Contact Us
 with tab2:
