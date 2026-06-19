@@ -14,10 +14,31 @@ def format_math_symbols(text):
 
 st.set_page_config(page_title="PAATHSALA", page_icon="📚", layout="centered")
 
-# Ye line aapke app ke interface par logo dikhayegi
-st.image("https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png", width=250)
+# --- WATERMARK BACKGROUND KA CODE ---
+watermark_css = """
+<style>
+[data-testid="stAppViewContainer"]::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-image: url("https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png");
+    background-size: 50%; /* Logo kitna bada dikhega (50% matlab half screen) */
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    opacity: 0.10; /* OPACITY LEVEL: 0.10 matlab sirf 10% dikhega (ekdum halka) */
+    z-index: -1;
+}
+</style>
+"""
+st.markdown(watermark_css, unsafe_allow_html=True)
+# ------------------------------------
 
-st.title("📚 PAATHSALA")
+# Upar wala main logo (Agar aapko ye interface ke top par bhi chahiye toh)
+st.image("https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png", width=200)
 
 # Yahan 2 Tabs banaye gaye hain
 tab1, tab2 = st.tabs(["📝 DPP Generator", "📞 Contact Us"])
@@ -118,7 +139,6 @@ with tab1:
                 ans_html_short_long += f'<tr><td style="text-align: center;">{q_num}</td><td>{formatted_ans}</td></tr>\n'
                 q_num += 1
 
-            # Yahan maine aapka GitHub wala asli Logo link daal diya hai
             logo_img_tag = '<img src="https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png" style="width: 150px; max-height: 80px;">' 
 
             html_template = f"""
@@ -134,85 +154,4 @@ with tab1:
                     .student-info {{ width: 50%; font-size: 11pt; vertical-align: top; }}
                     .logo-cell {{ width: 50%; text-align: right; vertical-align: top; }}
                     .title-section {{ text-align: center; margin: 20px 0 10px 0; }}
-                    .title-section h1 {{ font-size: 24pt; margin: 0; text-transform: uppercase; letter-spacing: 2px; }}
-                    .section-title {{ font-size: 12pt; font-weight: bold; background-color: #f4f4f4; padding: 6px 12px; border-left: 5px solid #fce803; margin: 15px 0 10px 0; }}
-                    .question {{ margin-bottom: 15px; font-size: 11pt; display: table; width: 100%; }}
-                    .q-num {{ display: table-cell; width: 30px; font-weight: bold; vertical-align: top; }}
-                    .q-text {{ display: table-cell; vertical-align: top; }}
-                    .opt-row {{ margin-top: 4px; display: block; }}
-                    .opt-box {{ display: inline-block; width: 48%; vertical-align: top; }}
-                    .answer-key-page {{ page-break-before: always; padding-top: 20px; }}
-                    .ans-table {{ width: 100%; border-collapse: collapse; margin-top: 15px; }}
-                    .ans-table th, .ans-table td {{ border: 1px solid #ccc; padding: 8px; font-size: 10.5pt; text-align: left; }}
-                    .ans-table th {{ background-color: #fce803; font-weight: bold; text-align: center; }}
-                </style>
-            </head>
-            <body>
-                <table class="header-table">
-                    <tr>
-                        <td class="student-info">
-                            <div><strong>Name:</strong> ___________________________</div>
-                            <div><strong>Date:</strong> ___________________________</div>
-                            <div><strong>Class:</strong> {selected_class}</div>
-                            <div><strong>Subject:</strong> {selected_subject}</div>
-                        </td>
-                        <td class="logo-cell">
-                            {logo_img_tag}
-                        </td>
-                    </tr>
-                </table>
-
-                <div class="title-section">
-                    <h1>{selected_chapter}</h1>
-                    <p><strong>Daily Practice Problem (DPP)</strong></p>
-                </div>
-
-                <div class="section-title">Section A: Multiple Choice Questions</div>
-                {mcq_html}
-
-                <div class="section-title">Section B: Short Answer Type Questions</div>
-                {short_html}
-
-                <div class="section-title">Section C: Long Answer Type Questions</div>
-                {long_html}
-
-                <div class="answer-key-page">
-                    <div class="title-section"><h2>ANSWER KEY</h2></div>
-                    <div class="section-title">Section A (MCQs)</div>
-                    <table class="ans-table">
-                        <tr><th width="15%">Q.No.</th><th width="85%">Answer</th></tr>
-                        {ans_html_mcq}
-                    </table>
-                    <div class="section-title">Section B & C (Subjective)</div>
-                    <table class="ans-table">
-                        <tr><th width="15%">Q.No.</th><th width="85%">Key Points / Answers</th></tr>
-                        {ans_html_short_long}
-                    </table>
-                </div>
-            </body>
-            </html>
-            """
-            
-            st.success(f"🎉 Yay! Aapka '{selected_chapter}' ka DPP ban gaya hai!")
-            
-            file_name = f"DPP_{selected_class.replace(' ', '')}_{selected_chapter.replace(' ', '')}.html"
-            st.download_button(
-                label="📥 Click Here to Download Your DPP",
-                data=html_template,
-                file_name=file_name,
-                mime="text/html"
-            )
-
-# TAB 2: Contact Us ka naya code
-with tab2:
-    st.header("📞 Contact Us")
-    st.write("Agar aapko humari services pasand aayi ya aap humse judna chahte hain, toh niche di gayi details par sampark karein:")
-    
-    st.markdown("---")
-    st.markdown("### 👤 **Name:** Amit Kumar Shaw")
-    st.markdown("### 📞 **Phone:** [+91 8116230505](tel:+918116230505)")
-    st.markdown("### 📧 **Email:** [amit.kr.shaw.3@gmail.com](mailto:amit.kr.shaw.3@gmail.com)")
-    st.markdown("### 📍 **Location:** Raniganj, West Bengal, India")
-    st.markdown("---")
-    
-    st.info("💡 **Tip:** Aap upar diye gaye Phone number ya Email par direct click karke bhi call ya mail kar sakte hain!")
+                    .title-section h1 {{ font-size: 24pt; margin: 0; text-transform: uppercase; letter-
