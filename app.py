@@ -4,7 +4,6 @@ import random
 import re
 import urllib.request
 import io
-import base64 # Smart PDF Generator Trick
 
 # Auto-Math-Fixer
 def format_math_symbols(text):
@@ -15,13 +14,7 @@ def format_math_symbols(text):
 
 st.set_page_config(page_title="PAATHSALA", page_icon="📚", layout="centered")
 
-# --- 1. FULL BACKGROUND WATERMARK CODE ---
-watermark_html = """
-<div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; opacity: 0.05; pointer-events: none; background-image: url('https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png'); background-size: 250px; background-repeat: repeat;"></div>
-"""
-st.markdown(watermark_html, unsafe_allow_html=True)
-
-# --- 2. ULTRA-PREMIUM UI CSS ---
+# --- GLOBAL MASTER UI CSS (FOR BOTH MOBILE & COMPUTER) ---
 custom_ui_css = """
 <style>
 /* Default Streamlit header hide karna */
@@ -146,8 +139,8 @@ with tab1:
 
         st.markdown("<br>", unsafe_allow_html=True)
         
-        if st.button("🚀 Generate My DPP (PDF)", type="primary", use_container_width=True):
-            with st.spinner("Apka shandar PDF ban raha hai..."):
+        if st.button("🚀 Generate My DPP", type="primary", use_container_width=True):
+            with st.spinner("Apka shandar DPP ready ho raha hai..."):
                 chapter_pool = [q for q in questions if q.get('Class') and q.get('Subject') and q.get('Chapter') and q['Class'].strip().lower() == selected_class.lower() and q['Subject'].strip().lower() == selected_subject.lower() and q['Chapter'].strip().lower() == selected_chapter.lower()]
                 
                 mcq_pool = [q for q in chapter_pool if q.get('Type') and q['Type'].strip().upper() == 'MCQ']
@@ -204,7 +197,7 @@ with tab1:
                     <script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
                     <script type="text/x-mathjax-config">
                       MathJax.Hub.Config({{
-                        tex2jax: {{inlineMath: [['$','$'], ['\\\\(','\\\\)']], displayMath: [['$$','$$'], ['\\\\[','\\\\]']]}}
+                        tex2jax: {{inlineMath: [['$','$'], ['\\\\(','\\\\)']], displayMath: [['$$','$$'], ['\\\\[','\\\\[']]}}
                       }});
                     </script>
                     <style>
@@ -279,19 +272,19 @@ with tab1:
                 </html>
                 """
                 
-                st.success(f"🎉 Yay! Aapka '{selected_chapter}' ka PDF ready hai!")
+                st.success(f"🎉 Yay! Aapka '{selected_chapter}' ka DPP download ke liye taiyar hai!")
                 
-                # Base64 Encode Trick
-                b64_html = base64.b64encode(html_template.encode('utf-8')).decode('utf-8')
+                # NATIVE STREAMLIT SAFE DOWNLOAD BUTTON (No Browser Blocking)
+                file_name = f"DPP_{selected_class.replace(' ', '')}_{selected_chapter.replace(' ', '')}.html"
                 
-                # Premium Print Button
-                pdf_button_html = f'''
-                <a href="data:text/html;base64,{b64_html}" target="_blank" style="display: block; width: 100%; text-align: center; background-color: #2563eb; color: white; padding: 14px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 18px; margin-top: 15px; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);">
-                    🖨️ Click Here to View & Save as PDF
-                </a>
-                <p style="text-align: center; font-size: 13px; color: #64748b; margin-top: 8px;">(Naya page khulega aur apne aap PDF Save ka option aa jayega)</p>
-                '''
-                st.markdown(pdf_button_html, unsafe_allow_html=True)
+                st.download_button(
+                    label="📥 Click Here to Download Print-Ready DPP",
+                    data=html_template,
+                    file_name=file_name,
+                    mime="text/html",
+                    use_container_width=True
+                )
+                st.info("💡 **Kaise Save Karein:** Download hone ke baad file par click karke open karein. Wo automatic aapke device ka PDF printer khol degi, bas 'Save as PDF' par click kar dein!")
 
 # TAB 2: Contact Us
 with tab2:
