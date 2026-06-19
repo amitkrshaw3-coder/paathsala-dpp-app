@@ -14,13 +14,13 @@ def format_math_symbols(text):
 
 st.set_page_config(page_title="PAATHSALA", page_icon="📚", layout="centered")
 
-# --- 1. FULL BACKGROUND WATERMARK CODE ---
+# --- 1. FULL BACKGROUND WATERMARK CODE (Opacity kam karke 0.05 kar di) ---
 watermark_html = """
-<div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; opacity: 0.08; pointer-events: none; background-image: url('https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png'); background-size: 250px; background-repeat: repeat;"></div>
+<div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; opacity: 0.05; pointer-events: none; background-image: url('https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png'); background-size: 250px; background-repeat: repeat;"></div>
 """
 st.markdown(watermark_html, unsafe_allow_html=True)
 
-# --- 2. PREMIUM UI CSS (TOP BAR, BOTTOM BAR, FLOATING CARDS) ---
+# --- 2. ULTRA-PREMIUM UI CSS ---
 custom_ui_css = """
 <style>
 /* Default Streamlit header hide karna */
@@ -52,55 +52,61 @@ header {visibility: hidden !important;}
     margin-top: 0px; 
 }
 
-/* 🚀 NAYA: FLOATING BOTTOM FOOTER (Animated) 🚀 */
-.custom-bottom-bar {
+/* 🚀 NAYA: GLASSMORPHISM FLOATING PILL FOOTER 🚀 */
+.custom-bottom-pill {
     position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100vw;
-    height: 45px;
-    background: linear-gradient(135deg, #0b2265, #1e3a8a); /* Top patti se match karta hua */
-    box-shadow: 0px -4px 12px rgba(0, 0, 0, 0.2);
+    bottom: 20px; /* Niche se thoda upar float karega */
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(11, 34, 101, 0.85); /* Transparent Dark Blue */
+    backdrop-filter: blur(10px); /* Frosted Glass Effect */
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    padding: 8px 24px;
+    border-radius: 50px; /* Pill Shape */
+    box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.2);
     z-index: 99999;
     display: flex;
     justify-content: center;
     align-items: center;
-    animation: slideUp 0.8s ease-out forwards; /* Niche se upar aane ka animation */
+    animation: popUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    opacity: 0;
 }
 
-/* Developer Name Style */
 .footer-text {
-    color: white;
-    font-size: 15px;
-    letter-spacing: 1px;
-    font-family: Arial, sans-serif;
+    color: #e2e8f0;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    display: flex;
+    align-items: center;
+    gap: 6px;
 }
+
 .footer-name {
-    color: #fce803; /* Golden/Yellow chamak */
-    font-weight: 800;
-    font-style: italic;
-    font-size: 16px;
-    letter-spacing: 1.5px;
+    color: #ffffff;
+    font-weight: 700;
+    letter-spacing: 0.5px;
 }
 
-/* Slide Up Animation Setup */
-@keyframes slideUp {
-    from { bottom: -50px; opacity: 0; }
-    to { bottom: 0; opacity: 1; }
+/* Pop Up Animation */
+@keyframes popUp {
+    0% { bottom: -20px; opacity: 0; transform: translateX(-50%) scale(0.9); }
+    100% { bottom: 20px; opacity: 1; transform: translateX(-50%) scale(1); }
 }
 
-/* App ke main content ki spacing (Upar aur Niche se) */
+/* App ke main content ki spacing */
 .main .block-container {
     padding-top: 110px !important;
-    padding-bottom: 80px !important; /* Footer ke liye niche jagah banayi */
+    padding-bottom: 90px !important; 
 }
 
 /* FLOATING WHITE CARDS CSS */
 div[data-testid="stVerticalBlockBorderWrapper"] {
     background-color: #ffffff !important;
-    border-radius: 20px !important;
-    box-shadow: 0px 12px 35px rgba(0, 0, 0, 0.08) !important;
-    border: 1px solid #e2e8f0 !important;
+    border-radius: 16px !important;
+    box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.05) !important;
+    border: 1px solid #f1f5f9 !important;
     padding: 25px !important;
     margin-bottom: 25px !important;
 }
@@ -113,12 +119,16 @@ div[data-testid="stVerticalBlockBorderWrapper"] span {
 }
 </style>
 
+<!-- Upar wala Logo HTML -->
 <div class="custom-top-bar">
     <img class="custom-logo" src="https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png">
 </div>
 
-<div class="custom-bottom-bar">
-    <div class="footer-text">Developed with ❤️ by <span class="footer-name">Amit Kumar Shaw</span></div>
+<!-- Niche wala Premium Glass Pill HTML -->
+<div class="custom-bottom-pill">
+    <div class="footer-text">
+        Developed by <span class="footer-name">Amit Kumar Shaw</span>
+    </div>
 </div>
 """
 st.markdown(custom_ui_css, unsafe_allow_html=True)
