@@ -1,4 +1,6 @@
 import streamlit as st
+import urllib.request
+import io
 import csv
 import random
 import re
