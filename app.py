@@ -20,14 +20,40 @@ watermark_html = """
 """
 st.markdown(watermark_html, unsafe_allow_html=True)
 
-# --- 2. FLOATING TOP LOGO (STICKY HEADER) CODE ---
-floating_logo_html = """
-<div style="position: fixed; top: 12px; left: 50px; z-index: 999999;">
-    <img src="https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png" style="height: 45px;">
+# --- 2. DEEP BLUE PATTI + MIDDLE FLOATING LOGO + FORK HIDE CODE ---
+custom_header_css = """
+<style>
+/* Default Streamlit ka upar wala fork/header area gayab karne ke liye */
+header {visibility: hidden !important;}
+[data-testid="stHeader"] {background-color: transparent !important;}
+
+/* Deep Blue Patti (Fixed Top Bar) */
+.custom-top-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 75px;
+    background-color: #0b2265; /* Deep Blue Color */
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
+    z-index: 99999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* App ke main content ko thoda niche dhakelna taaki wo patti ke peeche na chupe */
+.main .block-container {
+    padding-top: 100px !important;
+}
+</style>
+
+<div class="custom-top-bar">
+    <img src="https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png" style="height: 55px;">
 </div>
 """
-st.markdown(floating_logo_html, unsafe_allow_html=True)
-# ------------------------------------------------
+st.markdown(custom_header_css, unsafe_allow_html=True)
+# -----------------------------------------------------------------
 
 # Yahan 2 Tabs banaye gaye hain
 tab1, tab2 = st.tabs(["📝 DPP Generator", "📞 Contact Us"])
@@ -36,13 +62,13 @@ tab1, tab2 = st.tabs(["📝 DPP Generator", "📞 Contact Us"])
 with tab1:
     st.write("Apna Class, Subject aur Chapter chunein aur turant DPP banayein!")
     
-    # Google Sheets se data laana
+    # Google Sheets se data laana (Ultra-Smart Method)
     questions = []
     try:
         # 🔴 YAHAN APNA GOOGLE SHEET KA LINK PASTE KAREIN 🔴
         sheet_url = "https://docs.google.com/spreadsheets/d/1dc5ychco_3BXn_XcY0BGyxAlGDbczSuEel67VHYR-m4/edit?usp=sharing"
         
-        # Link ko theek karne ka jaadu
+        # Link ko theek karne ka jaadu (Regex)
         match = re.search(r'/d/([a-zA-Z0-9-_]+)', str(sheet_url))
         if match:
             sheet_id = match.group(1)
