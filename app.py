@@ -20,14 +20,14 @@ watermark_html = """
 """
 st.markdown(watermark_html, unsafe_allow_html=True)
 
-# --- 2. DEEP BLUE PATTI + PREMIUM OVERHANGING ROUNDED LOGO + FLOATING CARDS CSS ---
+# --- 2. PREMIUM UI CSS (TOP BAR, BOTTOM BAR, FLOATING CARDS) ---
 custom_ui_css = """
 <style>
-/* Default Streamlit ka upar wala fork/header area gayab karne ke liye */
+/* Default Streamlit header hide karna */
 header {visibility: hidden !important;}
 [data-testid="stHeader"] {background-color: transparent !important;}
 
-/* Deep Blue Patti (Fixed Top Bar) */
+/* Deep Blue Top Patti */
 .custom-top-bar {
     position: fixed;
     top: 0;
@@ -41,7 +41,7 @@ header {visibility: hidden !important;}
     justify-content: center;
 }
 
-/* Logo Styling (Bada, overlap karta hua, aur niche se rounded) */
+/* Premium Rounded Logo */
 .custom-logo {
     height: 90px; 
     background-color: white; 
@@ -52,12 +52,50 @@ header {visibility: hidden !important;}
     margin-top: 0px; 
 }
 
-/* App ke main content ko thoda niche dhakelna */
-.main .block-container {
-    padding-top: 110px !important;
+/* 🚀 NAYA: FLOATING BOTTOM FOOTER (Animated) 🚀 */
+.custom-bottom-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    height: 45px;
+    background: linear-gradient(135deg, #0b2265, #1e3a8a); /* Top patti se match karta hua */
+    box-shadow: 0px -4px 12px rgba(0, 0, 0, 0.2);
+    z-index: 99999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: slideUp 0.8s ease-out forwards; /* Niche se upar aane ka animation */
 }
 
-/* 🚀 DEVELOPER STYLE: FLOATING WHITE CARDS CSS 🚀 */
+/* Developer Name Style */
+.footer-text {
+    color: white;
+    font-size: 15px;
+    letter-spacing: 1px;
+    font-family: Arial, sans-serif;
+}
+.footer-name {
+    color: #fce803; /* Golden/Yellow chamak */
+    font-weight: 800;
+    font-style: italic;
+    font-size: 16px;
+    letter-spacing: 1.5px;
+}
+
+/* Slide Up Animation Setup */
+@keyframes slideUp {
+    from { bottom: -50px; opacity: 0; }
+    to { bottom: 0; opacity: 1; }
+}
+
+/* App ke main content ki spacing (Upar aur Niche se) */
+.main .block-container {
+    padding-top: 110px !important;
+    padding-bottom: 80px !important; /* Footer ke liye niche jagah banayi */
+}
+
+/* FLOATING WHITE CARDS CSS */
 div[data-testid="stVerticalBlockBorderWrapper"] {
     background-color: #ffffff !important;
     border-radius: 20px !important;
@@ -67,7 +105,6 @@ div[data-testid="stVerticalBlockBorderWrapper"] {
     margin-bottom: 25px !important;
 }
 
-/* Card ke andar ke text ko ekdum clear aur dark blue karne ke liye */
 div[data-testid="stVerticalBlockBorderWrapper"] p, 
 div[data-testid="stVerticalBlockBorderWrapper"] label,
 div[data-testid="stVerticalBlockBorderWrapper"] span {
@@ -78,6 +115,10 @@ div[data-testid="stVerticalBlockBorderWrapper"] span {
 
 <div class="custom-top-bar">
     <img class="custom-logo" src="https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png">
+</div>
+
+<div class="custom-bottom-bar">
+    <div class="footer-text">Developed with ❤️ by <span class="footer-name">Amit Kumar Shaw</span></div>
 </div>
 """
 st.markdown(custom_ui_css, unsafe_allow_html=True)
