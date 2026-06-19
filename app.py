@@ -14,31 +14,30 @@ def format_math_symbols(text):
 
 st.set_page_config(page_title="PAATHSALA", page_icon="📚", layout="centered")
 
-# --- WATERMARK BACKGROUND KA CODE ---
+# --- ASLI WATERMARK BACKGROUND (OVERLAY) KA CODE ---
 watermark_css = """
 <style>
 [data-testid="stAppViewContainer"]::before {
     content: "";
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
+    width: 100vw;
+    height: 100vh;
     background-image: url("https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png");
-    background-size: 50%;
+    background-size: 350px; /* Logo ka size background mein */
     background-position: center;
     background-repeat: no-repeat;
-    background-attachment: fixed;
-    opacity: 0.10;
+    opacity: 0.08; /* Opacity 8% rakhi hai taaki ekdum halka overlay dikhe */
     z-index: -1;
+    pointer-events: none; /* Isse buttons kaam karte rahenge */
 }
 </style>
 """
 st.markdown(watermark_css, unsafe_allow_html=True)
-# ------------------------------------
+# ---------------------------------------------------
 
-# Upar wala main logo
-st.image("https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png", width=200)
+# NOTE: Yahan se top par image dikhane wali line ko bilkul hata diya gaya hai!
 
 # Yahan 2 Tabs banaye gaye hain
 tab1, tab2 = st.tabs(["📝 DPP Generator", "📞 Contact Us"])
@@ -223,7 +222,7 @@ with tab1:
                 mime="text/html"
             )
 
-# TAB 2: Contact Us ka naya code
+# TAB 2: Contact Us ka code
 with tab2:
     st.header("📞 Contact Us")
     st.write("Agar aapko humari services pasand aayi ya aap humse judna chahte hain, toh niche di gayi details par sampark karein:")
