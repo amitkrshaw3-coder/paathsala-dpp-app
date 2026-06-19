@@ -4,7 +4,7 @@ import random
 import re
 import urllib.request
 import io
-import pdfkit # Nayi PDF library
+import base64 # Smart PDF Generator Trick
 
 # Auto-Math-Fixer
 def format_math_symbols(text):
@@ -24,117 +24,71 @@ st.markdown(watermark_html, unsafe_allow_html=True)
 # --- 2. ULTRA-PREMIUM UI CSS ---
 custom_ui_css = """
 <style>
+/* Default Streamlit header hide karna */
 header {visibility: hidden !important;}
 [data-testid="stHeader"] {background-color: transparent !important;}
 
+/* GLOBAL WATERMARK */
+[data-testid="stAppViewContainer"]::after {
+    content: ""; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+    background-image: url('https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png');
+    background-size: 250px; background-repeat: repeat; opacity: 0.05; pointer-events: none; z-index: 999999;
+}
+
+/* Deep Blue Top Patti */
 .custom-top-bar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 60px; 
-    background-color: #0b2265; 
-    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
-    z-index: 9999999; 
-    display: flex;
-    justify-content: center;
+    position: fixed; top: 0; left: 0; width: 100vw; height: 60px; 
+    background-color: #0b2265; box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2); z-index: 9999999; display: flex; justify-content: center;
 }
 
+/* Premium Rounded Logo */
 .custom-logo {
-    height: 90px; 
-    background-color: white; 
-    padding: 8px 20px; 
-    border-bottom-left-radius: 25px; 
-    border-bottom-right-radius: 25px; 
-    box-shadow: 0px 5px 15px rgba(0,0,0,0.3); 
-    margin-top: 0px; 
+    height: 90px; background-color: white; padding: 8px 20px; 
+    border-bottom-left-radius: 25px; border-bottom-right-radius: 25px; box-shadow: 0px 5px 15px rgba(0,0,0,0.3); margin-top: 0px; 
 }
 
+/* GLASSMORPHISM FLOATING PILL FOOTER */
 .custom-bottom-pill {
-    position: fixed;
-    bottom: 20px; 
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(11, 34, 101, 0.95) !important; 
-    backdrop-filter: blur(10px); 
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.15);
-    padding: 8px 24px;
-    border-radius: 50px; 
-    box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.3);
-    z-index: 9999999;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    animation: popUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-    opacity: 0;
-    width: max-content;
+    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+    background: rgba(11, 34, 101, 0.95) !important; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.15); padding: 8px 24px; border-radius: 50px; box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.3);
+    z-index: 9999999; display: flex; justify-content: center; align-items: center;
+    animation: popUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; width: max-content;
 }
-
 .footer-text {
-    color: #e2e8f0 !important;
-    font-size: 13px !important;
-    letter-spacing: 0.5px;
-    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    margin: 0 !important;
+    color: #e2e8f0 !important; font-size: 13px !important; letter-spacing: 0.5px;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; align-items: center; gap: 6px; margin: 0 !important;
 }
-
-.footer-name {
-    color: #ffffff !important;
-    font-weight: 700 !important;
-}
+.footer-name { color: #ffffff !important; font-weight: 700 !important; }
 
 @keyframes popUp {
     0% { bottom: -20px; opacity: 0; transform: translateX(-50%) scale(0.9); }
     100% { bottom: 20px; opacity: 1; transform: translateX(-50%) scale(1); }
 }
 
-.main .block-container {
-    padding-top: 110px !important;
-    padding-bottom: 90px !important; 
-}
+.main .block-container { padding-top: 110px !important; padding-bottom: 90px !important; }
 
+/* FLOATING WHITE CARDS CSS */
 div[data-testid="stVerticalBlockBorderWrapper"] {
-    background-color: #ffffff !important;
-    border-radius: 16px !important;
-    box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.05) !important;
-    border: 1px solid #f1f5f9 !important;
-    padding: 25px !important;
-    margin-bottom: 25px !important;
+    background-color: #ffffff !important; border-radius: 16px !important; box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.05) !important;
+    border: 1px solid #f1f5f9 !important; padding: 25px !important; margin-bottom: 25px !important;
 }
-
-div[data-testid="stVerticalBlockBorderWrapper"] p, 
-div[data-testid="stVerticalBlockBorderWrapper"] label,
-div[data-testid="stVerticalBlockBorderWrapper"] span {
-    color: #0b2265 !important;
-    font-weight: 600 !important;
+div[data-testid="stVerticalBlockBorderWrapper"] p, div[data-testid="stVerticalBlockBorderWrapper"] label, div[data-testid="stVerticalBlockBorderWrapper"] span {
+    color: #0b2265 !important; font-weight: 600 !important;
 }
 </style>
 
-<!-- Upar wala Logo HTML -->
-<div class="custom-top-bar">
-    <img class="custom-logo" src="https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png">
-</div>
-
-<!-- Niche wala Premium Glass Pill HTML -->
-<div class="custom-bottom-pill">
-    <div class="footer-text">
-        Developed by <span class="footer-name">Amit Kumar Shaw</span>
-    </div>
-</div>
+<div class="custom-top-bar"><img class="custom-logo" src="https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png"></div>
+<div class="custom-bottom-pill"><div class="footer-text">Developed by <span class="footer-name">Amit Kumar Shaw</span></div></div>
 """
 st.markdown(custom_ui_css, unsafe_allow_html=True)
 
-# Yahan 2 Tabs banaye gaye hain
+# Tabs
 tab1, tab2 = st.tabs(["📝 DPP Generator", "📞 Contact Us"])
 
-# TAB 1: DPP Generator
+# TAB 1
 with tab1:
     st.write("Apna Class, Subject aur Chapter chunein aur turant DPP banayein!")
-    
     questions = []
     try:
         # 🔴 YAHAN APNA GOOGLE SHEET KA LINK PASTE KAREIN 🔴
@@ -193,7 +147,7 @@ with tab1:
         st.markdown("<br>", unsafe_allow_html=True)
         
         if st.button("🚀 Generate My DPP (PDF)", type="primary", use_container_width=True):
-            with st.spinner("Apka shandar PDF ban raha hai, please wait..."):
+            with st.spinner("Apka shandar PDF ban raha hai..."):
                 chapter_pool = [q for q in questions if q.get('Class') and q.get('Subject') and q.get('Chapter') and q['Class'].strip().lower() == selected_class.lower() and q['Subject'].strip().lower() == selected_subject.lower() and q['Chapter'].strip().lower() == selected_chapter.lower()]
                 
                 mcq_pool = [q for q in chapter_pool if q.get('Type') and q['Type'].strip().upper() == 'MCQ']
@@ -240,19 +194,19 @@ with tab1:
 
                 logo_img_tag = '<img src="https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png" style="width: 150px; max-height: 80px;">' 
 
-                # MATHJAX & PDF TEMPLATE
+                # SMART HTML TEMPLATE WITH AUTO-PRINT SCRIPT
                 html_template = f"""
                 <!DOCTYPE html>
                 <html lang="en">
                 <head>
                     <meta charset="UTF-8">
                     <title>PAATHSALA DPP - {selected_chapter}</title>
+                    <script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
                     <script type="text/x-mathjax-config">
                       MathJax.Hub.Config({{
                         tex2jax: {{inlineMath: [['$','$'], ['\\\\(','\\\\)']], displayMath: [['$$','$$'], ['\\\\[','\\\\]']]}}
                       }});
                     </script>
-                    <script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
                     <style>
                         @page {{ size: A4; margin: 15mm 20mm; }}
                         body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #111; }}
@@ -282,9 +236,7 @@ with tab1:
                                 <div><strong>Class:</strong> {selected_class}</div>
                                 <div><strong>Subject:</strong> {selected_subject}</div>
                             </td>
-                            <td class="logo-cell">
-                                {logo_img_tag}
-                            </td>
+                            <td class="logo-cell">{logo_img_tag}</td>
                         </tr>
                     </table>
 
@@ -315,37 +267,31 @@ with tab1:
                             {ans_html_short_long}
                         </table>
                     </div>
+                    
+                    <script>
+                        window.onload = function() {{
+                            setTimeout(function() {{
+                                window.print();
+                            }}, 1500);
+                        }};
+                    </script>
                 </body>
                 </html>
                 """
                 
-                # PDF Generation Logic
-                try:
-                    options = {
-                        'page-size': 'A4',
-                        'margin-top': '15mm',
-                        'margin-right': '20mm',
-                        'margin-bottom': '15mm',
-                        'margin-left': '20mm',
-                        'encoding': "UTF-8",
-                        'javascript-delay': '3000', # Wait 3 seconds for Math formulas to render
-                        'enable-local-file-access': "",
-                        'no-stop-slow-scripts': ""
-                    }
-                    
-                    pdf_bytes = pdfkit.from_string(html_template, False, options=options)
-                    
-                    st.success(f"🎉 Yay! Aapka '{selected_chapter}' ka PDF DPP ban gaya hai!")
-                    file_name = f"DPP_{selected_class.replace(' ', '')}_{selected_chapter.replace(' ', '')}.pdf"
-                    
-                    st.download_button(
-                        label="📥 Download PDF DPP Now",
-                        data=pdf_bytes,
-                        file_name=file_name,
-                        mime="application/pdf"
-                    )
-                except Exception as e:
-                    st.error("Server par PDF banne mein thodi dikkat aayi. Kripya app ko Reboot karein.")
+                st.success(f"🎉 Yay! Aapka '{selected_chapter}' ka PDF ready hai!")
+                
+                # Base64 Encode Trick
+                b64_html = base64.b64encode(html_template.encode('utf-8')).decode('utf-8')
+                
+                # Premium Print Button
+                pdf_button_html = f'''
+                <a href="data:text/html;base64,{b64_html}" target="_blank" style="display: block; width: 100%; text-align: center; background-color: #2563eb; color: white; padding: 14px 20px; border-radius: 8px; text-decoration: none; font-weight: bold; font-size: 18px; margin-top: 15px; box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);">
+                    🖨️ Click Here to View & Save as PDF
+                </a>
+                <p style="text-align: center; font-size: 13px; color: #64748b; margin-top: 8px;">(Naya page khulega aur apne aap PDF Save ka option aa jayega)</p>
+                '''
+                st.markdown(pdf_button_html, unsafe_allow_html=True)
 
 # TAB 2: Contact Us
 with tab2:
