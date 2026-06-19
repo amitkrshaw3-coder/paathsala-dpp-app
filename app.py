@@ -109,7 +109,7 @@ if questions:
             ans_html_short_long += f'<tr><td style="text-align: center;">{q_num}</td><td>{formatted_ans}</td></tr>\n'
             q_num += 1
 
-        logo_img_tag = '<h2>PAATHSALA</h2>' 
+        logo_img_tag = '<h2>https://github.com/amitkrshaw3-coder/paathsala-dpp-app/blob/main/1000086036.png?raw=true</h2>' 
 
         html_template = f"""
         <!DOCTYPE html>
