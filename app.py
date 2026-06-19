@@ -5,8 +5,11 @@ import re
 import urllib.request
 import io
 import streamlit.components.v1 as components 
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
-# Session State Initialize karna (Login track karne ke liye)
+# Session State Initialize karna
 if 'logged_in' not in st.session_state:
     st.session_state.logged_in = False
 if 'otp_sent' not in st.session_state:
@@ -24,6 +27,46 @@ def format_math_symbols(text):
     text = re.sub(r'_([0-9a-zA-Z]+)', r'<sub>\1</sub>', text)
     return text
 
+# 🔥 REAL EMAIL SENDING FUNCTION 🔥
+def send_real_otp_email(receiver_email, otp_code):
+    try:
+        # Streamlit secrets se secure email aur password lena
+        sender_email = st.secrets["SENDER_EMAIL"]
+        app_password = st.secrets["APP_PASSWORD"]
+        
+        msg = MIMEMultipart()
+        msg['From'] = f"PAATHSALA <{sender_email}>"
+        msg['To'] = receiver_email
+        msg['Subject'] = "🔒 PAATHSALA - Your Login OTP"
+        
+        html_body = f"""
+        <html>
+            <body style="font-family: Arial, sans-serif; color: #333;">
+                <div style="max-width: 500px; margin: auto; border: 1px solid #e0e0e0; border-radius: 10px; padding: 20px;">
+                    <h2 style="color: #0b2265; text-align: center;">Welcome to PAATHSALA</h2>
+                    <p>Hello,</p>
+                    <p>Your One-Time Password (OTP) to securely login to your account is:</p>
+                    <h1 style="text-align: center; color: #2563eb; letter-spacing: 5px; font-size: 36px; background: #f4f7f6; padding: 10px; border-radius: 8px;">{otp_code}</h1>
+                    <p style="color: #888; font-size: 12px; text-align: center;">Please do not share this code with anyone. It is valid for a single use.</p>
+                    <hr style="border-top: 1px solid #eee;">
+                    <p style="font-size: 12px; color: #999; text-align: center;">Developed by Amit Kumar Shaw</p>
+                </div>
+            </body>
+        </html>
+        """
+        msg.attach(MIMEText(html_body, 'html'))
+        
+        # Connect to Gmail Server
+        server = smtplib.SMTP('smtp.gmail.com', 587)
+        server.starttls()
+        server.login(sender_email, app_password)
+        server.send_message(msg)
+        server.quit()
+        return True
+    except Exception as e:
+        st.error(f"⚠️ Email server error: Pehle Streamlit 'Secrets' mein Email/App Password set karein. Error: {e}")
+        return False
+
 st.set_page_config(page_title="PAATHSALA", page_icon="📚", layout="centered")
 
 # --- GLOBAL MASTER UI CSS ---
@@ -31,27 +74,20 @@ custom_ui_css = """
 <style>
 header {visibility: hidden !important;}
 [data-testid="stHeader"] {background-color: transparent !important;}
-
-/* APP GLOBAL WATERMARK */
 [data-testid="stAppViewContainer"]::after {
     content: ""; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
     background-image: url('https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png');
     background-size: 250px; background-repeat: repeat; opacity: 0.05; pointer-events: none; z-index: 999999;
 }
-
 .custom-top-bar { position: fixed; top: 0; left: 0; width: 100vw; height: 60px; background-color: #0b2265; box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2); z-index: 9999999; display: flex; justify-content: center; }
 .custom-logo { height: 90px; background-color: white; padding: 8px 20px; border-bottom-left-radius: 25px; border-bottom-right-radius: 25px; box-shadow: 0px 5px 15px rgba(0,0,0,0.3); margin-top: 0px; }
-.custom-bottom-pill { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(11, 34, 101, 0.95) !important; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.15); padding: 8px 24px; border-radius: 50px; box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.3); z-index: 9999999; display: flex; justify-content: center; align-items: center; animation: popUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; width: max-content; }
+.custom-bottom-pill { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(11, 34, 101, 0.95) !important; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.15); padding: 8px 24px; border-radius: 50px; box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.3); z-index: 9999999; display: flex; justify-content: center; align-items: center; }
 .footer-text { color: #e2e8f0 !important; font-size: 13px !important; letter-spacing: 0.5px; font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; align-items: center; gap: 6px; margin: 0 !important; }
 .footer-name { color: #ffffff !important; font-weight: 700 !important; }
-
-@keyframes popUp { 0% { bottom: -20px; opacity: 0; transform: translateX(-50%) scale(0.9); } 100% { bottom: 20px; opacity: 1; transform: translateX(-50%) scale(1); } }
 .main .block-container { padding-top: 110px !important; padding-bottom: 90px !important; }
-
 div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #ffffff !important; border-radius: 16px !important; box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.05) !important; border: 1px solid #f1f5f9 !important; padding: 25px !important; margin-bottom: 25px !important; }
 div[data-testid="stVerticalBlockBorderWrapper"] p, div[data-testid="stVerticalBlockBorderWrapper"] label, div[data-testid="stVerticalBlockBorderWrapper"] span { color: #0b2265 !important; font-weight: 600 !important; }
 </style>
-
 <div class="custom-top-bar"><img class="custom-logo" src="https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png"></div>
 <div class="custom-bottom-pill"><div class="footer-text">Developed by <span class="footer-name">Amit Kumar Shaw</span></div></div>
 """
@@ -63,34 +99,33 @@ if not st.session_state.logged_in:
     with st.container(border=True):
         st.markdown("""
         <div style="text-align: center; margin-bottom: 20px;">
-            <h2 style="color: #0b2265; margin: 0; font-size: 26px; font-weight: 800;">🔒 Secure User Login</h2>
-            <p style="color: #64748b; margin: 5px 0 0 0; font-size: 14px;">PAATHSALA Dashboard ka access paane ke liye login karein</p>
+            <h2 style="color: #0b2265; margin: 0; font-size: 26px; font-weight: 800;">🔒 Secure Email Login</h2>
+            <p style="color: #64748b; margin: 5px 0 0 0; font-size: 14px;">Apna valid email enter karein OTP receive karne ke liye</p>
         </div>
         <hr style="border: 0; border-top: 1px solid #f1f5f9; margin-bottom: 20px;">
         """, unsafe_allow_html=True)
         
-        # Step A: Email ya Phone input lein
-        user_input = st.text_input("Enter Mobile Number or Email ID:", 
+        user_input = st.text_input("Enter Email ID:", 
                                   value=st.session_state.user_identifier,
-                                  placeholder="e.g., 9876543210 or student@gmail.com")
+                                  placeholder="e.g., student@gmail.com")
         
         if not st.session_state.otp_sent:
-            if st.button("🚀 Send OTP", type="primary", use_container_width=True):
-                if user_input.strip() == "":
-                    st.warning("⚠️ Kripya ek valid Email ya Mobile number daalein!")
+            if st.button("🚀 Send Real OTP", type="primary", use_container_width=True):
+                # Basic Email validation check
+                if not re.match(r"[^@]+@[^@]+\.[^@]+", user_input):
+                    st.warning("⚠️ Kripya ek sahi Email ID daalein!")
                 else:
-                    # random 4-digit OTP generate karna
-                    st.session_state.generated_otp = str(random.randint(1000, 9999))
-                    st.session_state.user_identifier = user_input
-                    st.session_state.otp_sent = True
-                    st.rerun()
+                    with st.spinner("📧 Email bheja ja raha hai... Kripya pratiksha karein"):
+                        st.session_state.generated_otp = str(random.randint(1000, 9999))
+                        success = send_real_otp_email(user_input, st.session_state.generated_otp)
+                        
+                        if success:
+                            st.session_state.user_identifier = user_input
+                            st.session_state.otp_sent = True
+                            st.rerun()
                     
         else:
-            # OTP send hone ke baad ye dikhega
-            st.info(f"📩 OTP sent successfully to **{st.session_state.user_identifier}**")
-            
-            # 🔥 PRO-TESTING BOX: Aapko test karne ke liye screen par hi OTP dikha raha hu
-            st.code(f"🔑 Testing OTP Code: {st.session_state.generated_otp}", language="text")
+            st.success(f"📩 Ek real OTP aapke email **{st.session_state.user_identifier}** par bhej diya gaya hai. (Spam folder bhi check kar lein)")
             
             entered_otp = st.text_input("Enter 4-Digit OTP Code:", placeholder="----", max_chars=4)
             
@@ -102,16 +137,15 @@ if not st.session_state.logged_in:
                         st.success("🎉 Login Successful!")
                         st.rerun()
                     else:
-                        st.error("❌ Galat OTP! Kripya sahi code daalein.")
+                        st.error("❌ Galat OTP! Kripya mail check karke sahi code daalein.")
             with col2:
-                if st.button("🔄 Resend / Change Number", use_container_width=True):
+                if st.button("🔄 Change Email / Resend", use_container_width=True):
                     st.session_state.otp_sent = False
                     st.session_state.generated_otp = None
                     st.rerun()
                     
 # ----------------- 📝 APP MAIN CONTENS (AFTER LOGIN) 📝 -----------------
 else:
-    # Logout button top right bar ke niche set karne ke liye
     col_space, col_logout = st.columns([6, 1.5])
     with col_logout:
         if st.button("🔒 Logout", use_container_width=True):
@@ -122,7 +156,6 @@ else:
 
     tab1, tab2 = st.tabs(["📝 DPP Generator", "📞 Contact Us"])
 
-    # TAB 1: DPP Generator
     with tab1:
         st.write("Apna Class, Subject aur Chapter chunein aur turant DPP banayein!")
         questions = []
@@ -144,17 +177,10 @@ else:
             for row in reader:
                 questions.append(row)
         except Exception as e:
-            st.error(f"❌ Google Sheet se data laane mein error aaya! Details: {e}")
+            st.error(f"❌ Google Sheet Error: {e}")
 
         if questions:
             with st.container(border=True):
-                st.markdown("""
-                <div style="display: flex; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #f0f2f6; padding-bottom: 10px;">
-                    <div style="background: linear-gradient(135deg, #0b2265, #2563eb); color: white; border-radius: 50%; width: 34px; height: 34px; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 18px; margin-right: 12px; box-shadow: 0 4px 6px rgba(11, 34, 101, 0.2);">1</div>
-                    <div style="font-size: 20px; font-weight: 600; color: #0b2265; letter-spacing: 0.5px;">Paper Details Select Karein</div>
-                </div>
-                """, unsafe_allow_html=True)
-                
                 all_classes = sorted(list(set(q.get('Class', '').strip() for q in questions if q.get('Class'))))
                 selected_class = st.selectbox("Select Class:", all_classes)
 
@@ -165,20 +191,10 @@ else:
                 selected_chapter = st.selectbox("Select Chapter:", all_chapters)
 
             with st.container(border=True):
-                st.markdown("""
-                <div style="display: flex; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #f0f2f6; padding-bottom: 10px;">
-                    <div style="background: linear-gradient(135deg, #0b2265, #2563eb); color: white; border-radius: 50%; width: 34px; height: 34px; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 18px; margin-right: 12px; box-shadow: 0 4px 6px rgba(11, 34, 101, 0.2);">2</div>
-                    <div style="font-size: 20px; font-weight: 600; color: #0b2265; letter-spacing: 0.5px;">Questions ki Sankhya (Number) Batayein</div>
-                </div>
-                """, unsafe_allow_html=True)
-                
                 col1, col2, col3 = st.columns(3)
-                with col1:
-                    n_mcq = st.number_input("No. of MCQs:", min_value=0, value=10)
-                with col2:
-                    n_short = st.number_input("No. of Short Qs:", min_value=0, value=5)
-                with col3:
-                    n_long = st.number_input("No. of Long Qs:", min_value=0, value=2)
+                with col1: n_mcq = st.number_input("No. of MCQs:", min_value=0, value=10)
+                with col2: n_short = st.number_input("No. of Short Qs:", min_value=0, value=5)
+                with col3: n_long = st.number_input("No. of Long Qs:", min_value=0, value=2)
 
             st.markdown("<br>", unsafe_allow_html=True)
             
@@ -226,10 +242,8 @@ else:
                         q_num += 1
 
                     logo_img_tag = '<img src="https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png" style="width: 150px; max-height: 80px;">' 
-                    
                     clean_filename = f"DPP_{selected_class.replace(' ', '')}_{selected_chapter.replace(' ', '')}.pdf"
 
-                    # PDF TEMPLATE WITH MATHJAX V3
                     html_template = f"""
                     <!DOCTYPE html>
                     <html lang="en">
@@ -308,7 +322,6 @@ else:
                     st.success("🎉 Mubaarak ho! Niche box mein PDF taiyar hai.")
                     components.html(html_template, height=800, scrolling=True)
 
-    # TAB 2: Contact Us
     with tab2:
         st.markdown("<br>", unsafe_allow_html=True)
         with st.container(border=True):
