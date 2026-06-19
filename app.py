@@ -14,6 +14,9 @@ def format_math_symbols(text):
 
 st.set_page_config(page_title="PAATHSALA", page_icon="📚", layout="centered")
 
+# Ye line aapke app ke interface par logo dikhayegi
+st.image("https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png", width=250)
+
 st.title("📚 PAATHSALA")
 
 # Yahan 2 Tabs banaye gaye hain
