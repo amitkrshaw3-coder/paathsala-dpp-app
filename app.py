@@ -20,7 +20,7 @@ watermark_html = """
 """
 st.markdown(watermark_html, unsafe_allow_html=True)
 
-# --- 2. DEEP BLUE PATTI + MIDDLE FLOATING LOGO + FORK HIDE CODE ---
+# --- 2. DEEP BLUE PATTI + PREMIUM OVERHANGING ROUNDED LOGO ---
 custom_header_css = """
 <style>
 /* Default Streamlit ka upar wala fork/header area gayab karne ke liye */
@@ -33,23 +33,33 @@ header {visibility: hidden !important;}
     top: 0;
     left: 0;
     width: 100vw;
-    height: 75px;
+    height: 60px; /* Patti ko thoda patla kiya taaki logo bada dikhe */
     background-color: #0b2265; /* Deep Blue Color */
     box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
     z-index: 99999;
     display: flex;
     justify-content: center;
-    align-items: center;
 }
 
-/* App ke main content ko thoda niche dhakelna taaki wo patti ke peeche na chupe */
+/* Logo Styling (Bada, overlap karta hua, aur niche se rounded) */
+.custom-logo {
+    height: 90px; /* Logo ka size bada kar diya */
+    background-color: white; /* White base taaki premium lage */
+    padding: 8px 20px; /* Logo ke aaspas thodi jagah */
+    border-bottom-left-radius: 25px; /* Niche ka left edge gol */
+    border-bottom-right-radius: 25px; /* Niche ka right edge gol */
+    box-shadow: 0px 5px 15px rgba(0,0,0,0.3); /* Premium 3D shadow */
+    margin-top: 0px; 
+}
+
+/* App ke main content ko thoda niche dhakelna */
 .main .block-container {
-    padding-top: 100px !important;
+    padding-top: 110px !important;
 }
 </style>
 
 <div class="custom-top-bar">
-    <img src="https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png" style="height: 55px;">
+    <img class="custom-logo" src="https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png">
 </div>
 """
 st.markdown(custom_header_css, unsafe_allow_html=True)
@@ -62,13 +72,13 @@ tab1, tab2 = st.tabs(["📝 DPP Generator", "📞 Contact Us"])
 with tab1:
     st.write("Apna Class, Subject aur Chapter chunein aur turant DPP banayein!")
     
-    # Google Sheets se data laana (Ultra-Smart Method)
+    # Google Sheets se data laana
     questions = []
     try:
         # 🔴 YAHAN APNA GOOGLE SHEET KA LINK PASTE KAREIN 🔴
         sheet_url = "https://docs.google.com/spreadsheets/d/1dc5ychco_3BXn_XcY0BGyxAlGDbczSuEel67VHYR-m4/edit?usp=sharing"
         
-        # Link ko theek karne ka jaadu (Regex)
+        # Link ko theek karne ka jaadu
         match = re.search(r'/d/([a-zA-Z0-9-_]+)', str(sheet_url))
         if match:
             sheet_id = match.group(1)
