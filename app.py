@@ -7,6 +7,7 @@ import io
 
 # Auto-Math-Fixer
 def format_math_symbols(text):
+    if not text: return ""
     text = re.sub(r'\^([0-9a-zA-Z]+)', r'<sup>\1</sup>', text)
     text = re.sub(r'_([0-9a-zA-Z]+)', r'<sub>\1</sub>', text)
     return text
@@ -16,19 +17,19 @@ st.set_page_config(page_title="PAATHSALA DPP Generator", page_icon="📚", layou
 st.title("📚 PAATHSALA DPP Generator")
 st.write("Apna Class, Subject aur Chapter chunein aur turant DPP banayein!")
 
-# Google Sheets se data laana (Direct Method)
+# Google Sheets se data laana (Ultra-Smart Method)
 questions = []
 try:
     # 🔴 YAHAN APNA GOOGLE SHEET KA LINK PASTE KAREIN 🔴
-    # Pehle Share wala link copy karein, aur use niche wale double quotes ke beech mein daal dein.
     sheet_url = "https://docs.google.com/spreadsheets/d/1dc5ychco_3BXn_XcY0BGyxAlGDbczSuEel67VHYR-m4/edit?usp=sharing"
     
-    # Is share link ko automatic CSV link mein badalna
-    if "docs.google.com/spreadsheets" in sheet_url:
-        sheet_id = sheet_url.split("/d/").split("/")
+    # Link ko theek karne ka jaadu (Regex)
+    match = re.search(r'/d/([a-zA-Z0-9-_]+)', str(sheet_url))
+    if match:
+        sheet_id = match.group(1)
         csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv"
     else:
-        csv_url = sheet_url
+        csv_url = str(sheet_url)
 
     req = urllib.request.Request(csv_url, headers={'User-Agent': 'Mozilla/5.0'})
     response = urllib.request.urlopen(req)
@@ -42,13 +43,13 @@ except Exception as e:
 if questions:
     st.subheader("1. Paper Details Select Karein")
     
-    all_classes = sorted(list(set(q['Class'].strip() for q in questions if q.get('Class'))))
+    all_classes = sorted(list(set(q.get('Class', '').strip() for q in questions if q.get('Class'))))
     selected_class = st.selectbox("Select Class:", all_classes)
 
-    all_subjects = sorted(list(set(q['Subject'].strip() for q in questions if q.get('Subject') and q['Class'].strip() == selected_class)))
+    all_subjects = sorted(list(set(q.get('Subject', '').strip() for q in questions if q.get('Subject') and q.get('Class', '').strip() == selected_class)))
     selected_subject = st.selectbox("Select Subject:", all_subjects)
 
-    all_chapters = sorted(list(set(q['Chapter'].strip() for q in questions if q.get('Chapter') and q['Class'].strip() == selected_class and q['Subject'].strip() == selected_subject)))
+    all_chapters = sorted(list(set(q.get('Chapter', '').strip() for q in questions if q.get('Chapter') and q.get('Class', '').strip() == selected_class and q.get('Subject', '').strip() == selected_subject)))
     selected_chapter = st.selectbox("Select Chapter:", all_chapters)
 
     st.subheader("2. Questions ki Sankhya (Number) Batayein")
@@ -79,8 +80,8 @@ if questions:
         q_num = 1
         
         for q in selected_mcqs:
-            formatted_q = format_math_symbols(q['Question'])
-            formatted_ans = format_math_symbols(q['Answer'])
+            formatted_q = format_math_symbols(q.get('Question', ''))
+            formatted_ans = format_math_symbols(q.get('Answer', ''))
             if " a) " in formatted_q:
                 formatted_q = formatted_q.replace(" a) ", "<div class='opt-row'><span class='opt-box'>a) ")
                 formatted_q = formatted_q.replace(" b) ", "</span><span class='opt-box'>b) ")
@@ -94,16 +95,16 @@ if questions:
         short_html = ""
         ans_html_short_long = ""
         for q in selected_shorts:
-            formatted_q = format_math_symbols(q['Question'])
-            formatted_ans = format_math_symbols(q['Answer'])
+            formatted_q = format_math_symbols(q.get('Question', ''))
+            formatted_ans = format_math_symbols(q.get('Answer', ''))
             short_html += f'<div class="question"><div class="q-num">{q_num}.</div><div class="q-text">{formatted_q}</div></div>\n'
             ans_html_short_long += f'<tr><td style="text-align: center;">{q_num}</td><td>{formatted_ans}</td></tr>\n'
             q_num += 1
 
         long_html = ""
         for q in selected_longs:
-            formatted_q = format_math_symbols(q['Question'])
-            formatted_ans = format_math_symbols(q['Answer'])
+            formatted_q = format_math_symbols(q.get('Question', ''))
+            formatted_ans = format_math_symbols(q.get('Answer', ''))
             long_html += f'<div class="question"><div class="q-num">{q_num}.</div><div class="q-text">{formatted_q}</div></div>\n'
             ans_html_short_long += f'<tr><td style="text-align: center;">{q_num}</td><td>{formatted_ans}</td></tr>\n'
             q_num += 1
