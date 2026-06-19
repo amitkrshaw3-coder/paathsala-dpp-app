@@ -6,9 +6,10 @@ import urllib.request
 import io
 import streamlit.components.v1 as components 
 
-# Auto-Math-Fixer
+# 🚀 BUG FIXED YAHAN: Agar Dollar sign hoga, toh Auto-fixer use touch nahi karega
 def format_math_symbols(text):
     if not text: return ""
+    if '$' in text: return text  # MathJax khud handle karega
     text = re.sub(r'\^([0-9a-zA-Z]+)', r'<sup>\1</sup>', text)
     text = re.sub(r'_([0-9a-zA-Z]+)', r'<sub>\1</sub>', text)
     return text
@@ -46,10 +47,8 @@ div[data-testid="stVerticalBlockBorderWrapper"] p, div[data-testid="stVerticalBl
 """
 st.markdown(custom_ui_css, unsafe_allow_html=True)
 
-# Tabs
 tab1, tab2 = st.tabs(["📝 DPP Generator", "📞 Contact Us"])
 
-# TAB 1
 with tab1:
     st.write("Apna Class, Subject aur Chapter chunein aur turant DPP banayein!")
     questions = []
@@ -156,38 +155,36 @@ with tab1:
                 
                 clean_filename = f"DPP_{selected_class.replace(' ', '')}_{selected_chapter.replace(' ', '')}.pdf"
 
-                # 🚀 PERFECT PDF TEMPLATE WITH FULL PAGE WATERMARK 🚀
+                # 🚀 PERFECT PDF TEMPLATE WITH MATHJAX V3 🚀
                 html_template = f"""
                 <!DOCTYPE html>
                 <html lang="en">
                 <head>
                     <meta charset="UTF-8">
                     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-                    <script type="text/x-mathjax-config">
-                      MathJax.Hub.Config({{ jax: ["input/TeX", "output/SVG"], tex2jax: {{inlineMath: [['$','$'], ['\\\\(','\\\\)']], displayMath: [['$$','$$'], ['\\\\[','\\\\]']]}} }});
+                    
+                    <script>
+                    window.MathJax = {{
+                      tex: {{
+                        inlineMath: [['$', '$'], ['\\\\(', '\\\\)']],
+                        displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']]
+                      }},
+                      svg: {{
+                        fontCache: 'global'
+                      }}
+                    }};
                     </script>
-                    <script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js"></script>
+                    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
                     
                     <style>
                         body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #111; padding: 10px; }}
                         
-                        /* 💥 THE MAGIC PDF WATERMARK 💥 */
-                        #pdf-content {{
-                            position: relative;
-                            padding: 20px;
-                            background-color: white;
-                            z-index: 1;
-                        }}
+                        /* WATERMARK */
+                        #pdf-content {{ position: relative; padding: 20px; background-color: white; z-index: 1; }}
                         #pdf-content::before {{
-                            content: "";
-                            position: absolute;
-                            top: 0; left: 0; width: 100%; height: 100%;
+                            content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
                             background-image: url('https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png');
-                            background-size: 350px; /* Bada logo watermark */
-                            background-repeat: repeat; 
-                            opacity: 0.08; /* Premium halki opacity */
-                            z-index: -1;
-                            pointer-events: none;
+                            background-size: 350px; background-repeat: repeat; opacity: 0.08; z-index: -1; pointer-events: none;
                         }}
 
                         .header-table {{ width: 100%; border-collapse: collapse; margin-bottom: 10px; }}
@@ -245,19 +242,22 @@ with tab1:
 
                     <script>
                         function downloadPDF() {{
-                            const element = document.getElementById('pdf-content');
-                            document.querySelector('.download-btn-container').style.display = 'none';
-                            
-                            var opt = {{
-                                margin:       10,
-                                filename:     '{clean_filename}',
-                                image:        {{ type: 'jpeg', quality: 1.0 }},
-                                html2canvas:  {{ scale: 2, useCORS: true }},
-                                jsPDF:        {{ unit: 'mm', format: 'a4', orientation: 'portrait' }}
-                            }};
-                            
-                            html2pdf().set(opt).from(element).save().then(function() {{
-                                document.querySelector('.download-btn-container').style.display = 'block';
+                            // MathJax puri tarah load hone ke baad print karo
+                            MathJax.typesetPromise().then(() => {{
+                                const element = document.getElementById('pdf-content');
+                                document.querySelector('.download-btn-container').style.display = 'none';
+                                
+                                var opt = {{
+                                    margin:       10,
+                                    filename:     '{clean_filename}',
+                                    image:        {{ type: 'jpeg', quality: 1.0 }},
+                                    html2canvas:  {{ scale: 2, useCORS: true }},
+                                    jsPDF:        {{ unit: 'mm', format: 'a4', orientation: 'portrait' }}
+                                }};
+                                
+                                html2pdf().set(opt).from(element).save().then(function() {{
+                                    document.querySelector('.download-btn-container').style.display = 'block';
+                                }});
                             }});
                         }}
                     </script>
@@ -268,7 +268,6 @@ with tab1:
                 st.success("🎉 Mubaarak ho! Niche box mein PDF taiyar hai.")
                 components.html(html_template, height=800, scrolling=True)
 
-# TAB 2: Contact Us
 with tab2:
     st.markdown("<br>", unsafe_allow_html=True)
     with st.container(border=True):
