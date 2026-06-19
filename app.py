@@ -4,6 +4,9 @@ import random
 import re
 import urllib.request
 import io
+import os
+import platform
+import pdfkit 
 
 # Auto-Math-Fixer
 def format_math_symbols(text):
@@ -12,12 +15,30 @@ def format_math_symbols(text):
     text = re.sub(r'_([0-9a-zA-Z]+)', r'<sub>\1</sub>', text)
     return text
 
+# 🚀 THE ULTIMATE JUGAAD: Auto-Install PDF Engine in Background 🚀
+@st.cache_resource
+def get_pdf_engine():
+    if platform.system() == "Linux":
+        bin_path = "/tmp/wkhtmltox/usr/local/bin/wkhtmltopdf"
+        if not os.path.exists(bin_path):
+            with st.spinner("⏳ System PDF Engine Update kar raha hai (Sirf pehli baar 10 second lagenge)..."):
+                os.system("wget https://github.com/wkhtmltopdf/packaging/releases/download/0.12.6.1-2/wkhtmltox_0.12.6.1-2.jammy_amd64.deb -O /tmp/wk.deb")
+                os.system("dpkg -x /tmp/wk.deb /tmp/wkhtmltox")
+                os.system("chmod +x /tmp/wkhtmltox/usr/local/bin/wkhtmltopdf")
+        return bin_path
+    return None
+
 st.set_page_config(page_title="PAATHSALA", page_icon="📚", layout="centered")
 
-# --- GLOBAL MASTER UI CSS (FOR BOTH MOBILE & COMPUTER) ---
+# --- 1. FULL BACKGROUND WATERMARK CODE ---
+watermark_html = """
+<div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; opacity: 0.05; pointer-events: none; background-image: url('https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png'); background-size: 250px; background-repeat: repeat;"></div>
+"""
+st.markdown(watermark_html, unsafe_allow_html=True)
+
+# --- 2. ULTRA-PREMIUM UI CSS ---
 custom_ui_css = """
 <style>
-/* Default Streamlit header hide karna */
 header {visibility: hidden !important;}
 [data-testid="stHeader"] {background-color: transparent !important;}
 
@@ -28,47 +49,17 @@ header {visibility: hidden !important;}
     background-size: 250px; background-repeat: repeat; opacity: 0.05; pointer-events: none; z-index: 999999;
 }
 
-/* Deep Blue Top Patti */
-.custom-top-bar {
-    position: fixed; top: 0; left: 0; width: 100vw; height: 60px; 
-    background-color: #0b2265; box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2); z-index: 9999999; display: flex; justify-content: center;
-}
-
-/* Premium Rounded Logo */
-.custom-logo {
-    height: 90px; background-color: white; padding: 8px 20px; 
-    border-bottom-left-radius: 25px; border-bottom-right-radius: 25px; box-shadow: 0px 5px 15px rgba(0,0,0,0.3); margin-top: 0px; 
-}
-
-/* GLASSMORPHISM FLOATING PILL FOOTER */
-.custom-bottom-pill {
-    position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-    background: rgba(11, 34, 101, 0.95) !important; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.15); padding: 8px 24px; border-radius: 50px; box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.3);
-    z-index: 9999999; display: flex; justify-content: center; align-items: center;
-    animation: popUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; width: max-content;
-}
-.footer-text {
-    color: #e2e8f0 !important; font-size: 13px !important; letter-spacing: 0.5px;
-    font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; align-items: center; gap: 6px; margin: 0 !important;
-}
+.custom-top-bar { position: fixed; top: 0; left: 0; width: 100vw; height: 60px; background-color: #0b2265; box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2); z-index: 9999999; display: flex; justify-content: center; }
+.custom-logo { height: 90px; background-color: white; padding: 8px 20px; border-bottom-left-radius: 25px; border-bottom-right-radius: 25px; box-shadow: 0px 5px 15px rgba(0,0,0,0.3); margin-top: 0px; }
+.custom-bottom-pill { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(11, 34, 101, 0.95) !important; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.15); padding: 8px 24px; border-radius: 50px; box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.3); z-index: 9999999; display: flex; justify-content: center; align-items: center; animation: popUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; width: max-content; }
+.footer-text { color: #e2e8f0 !important; font-size: 13px !important; letter-spacing: 0.5px; font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; align-items: center; gap: 6px; margin: 0 !important; }
 .footer-name { color: #ffffff !important; font-weight: 700 !important; }
 
-@keyframes popUp {
-    0% { bottom: -20px; opacity: 0; transform: translateX(-50%) scale(0.9); }
-    100% { bottom: 20px; opacity: 1; transform: translateX(-50%) scale(1); }
-}
-
+@keyframes popUp { 0% { bottom: -20px; opacity: 0; transform: translateX(-50%) scale(0.9); } 100% { bottom: 20px; opacity: 1; transform: translateX(-50%) scale(1); } }
 .main .block-container { padding-top: 110px !important; padding-bottom: 90px !important; }
 
-/* FLOATING WHITE CARDS CSS */
-div[data-testid="stVerticalBlockBorderWrapper"] {
-    background-color: #ffffff !important; border-radius: 16px !important; box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.05) !important;
-    border: 1px solid #f1f5f9 !important; padding: 25px !important; margin-bottom: 25px !important;
-}
-div[data-testid="stVerticalBlockBorderWrapper"] p, div[data-testid="stVerticalBlockBorderWrapper"] label, div[data-testid="stVerticalBlockBorderWrapper"] span {
-    color: #0b2265 !important; font-weight: 600 !important;
-}
+div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #ffffff !important; border-radius: 16px !important; box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.05) !important; border: 1px solid #f1f5f9 !important; padding: 25px !important; margin-bottom: 25px !important; }
+div[data-testid="stVerticalBlockBorderWrapper"] p, div[data-testid="stVerticalBlockBorderWrapper"] label, div[data-testid="stVerticalBlockBorderWrapper"] span { color: #0b2265 !important; font-weight: 600 !important; }
 </style>
 
 <div class="custom-top-bar"><img class="custom-logo" src="https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png"></div>
@@ -139,8 +130,8 @@ with tab1:
 
         st.markdown("<br>", unsafe_allow_html=True)
         
-        if st.button("🚀 Generate My DPP", type="primary", use_container_width=True):
-            with st.spinner("Apka shandar DPP ready ho raha hai..."):
+        if st.button("🚀 Generate Direct PDF", type="primary", use_container_width=True):
+            with st.spinner("Apka direct PDF ban raha hai, please 10 seconds wait karein..."):
                 chapter_pool = [q for q in questions if q.get('Class') and q.get('Subject') and q.get('Chapter') and q['Class'].strip().lower() == selected_class.lower() and q['Subject'].strip().lower() == selected_subject.lower() and q['Chapter'].strip().lower() == selected_chapter.lower()]
                 
                 mcq_pool = [q for q in chapter_pool if q.get('Type') and q['Type'].strip().upper() == 'MCQ']
@@ -151,9 +142,7 @@ with tab1:
                 selected_shorts = random.sample(short_pool, min(n_short, len(short_pool)))
                 selected_longs = random.sample(long_pool, min(n_long, len(long_pool)))
                 
-                mcq_html = ""
-                ans_html_mcq = ""
-                q_num = 1
+                mcq_html, ans_html_mcq, q_num = "", "", 1
                 
                 for q in selected_mcqs:
                     formatted_q = format_math_symbols(q.get('Question', ''))
@@ -168,8 +157,7 @@ with tab1:
                     ans_html_mcq += f'<tr><td style="text-align: center;">{q_num}</td><td>{formatted_ans}</td></tr>\n'
                     q_num += 1
 
-                short_html = ""
-                ans_html_short_long = ""
+                short_html, ans_html_short_long = "", ""
                 for q in selected_shorts:
                     formatted_q = format_math_symbols(q.get('Question', ''))
                     formatted_ans = format_math_symbols(q.get('Answer', ''))
@@ -187,18 +175,16 @@ with tab1:
 
                 logo_img_tag = '<img src="https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png" style="width: 150px; max-height: 80px;">' 
 
-                # SMART HTML TEMPLATE WITH AUTO-PRINT SCRIPT
+                # HTML FOR PDF ENGINE
                 html_template = f"""
                 <!DOCTYPE html>
                 <html lang="en">
                 <head>
                     <meta charset="UTF-8">
                     <title>PAATHSALA DPP - {selected_chapter}</title>
-                    <script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
+                    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js?config=TeX-MML-AM_CHTML"></script>
                     <script type="text/x-mathjax-config">
-                      MathJax.Hub.Config({{
-                        tex2jax: {{inlineMath: [['$','$'], ['\\\\(','\\\\)']], displayMath: [['$$','$$'], ['\\\\[','\\\\[']]}}
-                      }});
+                      MathJax.Hub.Config({{ tex2jax: {{inlineMath: [['$','$'], ['\\\\(','\\\\)']], displayMath: [['$$','$$'], ['\\\\[','\\\\]']]}} }});
                     </script>
                     <style>
                         @page {{ size: A4; margin: 15mm 20mm; }}
@@ -232,59 +218,49 @@ with tab1:
                             <td class="logo-cell">{logo_img_tag}</td>
                         </tr>
                     </table>
-
-                    <div class="title-section">
-                        <h1>{selected_chapter}</h1>
-                        <p><strong>Daily Practice Problem (DPP)</strong></p>
-                    </div>
-
-                    <div class="section-title">Section A: Multiple Choice Questions</div>
-                    {mcq_html}
-
-                    <div class="section-title">Section B: Short Answer Type Questions</div>
-                    {short_html}
-
-                    <div class="section-title">Section C: Long Answer Type Questions</div>
-                    {long_html}
-
+                    <div class="title-section"><h1>{selected_chapter}</h1><p><strong>Daily Practice Problem (DPP)</strong></p></div>
+                    <div class="section-title">Section A: Multiple Choice Questions</div>{mcq_html}
+                    <div class="section-title">Section B: Short Answer Type Questions</div>{short_html}
+                    <div class="section-title">Section C: Long Answer Type Questions</div>{long_html}
                     <div class="answer-key-page">
                         <div class="title-section"><h2>ANSWER KEY</h2></div>
-                        <div class="section-title">Section A (MCQs)</div>
-                        <table class="ans-table">
-                            <tr><th width="15%">Q.No.</th><th width="85%">Answer</th></tr>
-                            {ans_html_mcq}
-                        </table>
-                        <div class="section-title">Section B & C (Subjective)</div>
-                        <table class="ans-table">
-                            <tr><th width="15%">Q.No.</th><th width="85%">Key Points / Answers</th></tr>
-                            {ans_html_short_long}
-                        </table>
+                        <div class="section-title">Section A (MCQs)</div><table class="ans-table"><tr><th width="15%">Q.No.</th><th width="85%">Answer</th></tr>{ans_html_mcq}</table>
+                        <div class="section-title">Section B & C (Subjective)</div><table class="ans-table"><tr><th width="15%">Q.No.</th><th width="85%">Key Points / Answers</th></tr>{ans_html_short_long}</table>
                     </div>
-                    
-                    <script>
-                        window.onload = function() {{
-                            setTimeout(function() {{
-                                window.print();
-                            }}, 1500);
-                        }};
-                    </script>
                 </body>
                 </html>
                 """
                 
-                st.success(f"🎉 Yay! Aapka '{selected_chapter}' ka DPP download ke liye taiyar hai!")
-                
-                # NATIVE STREAMLIT SAFE DOWNLOAD BUTTON (No Browser Blocking)
-                file_name = f"DPP_{selected_class.replace(' ', '')}_{selected_chapter.replace(' ', '')}.html"
-                
-                st.download_button(
-                    label="📥 Click Here to Download Print-Ready DPP",
-                    data=html_template,
-                    file_name=file_name,
-                    mime="text/html",
-                    use_container_width=True
-                )
-                st.info("💡 **Kaise Save Karein:** Download hone ke baad file par click karke open karein. Wo automatic aapke device ka PDF printer khol degi, bas 'Save as PDF' par click kar dein!")
+                try:
+                    # PDF Options for MathJax
+                    options = {
+                        'page-size': 'A4',
+                        'margin-top': '15mm', 'margin-right': '20mm', 'margin-bottom': '15mm', 'margin-left': '20mm',
+                        'encoding': "UTF-8",
+                        'javascript-delay': '3000', 
+                        'enable-local-file-access': "", 'no-stop-slow-scripts': ""
+                    }
+                    
+                    engine_path = get_pdf_engine()
+                    if engine_path:
+                        config = pdfkit.configuration(wkhtmltopdf=engine_path)
+                        pdf_bytes = pdfkit.from_string(html_template, False, options=options, configuration=config)
+                    else:
+                        pdf_bytes = pdfkit.from_string(html_template, False, options=options)
+                    
+                    st.success("🎉 Mubaarak ho! Aapka Direct PDF ban gaya hai!")
+                    file_name = f"DPP_{selected_class.replace(' ', '')}_{selected_chapter.replace(' ', '')}.pdf"
+                    
+                    # ASLI DIRECT PDF DOWNLOAD BUTTON!
+                    st.download_button(
+                        label="📥 Click Here to Download True PDF",
+                        data=pdf_bytes,
+                        file_name=file_name,
+                        mime="application/pdf",
+                        use_container_width=True
+                    )
+                except Exception as e:
+                    st.error(f"❌ PDF Engine ne thodi gadbadi ki: {e}")
 
 # TAB 2: Contact Us
 with tab2:
