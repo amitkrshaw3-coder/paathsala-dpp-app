@@ -20,8 +20,8 @@ watermark_html = """
 """
 st.markdown(watermark_html, unsafe_allow_html=True)
 
-# --- 2. DEEP BLUE PATTI + PREMIUM OVERHANGING ROUNDED LOGO ---
-custom_header_css = """
+# --- 2. DEEP BLUE PATTI + PREMIUM OVERHANGING ROUNDED LOGO + FLOATING CARDS CSS ---
+custom_ui_css = """
 <style>
 /* Default Streamlit ka upar wala fork/header area gayab karne ke liye */
 header {visibility: hidden !important;}
@@ -56,13 +56,31 @@ header {visibility: hidden !important;}
 .main .block-container {
     padding-top: 110px !important;
 }
+
+/* 🚀 DEVELOPER STYLE: FLOATING WHITE CARDS CSS 🚀 */
+div[data-testid="stVerticalBlockBorderWrapper"] {
+    background-color: #ffffff !important;
+    border-radius: 20px !important;
+    box-shadow: 0px 12px 35px rgba(0, 0, 0, 0.08) !important;
+    border: 1px solid #e2e8f0 !important;
+    padding: 25px !important;
+    margin-bottom: 25px !important;
+}
+
+/* Card ke andar ke text ko ekdum clear aur dark blue karne ke liye */
+div[data-testid="stVerticalBlockBorderWrapper"] p, 
+div[data-testid="stVerticalBlockBorderWrapper"] label,
+div[data-testid="stVerticalBlockBorderWrapper"] span {
+    color: #0b2265 !important;
+    font-weight: 600 !important;
+}
 </style>
 
 <div class="custom-top-bar">
     <img class="custom-logo" src="https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png">
 </div>
 """
-st.markdown(custom_header_css, unsafe_allow_html=True)
+st.markdown(custom_ui_css, unsafe_allow_html=True)
 # -----------------------------------------------------------------
 
 # Yahan 2 Tabs banaye gaye hain
@@ -96,38 +114,41 @@ with tab1:
         st.error(f"❌ Google Sheet se data laane mein error aaya! Details: {e}")
 
     if questions:
-        # --- MODERN DEVELOPER STYLE: STEP 1 HEADING ---
-        st.markdown("""
-        <div style="display: flex; align-items: center; margin-top: 20px; margin-bottom: 15px; border-bottom: 2px solid #f0f2f6; padding-bottom: 10px;">
-            <div style="background: linear-gradient(135deg, #0b2265, #2563eb); color: white; border-radius: 50%; width: 34px; height: 34px; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 18px; margin-right: 12px; box-shadow: 0 4px 6px rgba(11, 34, 101, 0.2);">1</div>
-            <div style="font-size: 20px; font-weight: 600; color: #1e293b; letter-spacing: 0.5px;">Paper Details Select Karein</div>
-        </div>
-        """, unsafe_allow_html=True)
         
-        all_classes = sorted(list(set(q.get('Class', '').strip() for q in questions if q.get('Class'))))
-        selected_class = st.selectbox("Select Class:", all_classes)
+        # 📦 STEP 1 FLOATING CARD
+        with st.container(border=True):
+            st.markdown("""
+            <div style="display: flex; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #f0f2f6; padding-bottom: 10px;">
+                <div style="background: linear-gradient(135deg, #0b2265, #2563eb); color: white; border-radius: 50%; width: 34px; height: 34px; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 18px; margin-right: 12px; box-shadow: 0 4px 6px rgba(11, 34, 101, 0.2);">1</div>
+                <div style="font-size: 20px; font-weight: 600; color: #0b2265; letter-spacing: 0.5px;">Paper Details Select Karein</div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            all_classes = sorted(list(set(q.get('Class', '').strip() for q in questions if q.get('Class'))))
+            selected_class = st.selectbox("Select Class:", all_classes)
 
-        all_subjects = sorted(list(set(q.get('Subject', '').strip() for q in questions if q.get('Subject') and q.get('Class', '').strip() == selected_class)))
-        selected_subject = st.selectbox("Select Subject:", all_subjects)
+            all_subjects = sorted(list(set(q.get('Subject', '').strip() for q in questions if q.get('Subject') and q.get('Class', '').strip() == selected_class)))
+            selected_subject = st.selectbox("Select Subject:", all_subjects)
 
-        all_chapters = sorted(list(set(q.get('Chapter', '').strip() for q in questions if q.get('Chapter') and q.get('Class', '').strip() == selected_class and q.get('Subject', '').strip() == selected_subject)))
-        selected_chapter = st.selectbox("Select Chapter:", all_chapters)
+            all_chapters = sorted(list(set(q.get('Chapter', '').strip() for q in questions if q.get('Chapter') and q.get('Class', '').strip() == selected_class and q.get('Subject', '').strip() == selected_subject)))
+            selected_chapter = st.selectbox("Select Chapter:", all_chapters)
 
-        # --- MODERN DEVELOPER STYLE: STEP 2 HEADING ---
-        st.markdown("""
-        <div style="display: flex; align-items: center; margin-top: 35px; margin-bottom: 15px; border-bottom: 2px solid #f0f2f6; padding-bottom: 10px;">
-            <div style="background: linear-gradient(135deg, #0b2265, #2563eb); color: white; border-radius: 50%; width: 34px; height: 34px; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 18px; margin-right: 12px; box-shadow: 0 4px 6px rgba(11, 34, 101, 0.2);">2</div>
-            <div style="font-size: 20px; font-weight: 600; color: #1e293b; letter-spacing: 0.5px;">Questions ki Sankhya (Number) Batayein</div>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        col1, col2, col3 = st.columns(3)
-        with col1:
-            n_mcq = st.number_input("No. of MCQs:", min_value=0, value=10)
-        with col2:
-            n_short = st.number_input("No. of Short Qs:", min_value=0, value=5)
-        with col3:
-            n_long = st.number_input("No. of Long Qs:", min_value=0, value=2)
+        # 📦 STEP 2 FLOATING CARD
+        with st.container(border=True):
+            st.markdown("""
+            <div style="display: flex; align-items: center; margin-bottom: 15px; border-bottom: 2px solid #f0f2f6; padding-bottom: 10px;">
+                <div style="background: linear-gradient(135deg, #0b2265, #2563eb); color: white; border-radius: 50%; width: 34px; height: 34px; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 18px; margin-right: 12px; box-shadow: 0 4px 6px rgba(11, 34, 101, 0.2);">2</div>
+                <div style="font-size: 20px; font-weight: 600; color: #0b2265; letter-spacing: 0.5px;">Questions ki Sankhya (Number) Batayein</div>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                n_mcq = st.number_input("No. of MCQs:", min_value=0, value=10)
+            with col2:
+                n_short = st.number_input("No. of Short Qs:", min_value=0, value=5)
+            with col3:
+                n_long = st.number_input("No. of Long Qs:", min_value=0, value=2)
 
         st.markdown("<br>", unsafe_allow_html=True)
         
