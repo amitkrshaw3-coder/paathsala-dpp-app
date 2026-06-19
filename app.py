@@ -33,8 +33,8 @@ header {visibility: hidden !important;}
     top: 0;
     left: 0;
     width: 100vw;
-    height: 60px; /* Patti ko thoda patla kiya taaki logo bada dikhe */
-    background-color: #0b2265; /* Deep Blue Color */
+    height: 60px; 
+    background-color: #0b2265; 
     box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
     z-index: 99999;
     display: flex;
@@ -43,12 +43,12 @@ header {visibility: hidden !important;}
 
 /* Logo Styling (Bada, overlap karta hua, aur niche se rounded) */
 .custom-logo {
-    height: 90px; /* Logo ka size bada kar diya */
-    background-color: white; /* White base taaki premium lage */
-    padding: 8px 20px; /* Logo ke aaspas thodi jagah */
-    border-bottom-left-radius: 25px; /* Niche ka left edge gol */
-    border-bottom-right-radius: 25px; /* Niche ka right edge gol */
-    box-shadow: 0px 5px 15px rgba(0,0,0,0.3); /* Premium 3D shadow */
+    height: 90px; 
+    background-color: white; 
+    padding: 8px 20px; 
+    border-bottom-left-radius: 25px; 
+    border-bottom-right-radius: 25px; 
+    box-shadow: 0px 5px 15px rgba(0,0,0,0.3); 
     margin-top: 0px; 
 }
 
@@ -96,7 +96,13 @@ with tab1:
         st.error(f"❌ Google Sheet se data laane mein error aaya! Details: {e}")
 
     if questions:
-        st.subheader("1. Paper Details Select Karein")
+        # --- MODERN DEVELOPER STYLE: STEP 1 HEADING ---
+        st.markdown("""
+        <div style="display: flex; align-items: center; margin-top: 20px; margin-bottom: 15px; border-bottom: 2px solid #f0f2f6; padding-bottom: 10px;">
+            <div style="background: linear-gradient(135deg, #0b2265, #2563eb); color: white; border-radius: 50%; width: 34px; height: 34px; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 18px; margin-right: 12px; box-shadow: 0 4px 6px rgba(11, 34, 101, 0.2);">1</div>
+            <div style="font-size: 20px; font-weight: 600; color: #1e293b; letter-spacing: 0.5px;">Paper Details Select Karein</div>
+        </div>
+        """, unsafe_allow_html=True)
         
         all_classes = sorted(list(set(q.get('Class', '').strip() for q in questions if q.get('Class'))))
         selected_class = st.selectbox("Select Class:", all_classes)
@@ -107,7 +113,13 @@ with tab1:
         all_chapters = sorted(list(set(q.get('Chapter', '').strip() for q in questions if q.get('Chapter') and q.get('Class', '').strip() == selected_class and q.get('Subject', '').strip() == selected_subject)))
         selected_chapter = st.selectbox("Select Chapter:", all_chapters)
 
-        st.subheader("2. Questions ki Sankhya (Number) Batayein")
+        # --- MODERN DEVELOPER STYLE: STEP 2 HEADING ---
+        st.markdown("""
+        <div style="display: flex; align-items: center; margin-top: 35px; margin-bottom: 15px; border-bottom: 2px solid #f0f2f6; padding-bottom: 10px;">
+            <div style="background: linear-gradient(135deg, #0b2265, #2563eb); color: white; border-radius: 50%; width: 34px; height: 34px; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 18px; margin-right: 12px; box-shadow: 0 4px 6px rgba(11, 34, 101, 0.2);">2</div>
+            <div style="font-size: 20px; font-weight: 600; color: #1e293b; letter-spacing: 0.5px;">Questions ki Sankhya (Number) Batayein</div>
+        </div>
+        """, unsafe_allow_html=True)
         
         col1, col2, col3 = st.columns(3)
         with col1:
@@ -117,7 +129,8 @@ with tab1:
         with col3:
             n_long = st.number_input("No. of Long Qs:", min_value=0, value=2)
 
-        st.markdown("---")
+        st.markdown("<br>", unsafe_allow_html=True)
+        
         if st.button("🚀 Generate My DPP", type="primary", use_container_width=True):
             
             chapter_pool = [q for q in questions if q.get('Class') and q.get('Subject') and q.get('Chapter') and q['Class'].strip().lower() == selected_class.lower() and q['Subject'].strip().lower() == selected_subject.lower() and q['Chapter'].strip().lower() == selected_chapter.lower()]
