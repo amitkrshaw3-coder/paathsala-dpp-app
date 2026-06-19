@@ -4,7 +4,7 @@ import random
 import re
 import urllib.request
 import io
-import streamlit.components.v1 as components # Naya powerful tool!
+import streamlit.components.v1 as components 
 
 # Auto-Math-Fixer
 def format_math_symbols(text):
@@ -15,13 +15,13 @@ def format_math_symbols(text):
 
 st.set_page_config(page_title="PAATHSALA", page_icon="📚", layout="centered")
 
-# --- GLOBAL MASTER UI CSS (FOR BOTH MOBILE & COMPUTER) ---
+# --- GLOBAL MASTER UI CSS ---
 custom_ui_css = """
 <style>
 header {visibility: hidden !important;}
 [data-testid="stHeader"] {background-color: transparent !important;}
 
-/* GLOBAL WATERMARK */
+/* APP GLOBAL WATERMARK */
 [data-testid="stAppViewContainer"]::after {
     content: ""; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
     background-image: url('https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png');
@@ -109,7 +109,7 @@ with tab1:
 
         st.markdown("<br>", unsafe_allow_html=True)
         
-        if st.button("🚀 Generate Direct PDF", type="primary", use_container_width=True):
+        if st.button("🚀 Generate Print-Ready PDF", type="primary", use_container_width=True):
             with st.spinner("Apka shandar DPP ready ho raha hai..."):
                 chapter_pool = [q for q in questions if q.get('Class') and q.get('Subject') and q.get('Chapter') and q['Class'].strip().lower() == selected_class.lower() and q['Subject'].strip().lower() == selected_subject.lower() and q['Chapter'].strip().lower() == selected_chapter.lower()]
                 
@@ -156,30 +156,46 @@ with tab1:
                 
                 clean_filename = f"DPP_{selected_class.replace(' ', '')}_{selected_chapter.replace(' ', '')}.pdf"
 
-                # 🚀 100% CLIENT-SIDE PDF RENDERER (NO BACKEND ERRORS) 🚀
+                # 🚀 PERFECT PDF TEMPLATE WITH FULL PAGE WATERMARK 🚀
                 html_template = f"""
                 <!DOCTYPE html>
                 <html lang="en">
                 <head>
                     <meta charset="UTF-8">
                     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-                    
                     <script type="text/x-mathjax-config">
-                      MathJax.Hub.Config({{
-                        jax: ["input/TeX", "output/SVG"],
-                        tex2jax: {{inlineMath: [['$','$'], ['\\\\(','\\\\)']], displayMath: [['$$','$$'], ['\\\\[','\\\\]']]}}
-                      }});
+                      MathJax.Hub.Config({{ jax: ["input/TeX", "output/SVG"], tex2jax: {{inlineMath: [['$','$'], ['\\\\(','\\\\)']], displayMath: [['$$','$$'], ['\\\\[','\\\\]']]}} }});
                     </script>
                     <script type="text/javascript" async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.7/MathJax.js"></script>
                     
                     <style>
                         body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #111; padding: 10px; }}
+                        
+                        /* 💥 THE MAGIC PDF WATERMARK 💥 */
+                        #pdf-content {{
+                            position: relative;
+                            padding: 20px;
+                            background-color: white;
+                            z-index: 1;
+                        }}
+                        #pdf-content::before {{
+                            content: "";
+                            position: absolute;
+                            top: 0; left: 0; width: 100%; height: 100%;
+                            background-image: url('https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png');
+                            background-size: 350px; /* Bada logo watermark */
+                            background-repeat: repeat; 
+                            opacity: 0.08; /* Premium halki opacity */
+                            z-index: -1;
+                            pointer-events: none;
+                        }}
+
                         .header-table {{ width: 100%; border-collapse: collapse; margin-bottom: 10px; }}
                         .student-info {{ width: 50%; font-size: 11pt; vertical-align: top; }}
                         .logo-cell {{ width: 50%; text-align: right; vertical-align: top; }}
                         .title-section {{ text-align: center; margin: 20px 0 10px 0; }}
                         .title-section h1 {{ font-size: 24pt; margin: 0; text-transform: uppercase; letter-spacing: 2px; color: #0b2265; }}
-                        .section-title {{ font-size: 12pt; font-weight: bold; background-color: #f4f4f4; padding: 6px 12px; border-left: 5px solid #fce803; margin: 15px 0 10px 0; }}
+                        .section-title {{ font-size: 12pt; font-weight: bold; background-color: #f4f4f4; padding: 6px 12px; border-left: 5px solid #fce803; margin: 15px 0 10px 0; border-radius: 4px; }}
                         .question {{ margin-bottom: 15px; font-size: 11pt; display: table; width: 100%; }}
                         .q-num {{ display: table-cell; width: 30px; font-weight: bold; vertical-align: top; }}
                         .q-text {{ display: table-cell; vertical-align: top; }}
@@ -189,34 +205,21 @@ with tab1:
                         .ans-table th, .ans-table td {{ border: 1px solid #ccc; padding: 8px; font-size: 10.5pt; text-align: left; }}
                         .ans-table th {{ background-color: #fce803; font-weight: bold; text-align: center; }}
                         
-                        /* Premium Download Button Styling */
                         .download-btn-container {{ text-align: center; margin-bottom: 30px; margin-top: 10px; }}
                         .download-btn {{
-                            background: linear-gradient(135deg, #0b2265, #2563eb);
-                            color: white; padding: 14px 28px; border: none; border-radius: 10px;
-                            font-size: 18px; font-weight: bold; cursor: pointer;
-                            box-shadow: 0 8px 15px rgba(37, 99, 235, 0.3);
-                            transition: transform 0.2s, box-shadow 0.2s;
-                            font-family: Arial, sans-serif;
+                            background: linear-gradient(135deg, #0b2265, #2563eb); color: white; padding: 14px 28px; border: none; border-radius: 10px;
+                            font-size: 18px; font-weight: bold; cursor: pointer; box-shadow: 0 8px 15px rgba(37, 99, 235, 0.3); transition: transform 0.2s;
                         }}
-                        .download-btn:hover {{ transform: translateY(-2px); box-shadow: 0 12px 20px rgba(37, 99, 235, 0.4); }}
-                        
-                        /* Watermark inside PDF */
-                        .pdf-watermark {{ position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; opacity: 0.05; background-image: url('https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png'); background-size: 250px; background-repeat: repeat; }}
+                        .download-btn:hover {{ transform: translateY(-2px); }}
                     </style>
                 </head>
                 <body>
                     
                     <div class="download-btn-container">
-                        <button class="download-btn" onclick="downloadPDF()">
-                            📥 Click Here to Download True PDF
-                        </button>
-                        <p style="font-size: 12px; color: #64748b; margin-top: 8px;">(Button dabate hi direct PDF save hogi, no black screen!)</p>
+                        <button class="download-btn" onclick="downloadPDF()">📥 Click Here to Save as Perfect PDF</button>
                     </div>
 
-                    <div id="pdf-content" style="position: relative; padding: 10px; background-color: white;">
-                        <div class="pdf-watermark"></div>
-                        
+                    <div id="pdf-content">
                         <table class="header-table">
                             <tr>
                                 <td class="student-info">
@@ -232,6 +235,7 @@ with tab1:
                         <div class="section-title">Section A: Multiple Choice Questions</div>{mcq_html}
                         <div class="section-title">Section B: Short Answer Type Questions</div>{short_html}
                         <div class="section-title">Section C: Long Answer Type Questions</div>{long_html}
+                        
                         <div style="page-break-before: always; padding-top: 20px;">
                             <div class="title-section"><h2>ANSWER KEY</h2></div>
                             <div class="section-title">Section A (MCQs)</div><table class="ans-table"><tr><th width="15%">Q.No.</th><th width="85%">Answer</th></tr>{ans_html_mcq}</table>
@@ -242,21 +246,17 @@ with tab1:
                     <script>
                         function downloadPDF() {{
                             const element = document.getElementById('pdf-content');
-                            
-                            // Download button ko hide karo taaki print me na aaye
                             document.querySelector('.download-btn-container').style.display = 'none';
                             
                             var opt = {{
                                 margin:       10,
                                 filename:     '{clean_filename}',
-                                image:        {{ type: 'jpeg', quality: 0.98 }},
+                                image:        {{ type: 'jpeg', quality: 1.0 }},
                                 html2canvas:  {{ scale: 2, useCORS: true }},
                                 jsPDF:        {{ unit: 'mm', format: 'a4', orientation: 'portrait' }}
                             }};
                             
-                            // PDF Generate aur Save karo
                             html2pdf().set(opt).from(element).save().then(function() {{
-                                // Save hone ke baad button wapas dikhao
                                 document.querySelector('.download-btn-container').style.display = 'block';
                             }});
                         }}
@@ -266,8 +266,6 @@ with tab1:
                 """
                 
                 st.success("🎉 Mubaarak ho! Niche box mein PDF taiyar hai.")
-                
-                # Naya Powerful Component jo App ke andar PDF viewer aur button banayega
                 components.html(html_template, height=800, scrolling=True)
 
 # TAB 2: Contact Us
