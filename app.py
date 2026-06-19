@@ -14,20 +14,30 @@ def format_math_symbols(text):
 
 st.set_page_config(page_title="PAATHSALA", page_icon="📚", layout="centered")
 
-# --- 1. FULL BACKGROUND WATERMARK CODE ---
-watermark_html = """
-<div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; opacity: 0.05; pointer-events: none; background-image: url('https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png'); background-size: 250px; background-repeat: repeat;"></div>
-"""
-st.markdown(watermark_html, unsafe_allow_html=True)
-
-# --- 2. ULTRA-PREMIUM UI CSS ---
+# --- GLOBAL MASTER UI CSS (FOR BOTH MOBILE & COMPUTER) ---
 custom_ui_css = """
 <style>
-/* Default Streamlit header hide karna */
+/* 1. Default Streamlit header hide karna */
 header {visibility: hidden !important;}
 [data-testid="stHeader"] {background-color: transparent !important;}
 
-/* Deep Blue Top Patti */
+/* 2. GLOBAL WATERMARK: Yeh ab Computer aur Mobile dono par pakka dikhega */
+[data-testid="stAppViewContainer"]::after {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-image: url('https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png');
+    background-size: 250px;
+    background-repeat: repeat;
+    opacity: 0.05; /* Ekdum halka aur premium watermark background */
+    pointer-events: none;
+    z-index: 999999; /* Isse yeh desktop ke white layer ke upar aa jayega */
+}
+
+/* 3. Deep Blue Top Patti */
 .custom-top-bar {
     position: fixed;
     top: 0;
@@ -36,7 +46,7 @@ header {visibility: hidden !important;}
     height: 60px; 
     background-color: #0b2265; 
     box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
-    z-index: 99999;
+    z-index: 9999999; 
     display: flex;
     justify-content: center;
 }
@@ -52,50 +62,50 @@ header {visibility: hidden !important;}
     margin-top: 0px; 
 }
 
-/* GLASSMORPHISM FLOATING PILL FOOTER */
+/* 4. ULTRA-PREMIUM GLASS PILL FOOTER */
 .custom-bottom-pill {
     position: fixed;
     bottom: 20px; 
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(11, 34, 101, 0.85); 
+    background: rgba(11, 34, 101, 0.95) !important; 
     backdrop-filter: blur(10px); 
     -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.15);
     padding: 8px 24px;
     border-radius: 50px; 
-    box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.2);
-    z-index: 99999;
+    box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.3);
+    z-index: 9999999;
     display: flex;
     justify-content: center;
     align-items: center;
     animation: popUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     opacity: 0;
+    width: max-content;
 }
 
 .footer-text {
-    color: #e2e8f0;
-    font-size: 13px;
+    color: #e2e8f0 !important;
+    font-size: 13px !important;
     letter-spacing: 0.5px;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
     display: flex;
     align-items: center;
     gap: 6px;
+    margin: 0 !important;
 }
 
 .footer-name {
-    color: #ffffff;
-    font-weight: 700;
-    letter-spacing: 0.5px;
+    color: #ffffff !important;
+    font-weight: 700 !important;
 }
 
-/* Pop Up Animation */
 @keyframes popUp {
     0% { bottom: -20px; opacity: 0; transform: translateX(-50%) scale(0.9); }
     100% { bottom: 20px; opacity: 1; transform: translateX(-50%) scale(1); }
 }
 
-/* App ke main content ki spacing */
+/* Content margins spacing */
 .main .block-container {
     padding-top: 110px !important;
     padding-bottom: 90px !important; 
@@ -118,7 +128,7 @@ div[data-testid="stVerticalBlockBorderWrapper"] span {
     font-weight: 600 !important;
 }
 
-/* 🚀 CONTACT US HOVER CARDS CSS 🚀 */
+/* CONTACT US HOVER CARDS */
 .contact-card {
     display: flex; 
     align-items: center; 
@@ -161,12 +171,10 @@ div[data-testid="stVerticalBlockBorderWrapper"] span {
 }
 </style>
 
-<!-- Upar wala Logo HTML -->
 <div class="custom-top-bar">
     <img class="custom-logo" src="https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png">
 </div>
 
-<!-- Niche wala Premium Glass Pill HTML -->
 <div class="custom-bottom-pill">
     <div class="footer-text">
         Developed by <span class="footer-name">Amit Kumar Shaw</span>
@@ -312,7 +320,7 @@ with tab1:
                     .q-num {{ display: table-cell; width: 30px; font-weight: bold; vertical-align: top; }}
                     .q-text {{ display: table-cell; vertical-align: top; }}
                     .opt-row {{ margin-top: 4px; display: block; }}
-                    .opt-box {{ display: inline-block; width: 48%; vertical-align: top; }}
+                    .opt-box {{ inline-block; width: 48%; vertical-align: top; }}
                     .answer-key-page {{ page-break-before: always; padding-top: 20px; }}
                     .ans-table {{ width: 100%; border-collapse: collapse; margin-top: 15px; }}
                     .ans-table th, .ans-table td {{ border: 1px solid #ccc; padding: 8px; font-size: 10.5pt; text-align: left; }}
@@ -375,7 +383,7 @@ with tab1:
                 mime="text/html"
             )
 
-# TAB 2: Contact Us ka code (PURA NAYA PREMIUM DESIGN)
+# TAB 2: Contact Us ka code
 with tab2:
     st.markdown("<br>", unsafe_allow_html=True)
     
