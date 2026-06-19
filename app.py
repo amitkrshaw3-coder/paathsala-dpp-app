@@ -16,29 +16,39 @@ st.set_page_config(page_title="PAATHSALA DPP Generator", page_icon="📚", layou
 st.title("📚 PAATHSALA DPP Generator")
 st.write("Apna Class, Subject aur Chapter chunein aur turant DPP banayein!")
 
-# Google Sheets se data laana (Khufiya link ke zariye)
+# Google Sheets se data laana (Direct Method)
 questions = []
 try:
-    url = st.secrets["csv_link"]
-    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    # 🔴 YAHAN APNA GOOGLE SHEET KA LINK PASTE KAREIN 🔴
+    # Pehle Share wala link copy karein, aur use niche wale double quotes ke beech mein daal dein.
+    sheet_url = "https://docs.google.com/spreadsheets/d/1dc5ychco_3BXn_XcY0BGyxAlGDbczSuEel67VHYR-m4/edit?usp=sharing"
+    
+    # Is share link ko automatic CSV link mein badalna
+    if "docs.google.com/spreadsheets" in sheet_url:
+        sheet_id = sheet_url.split("/d/").split("/")
+        csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv"
+    else:
+        csv_url = sheet_url
+
+    req = urllib.request.Request(csv_url, headers={'User-Agent': 'Mozilla/5.0'})
     response = urllib.request.urlopen(req)
     csv_data = response.read().decode('utf-8-sig')
     reader = csv.DictReader(io.StringIO(csv_data))
     for row in reader:
         questions.append(row)
 except Exception as e:
-    st.error("❌ Google Sheet se data laane mein error aaya! Kripya check karein ki data hai ya nahi.")
+    st.error(f"❌ Google Sheet se data laane mein error aaya! Details: {e}")
 
 if questions:
     st.subheader("1. Paper Details Select Karein")
     
-    all_classes = sorted(list(set(q['Class'].strip() for q in questions)))
+    all_classes = sorted(list(set(q['Class'].strip() for q in questions if q.get('Class'))))
     selected_class = st.selectbox("Select Class:", all_classes)
 
-    all_subjects = sorted(list(set(q['Subject'].strip() for q in questions if q['Class'].strip() == selected_class)))
+    all_subjects = sorted(list(set(q['Subject'].strip() for q in questions if q.get('Subject') and q['Class'].strip() == selected_class)))
     selected_subject = st.selectbox("Select Subject:", all_subjects)
 
-    all_chapters = sorted(list(set(q['Chapter'].strip() for q in questions if q['Class'].strip() == selected_class and q['Subject'].strip() == selected_subject)))
+    all_chapters = sorted(list(set(q['Chapter'].strip() for q in questions if q.get('Chapter') and q['Class'].strip() == selected_class and q['Subject'].strip() == selected_subject)))
     selected_chapter = st.selectbox("Select Chapter:", all_chapters)
 
     st.subheader("2. Questions ki Sankhya (Number) Batayein")
@@ -54,11 +64,11 @@ if questions:
     st.markdown("---")
     if st.button("🚀 Generate My DPP", type="primary", use_container_width=True):
         
-        chapter_pool = [q for q in questions if q['Class'].strip().lower() == selected_class.lower() and q['Subject'].strip().lower() == selected_subject.lower() and q['Chapter'].strip().lower() == selected_chapter.lower()]
+        chapter_pool = [q for q in questions if q.get('Class') and q.get('Subject') and q.get('Chapter') and q['Class'].strip().lower() == selected_class.lower() and q['Subject'].strip().lower() == selected_subject.lower() and q['Chapter'].strip().lower() == selected_chapter.lower()]
         
-        mcq_pool = [q for q in chapter_pool if q['Type'].strip().upper() == 'MCQ']
-        short_pool = [q for q in chapter_pool if q['Type'].strip().upper() == 'SHORT ANSWER']
-        long_pool = [q for q in chapter_pool if q['Type'].strip().upper() == 'LONG ANSWER']
+        mcq_pool = [q for q in chapter_pool if q.get('Type') and q['Type'].strip().upper() == 'MCQ']
+        short_pool = [q for q in chapter_pool if q.get('Type') and q['Type'].strip().upper() == 'SHORT ANSWER']
+        long_pool = [q for q in chapter_pool if q.get('Type') and q['Type'].strip().upper() == 'LONG ANSWER']
         
         selected_mcqs = random.sample(mcq_pool, min(n_mcq, len(mcq_pool)))
         selected_shorts = random.sample(short_pool, min(n_short, len(short_pool)))
