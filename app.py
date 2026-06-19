@@ -14,11 +14,9 @@ def format_math_symbols(text):
 
 st.set_page_config(page_title="PAATHSALA", page_icon="📚", layout="centered")
 
-# --- 100% FOOLPROOF WATERMARK CODE ---
+# --- 100% FOOLPROOF FULL BACKGROUND WATERMARK CODE ---
 watermark_html = """
-<div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 9999; opacity: 0.10; pointer-events: none;">
-    <img src="https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png" width="350">
-</div>
+<div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; opacity: 0.08; pointer-events: none; background-image: url('https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png'); background-size: 250px; background-repeat: repeat;"></div>
 """
 st.markdown(watermark_html, unsafe_allow_html=True)
 # --------------------------------------
