@@ -14,7 +14,7 @@ def format_math_symbols(text):
 
 st.set_page_config(page_title="PAATHSALA", page_icon="📚", layout="centered")
 
-# --- 1. FULL BACKGROUND WATERMARK CODE (Opacity kam karke 0.05 kar di) ---
+# --- 1. FULL BACKGROUND WATERMARK CODE ---
 watermark_html = """
 <div style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 9999; opacity: 0.05; pointer-events: none; background-image: url('https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png'); background-size: 250px; background-repeat: repeat;"></div>
 """
@@ -52,18 +52,18 @@ header {visibility: hidden !important;}
     margin-top: 0px; 
 }
 
-/* 🚀 NAYA: GLASSMORPHISM FLOATING PILL FOOTER 🚀 */
+/* GLASSMORPHISM FLOATING PILL FOOTER */
 .custom-bottom-pill {
     position: fixed;
-    bottom: 20px; /* Niche se thoda upar float karega */
+    bottom: 20px; 
     left: 50%;
     transform: translateX(-50%);
-    background: rgba(11, 34, 101, 0.85); /* Transparent Dark Blue */
-    backdrop-filter: blur(10px); /* Frosted Glass Effect */
+    background: rgba(11, 34, 101, 0.85); 
+    backdrop-filter: blur(10px); 
     -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.15);
     padding: 8px 24px;
-    border-radius: 50px; /* Pill Shape */
+    border-radius: 50px; 
     box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.2);
     z-index: 99999;
     display: flex;
@@ -116,6 +116,48 @@ div[data-testid="stVerticalBlockBorderWrapper"] label,
 div[data-testid="stVerticalBlockBorderWrapper"] span {
     color: #0b2265 !important;
     font-weight: 600 !important;
+}
+
+/* 🚀 CONTACT US HOVER CARDS CSS 🚀 */
+.contact-card {
+    display: flex; 
+    align-items: center; 
+    padding: 16px; 
+    background: #f8fafc; 
+    border-radius: 14px; 
+    transition: all 0.3s ease; 
+    text-decoration: none !important; 
+    border: 1px solid transparent; 
+    margin-bottom: 15px;
+}
+.contact-card:hover {
+    background: #ffffff; 
+    border: 1px solid #2563eb; 
+    box-shadow: 0 10px 25px rgba(37, 99, 235, 0.1); 
+    transform: translateY(-3px);
+}
+.contact-icon {
+    font-size: 24px; 
+    margin-right: 18px; 
+    background: white; 
+    width: 50px; 
+    height: 50px; 
+    border-radius: 50%; 
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+.contact-title {
+    font-size: 13px; 
+    color: #64748b; 
+    margin-bottom: 3px;
+    font-weight: 500;
+}
+.contact-value {
+    font-size: 17px; 
+    font-weight: 700; 
+    color: #0b2265;
 }
 </style>
 
@@ -333,16 +375,46 @@ with tab1:
                 mime="text/html"
             )
 
-# TAB 2: Contact Us ka code
+# TAB 2: Contact Us ka code (PURA NAYA PREMIUM DESIGN)
 with tab2:
-    st.header("📞 Contact Us")
-    st.write("Agar aapko humari services pasand aayi ya aap humse judna chahte hain, toh niche di gayi details par sampark karein:")
+    st.markdown("<br>", unsafe_allow_html=True)
     
-    st.markdown("---")
-    st.markdown("### 👤 **Name:** Amit Kumar Shaw")
-    st.markdown("### 📞 **Phone:** [+91 8116230505](tel:+918116230505)")
-    st.markdown("### 📧 **Email:** [amit.kr.shaw.3@gmail.com](mailto:amit.kr.shaw.3@gmail.com)")
-    st.markdown("### 📍 **Location:** Raniganj, West Bengal, India")
-    st.markdown("---")
-    
-    st.info("💡 **Tip:** Aap upar diye gaye Phone number ya Email par direct click karke bhi call ya mail kar sakte hain!")
+    with st.container(border=True):
+        contact_html = """
+        <div style="text-align: center; margin-bottom: 25px;">
+            <div style="background: linear-gradient(135deg, #0b2265, #2563eb); color: white; width: 80px; height: 80px; border-radius: 50%; display: inline-flex; justify-content: center; align-items: center; font-size: 35px; box-shadow: 0 8px 15px rgba(11, 34, 101, 0.2); margin-bottom: 15px;">
+                👨‍💻
+            </div>
+            <h2 style="color: #0b2265; margin: 0; font-size: 26px; font-weight: 800;">Amit Kumar Shaw</h2>
+            <p style="color: #64748b; margin: 5px 0 0 0; font-size: 15px; font-weight: 500;">Developer & Creator</p>
+        </div>
+        
+        <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 25px 0;">
+        
+        <a href="tel:+918116230505" class="contact-card">
+            <div class="contact-icon">📞</div>
+            <div>
+                <div class="contact-title">Phone / WhatsApp</div>
+                <div class="contact-value">+91 8116230505</div>
+            </div>
+        </a>
+        
+        <a href="mailto:amit.kr.shaw.3@gmail.com" class="contact-card">
+            <div class="contact-icon">📧</div>
+            <div>
+                <div class="contact-title">Email Address</div>
+                <div class="contact-value">amit.kr.shaw.3@gmail.com</div>
+            </div>
+        </a>
+        
+        <div class="contact-card" style="cursor: default;">
+            <div class="contact-icon">📍</div>
+            <div>
+                <div class="contact-title">Location</div>
+                <div class="contact-value">Raniganj, West Bengal, India</div>
+            </div>
+        </div>
+        """
+        st.markdown(contact_html, unsafe_allow_html=True)
+        
+    st.info("💡 **Tip:** Box par click karke aap direct Call ya Mail kar sakte hain!")
