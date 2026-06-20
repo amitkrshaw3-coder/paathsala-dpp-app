@@ -20,7 +20,7 @@ if 'user_identifier' not in st.session_state:
     st.session_state.user_identifier = ""
 # Admin ke liye dynamic sheet link store karne ke liye
 if 'dynamic_sheet_url' not in st.session_state:
-    st.session_state.dynamic_sheet_url = "PASTE_YOUR_GOOGLE_SHEET_SHARE_LINK_HERE"
+    st.session_state.dynamic_sheet_url = "https://docs.google.com/spreadsheets/d/1dc5ychco_3BXn_XcY0BGyxAlGDbczSuEel67VHYR-m4/edit?usp=sharing"
 
 # Auto-Math-Fixer
 def format_math_symbols(text):
