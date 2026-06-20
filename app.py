@@ -9,18 +9,30 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-# Session State Initialize karna
-if 'logged_in' not in st.session_state:
-    st.session_state.logged_in = False
-if 'otp_sent' not in st.session_state:
-    st.session_state.otp_sent = False
-if 'generated_otp' not in st.session_state:
-    st.session_state.generated_otp = None
-if 'user_identifier' not in st.session_state:
-    st.session_state.user_identifier = ""
-# Admin ke liye dynamic sheet link store karne ke liye
-if 'dynamic_sheet_url' not in st.session_state:
-    st.session_state.dynamic_sheet_url = "https://docs.google.com/spreadsheets/d/1dc5ychco_3BXn_XcY0BGyxAlGDbczSuEel67VHYR-m4/edit?usp=sharing"
+# 1. SESSION STATES INITIALIZATION
+if 'logged_in' not in st.session_state: st.session_state.logged_in = False
+if 'otp_sent' not in st.session_state: st.session_state.otp_sent = False
+if 'generated_otp' not in st.session_state: st.session_state.generated_otp = None
+if 'user_identifier' not in st.session_state: st.session_state.user_identifier = ""
+if 'dynamic_sheet_url' not in st.session_state: st.session_state.dynamic_sheet_url = "PASTE_YOUR_DPP_QUESTIONS_SHEET_LINK_HERE"
+if 'users_sheet_url' not in st.session_state: st.session_state.users_sheet_url = "PASTE_YOUR_REGISTERED_USERS_SHEET_LINK_HERE"
+if 'live_allowed_users' not in st.session_state: st.session_state.live_allowed_users = []
+
+# Fetch Live Users from Google Sheet
+def get_live_users(sheet_url):
+    try:
+        match = re.search(r'/d/([a-zA-Z0-9-_]+)', str(sheet_url))
+        if match:
+            csv_url = f"https://docs.google.com/spreadsheets/d/{match.group(1)}/export?format=csv"
+            req = urllib.request.Request(csv_url, headers={'User-Agent': 'Mozilla/5.0'})
+            response = urllib.request.urlopen(req)
+            data = response.read().decode('utf-8-sig')
+            reader = csv.DictReader(io.StringIO(data))
+            users = [row['Email'].strip().lower() for row in reader if row.get('Email')]
+            return users
+        return []
+    except Exception as e:
+        return []
 
 # Auto-Math-Fixer
 def format_math_symbols(text):
@@ -70,20 +82,14 @@ def send_real_otp_email(receiver_email, otp_code):
 
 st.set_page_config(page_title="PAATHSALA", page_icon="📚", layout="centered")
 
-# --- GLOBAL MASTER UI CSS ---
 custom_ui_css = """
 <style>
-header {visibility: hidden !important;}
-[data-testid="stHeader"] {background-color: transparent !important;}
-[data-testid="stAppViewContainer"]::after {
-    content: ""; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-    background-image: url('https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png');
-    background-size: 250px; background-repeat: repeat; opacity: 0.05; pointer-events: none; z-index: 999999;
-}
+header {visibility: hidden !important;} [data-testid="stHeader"] {background-color: transparent !important;}
+[data-testid="stAppViewContainer"]::after { content: ""; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-image: url('https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png'); background-size: 250px; background-repeat: repeat; opacity: 0.05; pointer-events: none; z-index: 999999; }
 .custom-top-bar { position: fixed; top: 0; left: 0; width: 100vw; height: 60px; background-color: #0b2265; box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2); z-index: 9999999; display: flex; justify-content: center; }
 .custom-logo { height: 90px; background-color: white; padding: 8px 20px; border-bottom-left-radius: 25px; border-bottom-right-radius: 25px; box-shadow: 0px 5px 15px rgba(0,0,0,0.3); margin-top: 0px; }
 .custom-bottom-pill { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(11, 34, 101, 0.95) !important; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.15); padding: 8px 24px; border-radius: 50px; box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.3); z-index: 9999999; display: flex; justify-content: center; align-items: center; }
-.footer-text { color: #e2e8f0 !important; font-size: 13px !important; letter-spacing: 0.5px; font-family: -apple-system, BlinkMacSystemFont, sans-serif; display: flex; align-items: center; gap: 6px; margin: 0 !important; }
+.footer-text { color: #e2e8f0 !important; font-size: 13px !important; font-family: sans-serif; display: flex; align-items: center; gap: 6px; margin: 0 !important; }
 .footer-name { color: #ffffff !important; font-weight: 700 !important; }
 .main .block-container { padding-top: 110px !important; padding-bottom: 90px !important; }
 div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #ffffff !important; border-radius: 16px !important; box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.05) !important; border: 1px solid #f1f5f9 !important; padding: 25px !important; margin-bottom: 25px !important; }
@@ -94,34 +100,42 @@ div[data-testid="stVerticalBlockBorderWrapper"] p, div[data-testid="stVerticalBl
 """
 st.markdown(custom_ui_css, unsafe_allow_html=True)
 
+# Update Live Users List on every run
+st.session_state.live_allowed_users = get_live_users(st.session_state.users_sheet_url)
+admin_email = st.secrets.get("ADMIN_EMAIL", "").strip().lower()
+
 # ----------------- 🔐 OTP LOGIN SCREEN FLOW 🔐 -----------------
 if not st.session_state.logged_in:
     st.markdown("<br><br>", unsafe_allow_html=True)
     with st.container(border=True):
-        st.markdown("<h2 style='text-align:center; color:#0b2265;'>🔒 Secure Email Login</h2>", unsafe_allow_html=True)
+        st.markdown("<h2 style='text-align:center; color:#0b2265;'>🔒 Registered User Login</h2>", unsafe_allow_html=True)
         
         if not st.session_state.otp_sent:
             with st.form("email_form"):
-                user_input = st.text_input("Enter Email ID:", placeholder="student@gmail.com")
-                submit_email = st.form_submit_button("🚀 Send OTP")
+                user_input = st.text_input("Enter Registered Email ID:", placeholder="student@gmail.com")
+                submit_email = st.form_submit_button("🚀 Request Login OTP")
                 
                 if submit_email:
-                    if not re.match(r"[^@]+@[^@]+\.[^@]+", user_input):
+                    cleaned_email = user_input.strip().lower()
+                    
+                    if not re.match(r"[^@]+@[^@]+\.[^@]+", cleaned_email):
                         st.warning("⚠️ Kripya sahi Email daalein!")
+                    elif cleaned_email not in st.session_state.live_allowed_users and cleaned_email != admin_email:
+                        st.error("❌ Aap is app par registered nahi hain! Kripya access paane ke liye Admin se sampark karein.")
                     else:
-                        with st.spinner("📧 Email bheja ja raha hai..."):
+                        with st.spinner("📧 Security OTP bheja ja raha hai..."):
                             st.session_state.generated_otp = str(random.randint(1000, 9999))
-                            if send_real_otp_email(user_input, st.session_state.generated_otp):
-                                st.session_state.user_identifier = user_input.strip().lower()
+                            if send_real_otp_email(cleaned_email, st.session_state.generated_otp):
+                                st.session_state.user_identifier = cleaned_email
                                 st.session_state.otp_sent = True
                                 st.rerun()
         else:
-            st.info(f"📩 OTP sent to **{st.session_state.user_identifier}**")
+            st.info(f"📩 OTP sent successfully to **{st.session_state.user_identifier}**")
             with st.form("otp_form"):
                 entered_otp = st.text_input("Enter 4-Digit OTP:", max_chars=4)
                 col1, col2 = st.columns(2)
                 with col1: verify_btn = st.form_submit_button("✅ Verify & Login")
-                with col2: resend_btn = st.form_submit_button("🔄 Resend")
+                with col2: resend_btn = st.form_submit_button("🔄 Cancel / Change Email")
                 
                 if verify_btn:
                     if entered_otp == st.session_state.generated_otp:
@@ -131,15 +145,12 @@ if not st.session_state.logged_in:
                         st.error("❌ Galat OTP!")
                 if resend_btn:
                     st.session_state.otp_sent = False
+                    st.session_state.generated_otp = None
                     st.rerun()
                     
 # ----------------- 📝 APP MAIN CONTENTS (AFTER LOGIN) -----------------
 else:
-    # Check if the logged-in user is the Admin
-    is_admin = False
-    if "ADMIN_EMAIL" in st.secrets:
-        if st.session_state.user_identifier == st.secrets["ADMIN_EMAIL"].strip().lower():
-            is_admin = True
+    is_admin = (st.session_state.user_identifier == admin_email)
 
     col_space, col_logout = st.columns([6, 1.5])
     with col_logout:
@@ -149,35 +160,26 @@ else:
             st.session_state.generated_otp = None
             st.rerun()
 
-    # 🔥 DYNAMIC TABS BASED ON ROLE 🔥
     if is_admin:
         tab1, tab2, tab3 = st.tabs(["📝 DPP Generator", "📞 Contact Us", "👑 Admin Panel"])
     else:
         tab1, tab2 = st.tabs(["📝 DPP Generator", "📞 Contact Us"])
 
-    # TAB 1: DPP Generator
     with tab1:
         st.write("Apna Class, Subject aur Chapter chunein aur turant DPP banayein!")
         questions = []
         try:
-            # Use dynamic sheet URL controlled by Admin
             sheet_url = st.session_state.dynamic_sheet_url
-            
             match = re.search(r'/d/([a-zA-Z0-9-_]+)', str(sheet_url))
             if match:
-                sheet_id = match.group(1)
-                csv_url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv"
-            else:
-                csv_url = str(sheet_url)
-
-            req = urllib.request.Request(csv_url, headers={'User-Agent': 'Mozilla/5.0'})
-            response = urllib.request.urlopen(req)
-            csv_data = response.read().decode('utf-8-sig')
-            reader = csv.DictReader(io.StringIO(csv_data))
-            for row in reader:
-                questions.append(row)
+                csv_url = f"https://docs.google.com/spreadsheets/d/{match.group(1)}/export?format=csv"
+                req = urllib.request.Request(csv_url, headers={'User-Agent': 'Mozilla/5.0'})
+                response = urllib.request.urlopen(req)
+                csv_data = response.read().decode('utf-8-sig')
+                reader = csv.DictReader(io.StringIO(csv_data))
+                for row in reader: questions.append(row)
         except Exception as e:
-            st.error(f"❌ Google Sheet Error: {e}")
+            pass # Silent error handle if sheet is empty/invalid
 
         if questions:
             with st.container(border=True):
@@ -201,7 +203,6 @@ else:
             if st.button("🚀 Generate Print-Ready PDF", type="primary", use_container_width=True):
                 with st.spinner("Apka shandar DPP ready ho raha hai..."):
                     chapter_pool = [q for q in questions if q.get('Class') and q.get('Subject') and q.get('Chapter') and q['Class'].strip().lower() == selected_class.lower() and q['Subject'].strip().lower() == selected_subject.lower() and q['Chapter'].strip().lower() == selected_chapter.lower()]
-                    
                     mcq_pool = [q for q in chapter_pool if q.get('Type') and q['Type'].strip().upper() == 'MCQ']
                     short_pool = [q for q in chapter_pool if q.get('Type') and q['Type'].strip().upper() == 'SHORT ANSWER']
                     long_pool = [q for q in chapter_pool if q.get('Type') and q['Type'].strip().upper() == 'LONG ANSWER']
@@ -211,34 +212,25 @@ else:
                     selected_longs = random.sample(long_pool, min(n_long, len(long_pool)))
                     
                     mcq_html, ans_html_mcq, q_num = "", "", 1
-                    
                     for q in selected_mcqs:
                         formatted_q = format_math_symbols(q.get('Question', ''))
                         formatted_ans = format_math_symbols(q.get('Answer', ''))
                         if " a) " in formatted_q:
-                            formatted_q = formatted_q.replace(" a) ", "<div class='opt-row'><span class='opt-box'>a) ")
-                            formatted_q = formatted_q.replace(" b) ", "</span><span class='opt-box'>b) ")
-                            formatted_q = formatted_q.replace(" c) ", "</span></div><div class='opt-row'><span class='opt-box'>c) ")
-                            formatted_q = formatted_q.replace(" d) ", "</span><span class='opt-box'>d) ")
-                            formatted_q += "</span></div>"
+                            formatted_q = formatted_q.replace(" a) ", "<div class='opt-row'><span class='opt-box'>a) ").replace(" b) ", "</span><span class='opt-box'>b) ").replace(" c) ", "</span></div><div class='opt-row'><span class='opt-box'>c) ").replace(" d) ", "</span><span class='opt-box'>d) ") + "</span></div>"
                         mcq_html += f'<div class="question"><div class="q-num">{q_num}.</div><div class="q-text">{formatted_q}</div></div>\n'
                         ans_html_mcq += f'<tr><td style="text-align: center;">{q_num}</td><td>{formatted_ans}</td></tr>\n'
                         q_num += 1
 
                     short_html, ans_html_short_long = "", ""
                     for q in selected_shorts:
-                        formatted_q = format_math_symbols(q.get('Question', ''))
-                        formatted_ans = format_math_symbols(q.get('Answer', ''))
-                        short_html += f'<div class="question"><div class="q-num">{q_num}.</div><div class="q-text">{formatted_q}</div></div>\n'
-                        ans_html_short_long += f'<tr><td style="text-align: center;">{q_num}</td><td>{formatted_ans}</td></tr>\n'
+                        short_html += f'<div class="question"><div class="q-num">{q_num}.</div><div class="q-text">{format_math_symbols(q.get("Question", ""))}</div></div>\n'
+                        ans_html_short_long += f'<tr><td style="text-align: center;">{q_num}</td><td>{format_math_symbols(q.get("Answer", ""))}</td></tr>\n'
                         q_num += 1
 
                     long_html = ""
                     for q in selected_longs:
-                        formatted_q = format_math_symbols(q.get('Question', ''))
-                        formatted_ans = format_math_symbols(q.get('Answer', ''))
-                        long_html += f'<div class="question"><div class="q-num">{q_num}.</div><div class="q-text">{formatted_q}</div></div>\n'
-                        ans_html_short_long += f'<tr><td style="text-align: center;">{q_num}</td><td>{formatted_ans}</td></tr>\n'
+                        long_html += f'<div class="question"><div class="q-num">{q_num}.</div><div class="q-text">{format_math_symbols(q.get("Question", ""))}</div></div>\n'
+                        ans_html_short_long += f'<tr><td style="text-align: center;">{q_num}</td><td>{format_math_symbols(q.get("Answer", ""))}</td></tr>\n'
                         q_num += 1
 
                     logo_img_tag = '<img src="https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png" style="width: 150px; max-height: 80px;">' 
@@ -250,18 +242,12 @@ else:
                     <head>
                         <meta charset="UTF-8">
                         <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-                        <script>
-                        window.MathJax = {{ tex: {{ inlineMath: [['$', '$'], ['\\\\(', '\\\\)']], displayMath: [['$$', '$$'], ['\\\\[', '\\\\\]']] }}, svg: {{ fontCache: 'global' }} }};
-                        </script>
+                        <script>window.MathJax = {{ tex: {{ inlineMath: [['$', '$'], ['\\\\(', '\\\\)']], displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']] }}, svg: {{ fontCache: 'global' }} }};</script>
                         <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
                         <style>
                             body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #111; padding: 10px; }}
                             #pdf-content {{ position: relative; padding: 20px; background-color: white; z-index: 1; }}
-                            #pdf-content::before {{
-                                content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-                                background-image: url('https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png');
-                                background-size: 350px; background-repeat: repeat; opacity: 0.08; z-index: -1; pointer-events: none;
-                            }}
+                            #pdf-content::before {{ content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url('https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png'); background-size: 350px; background-repeat: repeat; opacity: 0.08; z-index: -1; pointer-events: none; }}
                             .header-table {{ width: 100%; border-collapse: collapse; margin-bottom: 10px; }}
                             .student-info {{ width: 50%; font-size: 11pt; vertical-align: top; }}
                             .logo-cell {{ width: 50%; text-align: right; vertical-align: top; }}
@@ -318,54 +304,41 @@ else:
                     </body>
                     </html>
                     """
-                    st.success("🎉 Mubaarak ho! Niche box mein PDF taiyar hai.")
                     components.html(html_template, height=800, scrolling=True)
 
-    # TAB 2: Contact Us
     with tab2:
         st.markdown("<br>", unsafe_allow_html=True)
         with st.container(border=True):
-            contact_html = """
-            <style>
-            .contact-card { display: flex; align-items: center; padding: 16px; background: #f8fafc; border-radius: 14px; transition: all 0.3s ease; text-decoration: none !important; border: 1px solid transparent; margin-bottom: 15px; }
-            .contact-card:hover { background: #ffffff; border: 1px solid #2563eb; box-shadow: 0 10px 25px rgba(37, 99, 235, 0.1); transform: translateY(-3px); }
-            .contact-icon { font-size: 24px; margin-right: 18px; background: white; width: 50px; height: 50px; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
-            .contact-title { font-size: 13px; color: #64748b; margin-bottom: 3px; font-weight: 500; }
-            .contact-value { font-size: 17px; font-weight: 700; color: #0b2265; }
-            </style>
+            st.markdown("""
             <div style="text-align: center; margin-bottom: 25px;">
                 <div style="background: linear-gradient(135deg, #0b2265, #2563eb); color: white; width: 80px; height: 80px; border-radius: 50%; display: inline-flex; justify-content: center; align-items: center; font-size: 35px; box-shadow: 0 8px 15px rgba(11, 34, 101, 0.2); margin-bottom: 15px;">👨‍💻</div>
                 <h2 style="color: #0b2265; margin: 0; font-size: 26px; font-weight: 800;">Amit Kumar Shaw</h2>
                 <p style="color: #64748b; margin: 5px 0 0 0; font-size: 15px; font-weight: 500;">Developer & Creator</p>
             </div>
-            <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 25px 0;">
-            <a href="tel:+918116230505" class="contact-card"><div class="contact-icon">📞</div><div><div class="contact-title">Phone / WhatsApp</div><div class="contact-value">+91 8116230505</div></div></a>
-            <a href="mailto:amit.kr.shaw.3@gmail.com" class="contact-card"><div class="contact-icon">📧</div><div><div class="contact-title">Email Address</div><div class="contact-value">amit.kr.shaw.3@gmail.com</div></div></a>
-            <div class="contact-card" style="cursor: default;"><div class="contact-icon">📍</div><div><div class="contact-title">Location</div><div class="contact-value">Raniganj, West Bengal, India</div></div></div>
-            """
-            st.markdown(contact_html, unsafe_allow_html=True)
+            """, unsafe_allow_html=True)
 
-    # 🔥👑 TAB 3: DYNAMIC ULTRA-PREMIUM ADMIN PANEL 👑🔥
+    # 🔥👑 TAB 3: DYNAMIC ADMIN PANEL 👑🔥
     if is_admin:
         with tab3:
             st.markdown("<br>", unsafe_allow_html=True)
             with st.container(border=True):
-                st.markdown("### 👑 Welcome to PAATHSALA Admin Command Center")
-                st.write(f"Logged in as Super Admin: `{st.session_state.user_identifier}`")
-                st.info("Yahan se aap bina code badle poore app ko control kar sakte hain.")
+                st.markdown("### 👑 App Configuration Panel")
+                st.info("Pehli baar yahan dono Google Sheets ka link set kijiye aur 'Save' dabaiye.")
                 
-                st.markdown("---")
-                st.markdown("#### 🔗 Update Questions Database (Google Sheet)")
-                new_url = st.text_input("Google Sheet Share Link Badlein:", value=st.session_state.dynamic_sheet_url)
+                # 1. DPP Questions Sheet URL
+                new_dpp_url = st.text_input("📚 DPP Questions Sheet Link:", value=st.session_state.dynamic_sheet_url)
                 
-                if st.button("💾 Save Database Link", type="primary"):
-                    st.session_state.dynamic_sheet_url = new_url
-                    st.success("🎉 Google Sheet Database dynamic tarike se update ho gaya! Ab naye sawaal turant load honge.")
+                # 2. Registered Users Sheet URL
+                new_users_url = st.text_input("👥 Registered Users Sheet Link:", value=st.session_state.users_sheet_url)
                 
-                st.markdown("---")
-                st.markdown("#### 📊 Current App Analytics")
-                col1, col2 = st.columns(2)
-                with col1:
-                    st.metric(label="Total Questions Loaded", value=len(questions) if questions else 0)
-                with col2:
-                    st.metric(label="System Status", value="🟢 ACTIVE & SECURE")
+                if st.button("💾 Save Both Links", type="primary"):
+                    st.session_state.dynamic_sheet_url = new_dpp_url
+                    st.session_state.users_sheet_url = new_users_url
+                    st.success("🎉 Links safely update ho gaye hain!")
+                    st.rerun()
+            
+            with st.container(border=True):
+                st.markdown("### 📊 Live Users Status")
+                st.write("Ye list direct aapki Google Sheet se padhi ja rahi hai:")
+                st.code(st.session_state.live_allowed_users)
+                st.caption("Naye user ko add ya delete karne ke liye bas apne phone par 'PAATHSALA Users' sheet ko edit karein.")
