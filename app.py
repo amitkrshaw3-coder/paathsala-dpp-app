@@ -150,6 +150,7 @@ if not st.session_state.logged_in:
                     
 # ----------------- 📝 APP MAIN CONTENTS (AFTER LOGIN) -----------------
 # ----------------- 📝 APP MAIN CONTENTS (AFTER LOGIN) -----------------
+# ----------------- 📝 APP MAIN CONTENTS (AFTER LOGIN) -----------------
 else:
     is_admin = (st.session_state.user_identifier == admin_email)
 
@@ -167,16 +168,207 @@ else:
         st.markdown(user_badge_html, unsafe_allow_html=True)
         
     with col_logout:
-        st.markdown("<br>", unsafe_allow_html=True) # Button ko align karne ke liye space
+        st.markdown("<br>", unsafe_allow_html=True) # Space to align button
         if st.button("🔒 Logout", use_container_width=True):
             st.session_state.logged_in = False
             st.session_state.otp_sent = False
             st.session_state.generated_otp = None
-            st.session_state.user_identifier = "" # Logout hone par ID clear kar dena
+            st.session_state.user_identifier = "" # ID clear for security
             st.rerun()
 
-    # Yahan se Tabs ka code shuru hoga (Pehle jaisa tha)
+    # Dynamic Tabs depending on user role
     if is_admin:
         tab1, tab2, tab3 = st.tabs(["📝 DPP Generator", "📞 Contact Us", "👑 Admin Panel"])
     else:
         tab1, tab2 = st.tabs(["📝 DPP Generator", "📞 Contact Us"])
+
+    # TAB 1: DPP Generator
+    with tab1:
+        st.write("Apna Class, Subject aur Chapter chunein aur turant DPP banayein!")
+        questions = []
+        try:
+            sheet_url = st.session_state.dynamic_sheet_url
+            match = re.search(r'/d/([a-zA-Z0-9-_]+)', str(sheet_url))
+            if match:
+                csv_url = f"https://docs.google.com/spreadsheets/d/{match.group(1)}/export?format=csv"
+                req = urllib.request.Request(csv_url, headers={'User-Agent': 'Mozilla/5.0'})
+                response = urllib.request.urlopen(req)
+                csv_data = response.read().decode('utf-8-sig')
+                reader = csv.DictReader(io.StringIO(csv_data))
+                for row in reader: questions.append(row)
+        except Exception as e:
+            pass # Silent handle empty sheet
+
+        if questions:
+            with st.container(border=True):
+                all_classes = sorted(list(set(q.get('Class', '').strip() for q in questions if q.get('Class'))))
+                selected_class = st.selectbox("Select Class:", all_classes)
+
+                all_subjects = sorted(list(set(q.get('Subject', '').strip() for q in questions if q.get('Subject') and q.get('Class', '').strip() == selected_class)))
+                selected_subject = st.selectbox("Select Subject:", all_subjects)
+
+                all_chapters = sorted(list(set(q.get('Chapter', '').strip() for q in questions if q.get('Chapter') and q.get('Class', '').strip() == selected_class and q.get('Subject', '').strip() == selected_subject)))
+                selected_chapter = st.selectbox("Select Chapter:", all_chapters)
+
+            with st.container(border=True):
+                col1, col2, col3 = st.columns(3)
+                with col1: n_mcq = st.number_input("No. of MCQs:", min_value=0, value=10)
+                with col2: n_short = st.number_input("No. of Short Qs:", min_value=0, value=5)
+                with col3: n_long = st.number_input("No. of Long Qs:", min_value=0, value=2)
+
+            st.markdown("<br>", unsafe_allow_html=True)
+            
+            if st.button("🚀 Generate Print-Ready PDF", type="primary", use_container_width=True):
+                with st.spinner("Apka shandar DPP ready ho raha hai..."):
+                    chapter_pool = [q for q in questions if q.get('Class') and q.get('Subject') and q.get('Chapter') and q['Class'].strip().lower() == selected_class.lower() and q['Subject'].strip().lower() == selected_subject.lower() and q['Chapter'].strip().lower() == selected_chapter.lower()]
+                    mcq_pool = [q for q in chapter_pool if q.get('Type') and q['Type'].strip().upper() == 'MCQ']
+                    short_pool = [q for q in chapter_pool if q.get('Type') and q['Type'].strip().upper() == 'SHORT ANSWER']
+                    long_pool = [q for q in chapter_pool if q.get('Type') and q['Type'].strip().upper() == 'LONG ANSWER']
+                    
+                    selected_mcqs = random.sample(mcq_pool, min(n_mcq, len(mcq_pool)))
+                    selected_shorts = random.sample(short_pool, min(n_short, len(short_pool)))
+                    selected_longs = random.sample(long_pool, min(n_long, len(long_pool)))
+                    
+                    mcq_html, ans_html_mcq, q_num = "", "", 1
+                    for q in selected_mcqs:
+                        formatted_q = format_math_symbols(q.get('Question', ''))
+                        formatted_ans = format_math_symbols(q.get('Answer', ''))
+                        if " a) " in formatted_q:
+                            formatted_q = formatted_q.replace(" a) ", "<div class='opt-row'><span class='opt-box'>a) ").replace(" b) ", "</span><span class='opt-box'>b) ").replace(" c) ", "</span></div><div class='opt-row'><span class='opt-box'>c) ").replace(" d) ", "</span><span class='opt-box'>d) ") + "</span></div>"
+                        mcq_html += f'<div class="question"><div class="q-num">{q_num}.</div><div class="q-text">{formatted_q}</div></div>\n'
+                        ans_html_mcq += f'<tr><td style="text-align: center;">{q_num}</td><td>{formatted_ans}</td></tr>\n'
+                        q_num += 1
+
+                    short_html, ans_html_short_long = "", ""
+                    for q in selected_shorts:
+                        short_html += f'<div class="question"><div class="q-num">{q_num}.</div><div class="q-text">{format_math_symbols(q.get("Question", ""))}</div></div>\n'
+                        ans_html_short_long += f'<tr><td style="text-align: center;">{q_num}</td><td>{format_math_symbols(q.get("Answer", ""))}</td></tr>\n'
+                        q_num += 1
+
+                    long_html = ""
+                    for q in selected_longs:
+                        long_html += f'<div class="question"><div class="q-num">{q_num}.</div><div class="q-text">{format_math_symbols(q.get("Question", ""))}</div></div>\n'
+                        ans_html_short_long += f'<tr><td style="text-align: center;">{q_num}</td><td>{format_math_symbols(q.get("Answer", ""))}</td></tr>\n'
+                        q_num += 1
+
+                    logo_img_tag = '<img src="https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png" style="width: 150px; max-height: 80px;">' 
+                    clean_filename = f"DPP_{selected_class.replace(' ', '')}_{selected_chapter.replace(' ', '')}.pdf"
+
+                    html_template = f"""
+                    <!DOCTYPE html>
+                    <html lang="en">
+                    <head>
+                        <meta charset="UTF-8">
+                        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+                        <script>window.MathJax = {{ tex: {{ inlineMath: [['$', '$'], ['\\\\(', '\\\\)']], displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']] }}, svg: {{ fontCache: 'global' }} }};</script>
+                        <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+                        <style>
+                            body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #111; padding: 10px; }}
+                            #pdf-content {{ position: relative; padding: 20px; background-color: white; z-index: 1; }}
+                            #pdf-content::before {{ content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url('https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png'); background-size: 350px; background-repeat: repeat; opacity: 0.08; z-index: -1; pointer-events: none; }}
+                            .header-table {{ width: 100%; border-collapse: collapse; margin-bottom: 10px; }}
+                            .student-info {{ width: 50%; font-size: 11pt; vertical-align: top; }}
+                            .logo-cell {{ width: 50%; text-align: right; vertical-align: top; }}
+                            .title-section {{ text-align: center; margin: 20px 0 10px 0; }}
+                            .title-section h1 {{ font-size: 24pt; margin: 0; text-transform: uppercase; letter-spacing: 2px; color: #0b2265; }}
+                            .section-title {{ font-size: 12pt; font-weight: bold; background-color: #f4f4f4; padding: 6px 12px; border-left: 5px solid #fce803; margin: 15px 0 10px 0; border-radius: 4px; }}
+                            .question {{ margin-bottom: 15px; font-size: 11pt; display: table; width: 100%; }}
+                            .q-num {{ display: table-cell; width: 30px; font-weight: bold; vertical-align: top; }}
+                            .q-text {{ display: table-cell; vertical-align: top; }}
+                            .opt-row {{ margin-top: 4px; display: block; }}
+                            .opt-box {{ display: inline-block; width: 48%; vertical-align: top; }}
+                            .ans-table {{ width: 100%; border-collapse: collapse; margin-top: 15px; }}
+                            .ans-table th, .ans-table td {{ border: 1px solid #ccc; padding: 8px; font-size: 10.5pt; text-align: left; }}
+                            .ans-table th {{ background-color: #fce803; font-weight: bold; text-align: center; }}
+                            .download-btn-container {{ text-align: center; margin-bottom: 30px; margin-top: 10px; }}
+                            .download-btn {{ background: linear-gradient(135deg, #0b2265, #2563eb); color: white; padding: 14px 28px; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; box-shadow: 0 8px 15px rgba(37, 99, 235, 0.3); transition: transform 0.2s; }}
+                            .download-btn:hover {{ transform: translateY(-2px); }}
+                        </style>
+                    </head>
+                    <body>
+                        <div class="download-btn-container"><button class="download-btn" onclick="downloadPDF()">📥 Click Here to Save as Perfect PDF</button></div>
+                        <div id="pdf-content">
+                            <table class="header-table">
+                                <tr>
+                                    <td class="student-info">
+                                        <div><strong>Name:</strong> ___________________________</div>
+                                        <div><strong>Date:</strong> ___________________________</div>
+                                        <div><strong>Class:</strong> {selected_class}</div>
+                                        <div><strong>Subject:</strong> {selected_subject}</div>
+                                    </td>
+                                    <td class="logo-cell">{logo_img_tag}</td>
+                                </tr>
+                            </table>
+                            <div class="title-section"><h1>{selected_chapter}</h1><p><strong>Daily Practice Problem (DPP)</strong></p></div>
+                            <div class="section-title">Section A: Multiple Choice Questions</div>{mcq_html}
+                            <div class="section-title">Section B: Short Answer Type Questions</div>{short_html}
+                            <div class="section-title">Section C: Long Answer Type Questions</div>{long_html}
+                            <div style="page-break-before: always; padding-top: 20px;">
+                                <div class="title-section"><h2>ANSWER KEY</h2></div>
+                                <div class="section-title">Section A (MCQs)</div><table class="ans-table"><tr><th width="15%">Q.No.</th><th width="85%">Answer</th></tr>{ans_html_mcq}</table>
+                                <div class="section-title">Section B & C (Subjective)</div><table class="ans-table"><tr><th width="15%">Q.No.</th><th width="85%">Key Points / Answers</th></tr>{ans_html_short_long}</table>
+                            </div>
+                        </div>
+                        <script>
+                            function downloadPDF() {{
+                                MathJax.typesetPromise().then(() => {{
+                                    const element = document.getElementById('pdf-content');
+                                    document.querySelector('.download-btn-container').style.display = 'none';
+                                    var opt = {{ margin: 10, filename: '{clean_filename}', image: {{ type: 'jpeg', quality: 1.0 }}, html2canvas: {{ scale: 2, useCORS: true }}, jsPDF: {{ unit: 'mm', format: 'a4', orientation: 'portrait' }} }};
+                                    html2pdf().set(opt).from(element).save().then(function() {{ document.querySelector('.download-btn-container').style.display = 'block'; }});
+                                }});
+                            }}
+                        </script>
+                    </body>
+                    </html>
+                    """
+                    components.html(html_template, height=800, scrolling=True)
+
+    # TAB 2: Contact Us
+    with tab2:
+        st.markdown("<br>", unsafe_allow_html=True)
+        with st.container(border=True):
+            st.markdown("""
+            <style>
+            .contact-card { display: flex; align-items: center; padding: 16px; background: #f8fafc; border-radius: 14px; transition: all 0.3s ease; text-decoration: none !important; border: 1px solid transparent; margin-bottom: 15px; }
+            .contact-card:hover { background: #ffffff; border: 1px solid #2563eb; box-shadow: 0 10px 25px rgba(37, 99, 235, 0.1); transform: translateY(-3px); }
+            .contact-icon { font-size: 24px; margin-right: 18px; background: white; width: 50px; height: 50px; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+            .contact-title { font-size: 13px; color: #64748b; margin-bottom: 3px; font-weight: 500; }
+            .contact-value { font-size: 17px; font-weight: 700; color: #0b2265; }
+            </style>
+            <div style="text-align: center; margin-bottom: 25px;">
+                <div style="background: linear-gradient(135deg, #0b2265, #2563eb); color: white; width: 80px; height: 80px; border-radius: 50%; display: inline-flex; justify-content: center; align-items: center; font-size: 35px; box-shadow: 0 8px 15px rgba(11, 34, 101, 0.2); margin-bottom: 15px;">👨‍💻</div>
+                <h2 style="color: #0b2265; margin: 0; font-size: 26px; font-weight: 800;">Amit Kumar Shaw</h2>
+                <p style="color: #64748b; margin: 5px 0 0 0; font-size: 15px; font-weight: 500;">Developer & Creator</p>
+            </div>
+            <hr style="border: 0; border-top: 1px solid #f1f5f9; margin: 25px 0;">
+            <a href="tel:+918116230505" class="contact-card"><div class="contact-icon">📞</div><div><div class="contact-title">Phone / WhatsApp</div><div class="contact-value">+91 8116230505</div></div></a>
+            <a href="mailto:amit.kr.shaw.3@gmail.com" class="contact-card"><div class="contact-icon">📧</div><div><div class="contact-title">Email Address</div><div class="contact-value">amit.kr.shaw.3@gmail.com</div></div></a>
+            <div class="contact-card" style="cursor: default;"><div class="contact-icon">📍</div><div><div class="contact-title">Location</div><div class="contact-value">Raniganj, West Bengal, India</div></div></div>
+            """, unsafe_allow_html=True)
+
+    # 🔥👑 TAB 3: DYNAMIC ADMIN PANEL 👑🔥
+    if is_admin:
+        with tab3:
+            st.markdown("<br>", unsafe_allow_html=True)
+            with st.container(border=True):
+                st.markdown("### 👑 App Configuration Panel")
+                st.info("Pehli baar yahan dono Google Sheets ka link set kijiye aur 'Save' dabaiye.")
+                
+                # 1. DPP Questions Sheet URL
+                new_dpp_url = st.text_input("📚 DPP Questions Sheet Link:", value=st.session_state.dynamic_sheet_url)
+                
+                # 2. Registered Users Sheet URL
+                new_users_url = st.text_input("👥 Registered Users Sheet Link:", value=st.session_state.users_sheet_url)
+                
+                if st.button("💾 Save Both Links", type="primary"):
+                    st.session_state.dynamic_sheet_url = new_dpp_url
+                    st.session_state.users_sheet_url = new_users_url
+                    st.success("🎉 Links safely update ho gaye hain!")
+                    st.rerun()
+            
+            with st.container(border=True):
+                st.markdown("### 📊 Live Users Status")
+                st.write("Ye list direct aapki Google Sheet se padhi ja rahi hai:")
+                st.code(st.session_state.live_allowed_users)
+                st.caption("Naye user ko add ya delete karne ke liye bas apne phone par 'PAATHSALA Users' sheet ko edit karein.")
