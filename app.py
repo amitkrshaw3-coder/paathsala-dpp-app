@@ -168,7 +168,7 @@ else:
     role_icon = "👑 Admin Dashboard" if is_admin else "🎓 Student Portal"
     
     # YAHI LINE MEIN ERROR THA JO AB FIX HO GAYA HAI 👇
-    col_user, col_logout = st.columns(``)
+    col_user, col_logout = st.columns()
     with col_user:
         user_badge_html = f"""
         <div style="background-color: #f8fafc; padding: 10px 20px; border-radius: 12px; border: 1px solid #e2e8f0; border-left: 5px solid #2563eb; margin-bottom: 15px;">
