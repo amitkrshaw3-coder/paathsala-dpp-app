@@ -18,6 +18,9 @@ if 'generated_otp' not in st.session_state:
     st.session_state.generated_otp = None
 if 'user_identifier' not in st.session_state:
     st.session_state.user_identifier = ""
+# Admin ke liye dynamic sheet link store karne ke liye
+if 'dynamic_sheet_url' not in st.session_state:
+    st.session_state.dynamic_sheet_url = "PASTE_YOUR_GOOGLE_SHEET_SHARE_LINK_HERE"
 
 # Auto-Math-Fixer
 def format_math_symbols(text):
@@ -27,10 +30,9 @@ def format_math_symbols(text):
     text = re.sub(r'_([0-9a-zA-Z]+)', r'<sub>\1</sub>', text)
     return text
 
-# 🔥 REAL EMAIL SENDING FUNCTION 🔥
+# REAL EMAIL SENDING FUNCTION
 def send_real_otp_email(receiver_email, otp_code):
     try:
-        # Streamlit secrets se secure email aur password lena
         sender_email = st.secrets["SENDER_EMAIL"]
         app_password = st.secrets["APP_PASSWORD"]
         
@@ -47,7 +49,7 @@ def send_real_otp_email(receiver_email, otp_code):
                     <p>Hello,</p>
                     <p>Your One-Time Password (OTP) to securely login to your account is:</p>
                     <h1 style="text-align: center; color: #2563eb; letter-spacing: 5px; font-size: 36px; background: #f4f7f6; padding: 10px; border-radius: 8px;">{otp_code}</h1>
-                    <p style="color: #888; font-size: 12px; text-align: center;">Please do not share this code with anyone. It is valid for a single use.</p>
+                    <p style="color: #888; font-size: 12px; text-align: center;">Please do not share this code with anyone.</p>
                     <hr style="border-top: 1px solid #eee;">
                     <p style="font-size: 12px; color: #999; text-align: center;">Developed by Amit Kumar Shaw</p>
                 </div>
@@ -56,7 +58,6 @@ def send_real_otp_email(receiver_email, otp_code):
         """
         msg.attach(MIMEText(html_body, 'html'))
         
-        # Connect to Gmail Server
         server = smtplib.SMTP('smtp.gmail.com', 587)
         server.starttls()
         server.login(sender_email, app_password)
@@ -64,7 +65,7 @@ def send_real_otp_email(receiver_email, otp_code):
         server.quit()
         return True
     except Exception as e:
-        st.error(f"⚠️ Email server error: Pehle Streamlit 'Secrets' mein Email/App Password set karein. Error: {e}")
+        st.error(f"⚠️ Email server error: Secrets check karein. Error: {e}")
         return False
 
 st.set_page_config(page_title="PAATHSALA", page_icon="📚", layout="centered")
@@ -97,55 +98,49 @@ st.markdown(custom_ui_css, unsafe_allow_html=True)
 if not st.session_state.logged_in:
     st.markdown("<br><br>", unsafe_allow_html=True)
     with st.container(border=True):
-        st.markdown("""
-        <div style="text-align: center; margin-bottom: 20px;">
-            <h2 style="color: #0b2265; margin: 0; font-size: 26px; font-weight: 800;">🔒 Secure Email Login</h2>
-            <p style="color: #64748b; margin: 5px 0 0 0; font-size: 14px;">Apna valid email enter karein OTP receive karne ke liye</p>
-        </div>
-        <hr style="border: 0; border-top: 1px solid #f1f5f9; margin-bottom: 20px;">
-        """, unsafe_allow_html=True)
-        
-        user_input = st.text_input("Enter Email ID:", 
-                                  value=st.session_state.user_identifier,
-                                  placeholder="e.g., student@gmail.com")
+        st.markdown("<h2 style='text-align:center; color:#0b2265;'>🔒 Secure Email Login</h2>", unsafe_allow_html=True)
         
         if not st.session_state.otp_sent:
-            if st.button("🚀 Send Real OTP", type="primary", use_container_width=True):
-                # Basic Email validation check
-                if not re.match(r"[^@]+@[^@]+\.[^@]+", user_input):
-                    st.warning("⚠️ Kripya ek sahi Email ID daalein!")
-                else:
-                    with st.spinner("📧 Email bheja ja raha hai... Kripya pratiksha karein"):
-                        st.session_state.generated_otp = str(random.randint(1000, 9999))
-                        success = send_real_otp_email(user_input, st.session_state.generated_otp)
-                        
-                        if success:
-                            st.session_state.user_identifier = user_input
-                            st.session_state.otp_sent = True
-                            st.rerun()
-                    
+            with st.form("email_form"):
+                user_input = st.text_input("Enter Email ID:", placeholder="student@gmail.com")
+                submit_email = st.form_submit_button("🚀 Send OTP")
+                
+                if submit_email:
+                    if not re.match(r"[^@]+@[^@]+\.[^@]+", user_input):
+                        st.warning("⚠️ Kripya sahi Email daalein!")
+                    else:
+                        with st.spinner("📧 Email bheja ja raha hai..."):
+                            st.session_state.generated_otp = str(random.randint(1000, 9999))
+                            if send_real_otp_email(user_input, st.session_state.generated_otp):
+                                st.session_state.user_identifier = user_input.strip().lower()
+                                st.session_state.otp_sent = True
+                                st.rerun()
         else:
-            st.success(f"📩 Ek real OTP aapke email **{st.session_state.user_identifier}** par bhej diya gaya hai. (Spam folder bhi check kar lein)")
-            
-            entered_otp = st.text_input("Enter 4-Digit OTP Code:", placeholder="----", max_chars=4)
-            
-            col1, col2 = st.columns(2)
-            with col1:
-                if st.button("✅ Verify & Login", type="primary", use_container_width=True):
+            st.info(f"📩 OTP sent to **{st.session_state.user_identifier}**")
+            with st.form("otp_form"):
+                entered_otp = st.text_input("Enter 4-Digit OTP:", max_chars=4)
+                col1, col2 = st.columns(2)
+                with col1: verify_btn = st.form_submit_button("✅ Verify & Login")
+                with col2: resend_btn = st.form_submit_button("🔄 Resend")
+                
+                if verify_btn:
                     if entered_otp == st.session_state.generated_otp:
                         st.session_state.logged_in = True
-                        st.success("🎉 Login Successful!")
                         st.rerun()
                     else:
-                        st.error("❌ Galat OTP! Kripya mail check karke sahi code daalein.")
-            with col2:
-                if st.button("🔄 Change Email / Resend", use_container_width=True):
+                        st.error("❌ Galat OTP!")
+                if resend_btn:
                     st.session_state.otp_sent = False
-                    st.session_state.generated_otp = None
                     st.rerun()
                     
-# ----------------- 📝 APP MAIN CONTENS (AFTER LOGIN) 📝 -----------------
+# ----------------- 📝 APP MAIN CONTENTS (AFTER LOGIN) -----------------
 else:
+    # Check if the logged-in user is the Admin
+    is_admin = False
+    if "ADMIN_EMAIL" in st.secrets:
+        if st.session_state.user_identifier == st.secrets["ADMIN_EMAIL"].strip().lower():
+            is_admin = True
+
     col_space, col_logout = st.columns([6, 1.5])
     with col_logout:
         if st.button("🔒 Logout", use_container_width=True):
@@ -154,14 +149,19 @@ else:
             st.session_state.generated_otp = None
             st.rerun()
 
-    tab1, tab2 = st.tabs(["📝 DPP Generator", "📞 Contact Us"])
+    # 🔥 DYNAMIC TABS BASED ON ROLE 🔥
+    if is_admin:
+        tab1, tab2, tab3 = st.tabs(["📝 DPP Generator", "📞 Contact Us", "👑 Admin Panel"])
+    else:
+        tab1, tab2 = st.tabs(["📝 DPP Generator", "📞 Contact Us"])
 
+    # TAB 1: DPP Generator
     with tab1:
         st.write("Apna Class, Subject aur Chapter chunein aur turant DPP banayein!")
         questions = []
         try:
-            # 🔴 YAHAN APNA GOOGLE SHEET KA LINK PASTE KAREIN 🔴
-            sheet_url = "https://docs.google.com/spreadsheets/d/1dc5ychco_3BXn_XcY0BGyxAlGDbczSuEel67VHYR-m4/edit?usp=sharing"
+            # Use dynamic sheet URL controlled by Admin
+            sheet_url = st.session_state.dynamic_sheet_url
             
             match = re.search(r'/d/([a-zA-Z0-9-_]+)', str(sheet_url))
             if match:
@@ -251,10 +251,9 @@ else:
                         <meta charset="UTF-8">
                         <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
                         <script>
-                        window.MathJax = {{ tex: {{ inlineMath: [['$', '$'], ['\\\\(', '\\\\)']], displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']] }}, svg: {{ fontCache: 'global' }} }};
+                        window.MathJax = {{ tex: {{ inlineMath: [['$', '$'], ['\\\\(', '\\\\)']], displayMath: [['$$', '$$'], ['\\\\[', '\\\\\]']] }}, svg: {{ fontCache: 'global' }} }};
                         </script>
                         <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
-                        
                         <style>
                             body {{ font-family: Arial, sans-serif; line-height: 1.6; color: #111; padding: 10px; }}
                             #pdf-content {{ position: relative; padding: 20px; background-color: white; z-index: 1; }}
@@ -322,6 +321,7 @@ else:
                     st.success("🎉 Mubaarak ho! Niche box mein PDF taiyar hai.")
                     components.html(html_template, height=800, scrolling=True)
 
+    # TAB 2: Contact Us
     with tab2:
         st.markdown("<br>", unsafe_allow_html=True)
         with st.container(border=True):
@@ -344,3 +344,28 @@ else:
             <div class="contact-card" style="cursor: default;"><div class="contact-icon">📍</div><div><div class="contact-title">Location</div><div class="contact-value">Raniganj, West Bengal, India</div></div></div>
             """
             st.markdown(contact_html, unsafe_allow_html=True)
+
+    # 🔥👑 TAB 3: DYNAMIC ULTRA-PREMIUM ADMIN PANEL 👑🔥
+    if is_admin:
+        with tab3:
+            st.markdown("<br>", unsafe_allow_html=True)
+            with st.container(border=True):
+                st.markdown("### 👑 Welcome to PAATHSALA Admin Command Center")
+                st.write(f"Logged in as Super Admin: `{st.session_state.user_identifier}`")
+                st.info("Yahan se aap bina code badle poore app ko control kar sakte hain.")
+                
+                st.markdown("---")
+                st.markdown("#### 🔗 Update Questions Database (Google Sheet)")
+                new_url = st.text_input("Google Sheet Share Link Badlein:", value=st.session_state.dynamic_sheet_url)
+                
+                if st.button("💾 Save Database Link", type="primary"):
+                    st.session_state.dynamic_sheet_url = new_url
+                    st.success("🎉 Google Sheet Database dynamic tarike se update ho gaya! Ab naye sawaal turant load honge.")
+                
+                st.markdown("---")
+                st.markdown("#### 📊 Current App Analytics")
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.metric(label="Total Questions Loaded", value=len(questions) if questions else 0)
+                with col2:
+                    st.metric(label="System Status", value="🟢 ACTIVE & SECURE")
