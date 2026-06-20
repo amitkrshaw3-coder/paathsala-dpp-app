@@ -3,19 +3,31 @@ import csv
 import random
 import re
 import urllib.request
+import urllib.parse
 import io
 import streamlit.components.v1 as components 
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
+# ==========================================
+# 🛑 APNE LINKS YAHAN PASTE KAREIN (LINES 17-19) 🛑
+# ==========================================
+if 'dynamic_sheet_url' not in st.session_state: 
+    st.session_state.dynamic_sheet_url = "https://docs.google.com/spreadsheets/d/1dc5ychco_3BXn_XcY0BGyxAlGDbczSuEel67VHYR-m4/edit?usp=sharing"
+
+if 'users_sheet_url' not in st.session_state: 
+    st.session_state.users_sheet_url = "https://docs.google.com/spreadsheets/d/1mlHR5Bq0RcOqTAOaePSiLiakSasKeF9JgOrL_7nmUFI/edit?usp=sharing"
+
+if 'apps_script_url' not in st.session_state: 
+    st.session_state.apps_script_url = "https://script.google.com/macros/s/AKfycbwToIrpZtr924Drx55s432gaQwrfMxwZ8auzsyVnusLxVgkyT7t8MUFtkjfWoj0Xt1T/exec"
+# ==========================================
+
 # 1. SESSION STATES INITIALIZATION
 if 'logged_in' not in st.session_state: st.session_state.logged_in = False
 if 'otp_sent' not in st.session_state: st.session_state.otp_sent = False
 if 'generated_otp' not in st.session_state: st.session_state.generated_otp = None
 if 'user_identifier' not in st.session_state: st.session_state.user_identifier = ""
-if 'dynamic_sheet_url' not in st.session_state: st.session_state.dynamic_sheet_url = "https://docs.google.com/spreadsheets/d/1dc5ychco_3BXn_XcY0BGyxAlGDbczSuEel67VHYR-m4/edit?usp=sharing"
-if 'users_sheet_url' not in st.session_state: st.session_state.users_sheet_url = "https://docs.google.com/spreadsheets/d/1mlHR5Bq0RcOqTAOaePSiLiakSasKeF9JgOrL_7nmUFI/edit?usp=sharing"
 if 'live_allowed_users' not in st.session_state: st.session_state.live_allowed_users = []
 
 # Fetch Live Users from Google Sheet
@@ -149,15 +161,13 @@ if not st.session_state.logged_in:
                     st.rerun()
                     
 # ----------------- 📝 APP MAIN CONTENTS (AFTER LOGIN) -----------------
-# ----------------- 📝 APP MAIN CONTENTS (AFTER LOGIN) -----------------
-# ----------------- 📝 APP MAIN CONTENTS (AFTER LOGIN) -----------------
 else:
     is_admin = (st.session_state.user_identifier == admin_email)
 
     # 🔥 SMART USER PROFILE BADGE & LOGOUT BUTTON 🔥
     role_icon = "👑 Admin Dashboard" if is_admin else "🎓 Student Portal"
     
-    col_user, col_logout = st.columns([7, 2])
+    col_user, col_logout = st.columns()
     with col_user:
         user_badge_html = f"""
         <div style="background-color: #f8fafc; padding: 10px 20px; border-radius: 12px; border: 1px solid #e2e8f0; border-left: 5px solid #2563eb; margin-bottom: 15px;">
@@ -168,21 +178,19 @@ else:
         st.markdown(user_badge_html, unsafe_allow_html=True)
         
     with col_logout:
-        st.markdown("<br>", unsafe_allow_html=True) # Space to align button
+        st.markdown("<br>", unsafe_allow_html=True) 
         if st.button("🔒 Logout", use_container_width=True):
             st.session_state.logged_in = False
             st.session_state.otp_sent = False
             st.session_state.generated_otp = None
-            st.session_state.user_identifier = "" # ID clear for security
+            st.session_state.user_identifier = "" 
             st.rerun()
 
-    # Dynamic Tabs depending on user role
     if is_admin:
         tab1, tab2, tab3 = st.tabs(["📝 DPP Generator", "📞 Contact Us", "👑 Admin Panel"])
     else:
         tab1, tab2 = st.tabs(["📝 DPP Generator", "📞 Contact Us"])
 
-    # TAB 1: DPP Generator
     with tab1:
         st.write("Apna Class, Subject aur Chapter chunein aur turant DPP banayein!")
         questions = []
@@ -197,7 +205,7 @@ else:
                 reader = csv.DictReader(io.StringIO(csv_data))
                 for row in reader: questions.append(row)
         except Exception as e:
-            pass # Silent handle empty sheet
+            pass 
 
         if questions:
             with st.container(border=True):
@@ -324,7 +332,6 @@ else:
                     """
                     components.html(html_template, height=800, scrolling=True)
 
-    # TAB 2: Contact Us
     with tab2:
         st.markdown("<br>", unsafe_allow_html=True)
         with st.container(border=True):
@@ -347,28 +354,68 @@ else:
             <div class="contact-card" style="cursor: default;"><div class="contact-icon">📍</div><div><div class="contact-title">Location</div><div class="contact-value">Raniganj, West Bengal, India</div></div></div>
             """, unsafe_allow_html=True)
 
-    # 🔥👑 TAB 3: DYNAMIC ADMIN PANEL 👑🔥
+    # 🔥👑 TAB 3: DYNAMIC ADMIN PANEL WITH LIVE ADD/DELETE 👑🔥
     if is_admin:
         with tab3:
             st.markdown("<br>", unsafe_allow_html=True)
-            with st.container(border=True):
-                st.markdown("### 👑 App Configuration Panel")
-                st.info("Pehli baar yahan dono Google Sheets ka link set kijiye aur 'Save' dabaiye.")
-                
-                # 1. DPP Questions Sheet URL
-                new_dpp_url = st.text_input("📚 DPP Questions Sheet Link:", value=st.session_state.dynamic_sheet_url)
-                
-                # 2. Registered Users Sheet URL
-                new_users_url = st.text_input("👥 Registered Users Sheet Link:", value=st.session_state.users_sheet_url)
-                
-                if st.button("💾 Save Both Links", type="primary"):
-                    st.session_state.dynamic_sheet_url = new_dpp_url
-                    st.session_state.users_sheet_url = new_users_url
-                    st.success("🎉 Links safely update ho gaye hain!")
-                    st.rerun()
             
             with st.container(border=True):
-                st.markdown("### 📊 Live Users Status")
-                st.write("Ye list direct aapki Google Sheet se padhi ja rahi hai:")
+                st.markdown("### 👥 Manage Registered Users")
+                st.write("Yahan se naye users add ya delete karein. Data direct Google Sheet me save hoga!")
+                
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    st.markdown("##### ➕ Register New Student")
+                    new_user_email = st.text_input("Enter Student's Email:", placeholder="rahul@gmail.com").strip().lower()
+                    if st.button("➕ Add User", type="primary", use_container_width=True):
+                        if new_user_email == "":
+                            st.warning("⚠️ Email box khali nahi ho sakta!")
+                        elif new_user_email in st.session_state.live_allowed_users:
+                            st.info("💡 Ye email pehle se hi registered hai!")
+                        else:
+                            with st.spinner("Saving to Database..."):
+                                try:
+                                    safe_email = urllib.parse.quote(new_user_email)
+                                    api_url = f"{st.session_state.apps_script_url}?action=add&email={safe_email}"
+                                    urllib.request.urlopen(api_url) 
+                                    st.success(f"🎉 `{new_user_email}` register ho gaya!")
+                                    st.session_state.live_allowed_users.append(new_user_email) 
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error("❌ API Error. Check Apps Script URL.")
+                
+                with col2:
+                    st.markdown("##### 🗑️ Remove / Block Student")
+                    if len(st.session_state.live_allowed_users) > 0:
+                        user_to_delete = st.selectbox("Select Email to Delete:", st.session_state.live_allowed_users)
+                        if st.button("🗑️ Delete User", type="secondary", use_container_width=True):
+                            with st.spinner("Deleting from Database..."):
+                                try:
+                                    safe_email_del = urllib.parse.quote(user_to_delete)
+                                    api_url_del = f"{st.session_state.apps_script_url}?action=delete&email={safe_email_del}"
+                                    urllib.request.urlopen(api_url_del)
+                                    st.success(f"❌ `{user_to_delete}` ka access block kar diya gaya!")
+                                    st.session_state.live_allowed_users.remove(user_to_delete) 
+                                    st.rerun()
+                                except Exception as e:
+                                    st.error("❌ API Error. Check Apps Script URL.")
+                    else:
+                        st.info("Database khali hai.")
+                
+                st.markdown("---")
+                st.markdown("##### 📊 Active Registered Users List")
                 st.code(st.session_state.live_allowed_users)
-                st.caption("Naye user ko add ya delete karne ke liye bas apne phone par 'PAATHSALA Users' sheet ko edit karein.")
+
+            with st.container(border=True):
+                st.markdown("### ⚙️ System Configuration")
+                new_dpp_url = st.text_input("📚 DPP Questions Sheet Link:", value=st.session_state.dynamic_sheet_url)
+                new_users_url = st.text_input("👥 Users Database Sheet Link:", value=st.session_state.users_sheet_url)
+                new_api_url = st.text_input("🔗 API Script Web App Link:", value=st.session_state.apps_script_url)
+                
+                if st.button("💾 Save All Settings", type="primary"):
+                    st.session_state.dynamic_sheet_url = new_dpp_url
+                    st.session_state.users_sheet_url = new_users_url
+                    st.session_state.apps_script_url = new_api_url
+                    st.success("🎉 Settings permanently app ke andar save ho gayi hain!")
+                    st.rerun()
