@@ -11,17 +11,17 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 # =========================================================================
-# DUMMY LINKS (APP CHALNE KE BAAD ADMIN PANEL SE CHANGE KAREIN)
+# 🛑 APNE LINKS YAHAN DAALEIN 🛑
 # =========================================================================
 
 if 'dynamic_sheet_url' not in st.session_state: 
-    st.session_state.dynamic_sheet_url = "https://docs.google.com/spreadsheets/d/dummy_link"
+    st.session_state.dynamic_sheet_url = "LINK_1_DPP_SHEET"
 
 if 'users_sheet_url' not in st.session_state: 
-    st.session_state.users_sheet_url = "https://docs.google.com/spreadsheets/d/dummy_link"
+    st.session_state.users_sheet_url = "LINK_2_USERS_SHEET"
 
 if 'apps_script_url' not in st.session_state: 
-    st.session_state.apps_script_url = "https://script.google.com/macros/s/dummy_link/exec"
+    st.session_state.apps_script_url = "LINK_3_APPS_SCRIPT"
 
 # =========================================================================
 
@@ -151,25 +151,26 @@ else:
     is_admin = (st.session_state.user_identifier == admin_email)
     role_icon = "👑 Admin Dashboard" if is_admin else "🎓 Student Portal"
     
-    col_user, col_logout = st.columns()
-    
-    with col_user:
-        st.markdown(f"""
-        <div style="background-color: #f8fafc; padding: 10px 20px; border-radius: 12px; border: 1px solid #e2e8f0; border-left: 5px solid #2563eb; margin-bottom: 15px;">
+    # 🔥 ERROR-FREE HEADER: Bina columns ka use kiye mast design 🔥
+    st.markdown(f"""
+    <div style="background-color: #f8fafc; padding: 10px 20px; border-radius: 12px; border: 1px solid #e2e8f0; border-left: 5px solid #2563eb; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+        <div>
             <div style="font-size: 12px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">{role_icon}</div>
             <div style="font-size: 16px; color: #0b2265; font-weight: 800;">👤 {st.session_state.user_identifier}</div>
         </div>
-        """, unsafe_allow_html=True)
+    </div>
+    """, unsafe_allow_html=True)
+    
+    if st.button("🔒 Secure Logout", type="secondary"):
+        st.session_state.logged_in = False
+        st.session_state.otp_sent = False
+        st.session_state.generated_otp = None
+        st.session_state.user_identifier = "" 
+        st.rerun()
         
-    with col_logout:
-        st.markdown("<br>", unsafe_allow_html=True) 
-        if st.button("🔒 Logout", use_container_width=True):
-            st.session_state.logged_in = False
-            st.session_state.otp_sent = False
-            st.session_state.generated_otp = None
-            st.session_state.user_identifier = "" 
-            st.rerun()
+    st.markdown("<br>", unsafe_allow_html=True)
 
+    # TABS FOR ADMIN AND STUDENTS
     if is_admin:
         tab1, tab2, tab3 = st.tabs(["📝 DPP Generator", "📞 Contact Us", "👑 Admin Panel"])
     else:
@@ -320,20 +321,58 @@ else:
                 <h2 style="color: #0b2265; margin: 0; font-size: 26px; font-weight: 800;">Amit Kumar Shaw</h2>
                 <p style="color: #64748b; margin: 5px 0 0 0; font-size: 15px; font-weight: 500;">Developer & Creator</p>
             </div>
+            <hr>
+            <p style="text-align: center;"><strong>📞 Phone / WhatsApp:</strong> +91 8116230505</p>
+            <p style="text-align: center;"><strong>📧 Email:</strong> amit.kr.shaw.3@gmail.com</p>
             """, unsafe_allow_html=True)
 
     if is_admin:
         with tab3:
             st.markdown("<br>", unsafe_allow_html=True)
+            
+            with st.container(border=True):
+                st.markdown("### 👥 Manage Registered Users")
+                st.write("Yahan se naye users add ya delete karein.")
+                
+                col_add, col_del = st.columns(2)
+                
+                with col_add:
+                    st.markdown("##### ➕ Add Student")
+                    new_user_email = st.text_input("Enter Email:", placeholder="rahul@gmail.com", key="add_user").strip().lower()
+                    if st.button("➕ Add", type="primary", use_container_width=True):
+                        if new_user_email:
+                            try:
+                                safe_email = urllib.parse.quote(new_user_email)
+                                urllib.request.urlopen(f"{st.session_state.apps_script_url}?action=add&email={safe_email}") 
+                                st.success(f"Added `{new_user_email}`")
+                                st.rerun()
+                            except:
+                                st.error("API Error.")
+                
+                with col_del:
+                    st.markdown("##### 🗑️ Remove Student")
+                    if st.session_state.live_allowed_users:
+                        user_to_delete = st.selectbox("Select Email:", st.session_state.live_allowed_users)
+                        if st.button("🗑️ Delete", type="secondary", use_container_width=True):
+                            try:
+                                safe_email_del = urllib.parse.quote(user_to_delete)
+                                urllib.request.urlopen(f"{st.session_state.apps_script_url}?action=delete&email={safe_email_del}")
+                                st.success("Removed successfully!")
+                                st.rerun()
+                            except:
+                                st.error("API Error.")
+                    else:
+                        st.info("No active users.")
+
             with st.container(border=True):
                 st.markdown("### ⚙️ System Configuration")
                 new_dpp_url = st.text_input("📚 DPP Questions Sheet Link:", value=st.session_state.dynamic_sheet_url)
                 new_users_url = st.text_input("👥 Users Database Sheet Link:", value=st.session_state.users_sheet_url)
                 new_api_url = st.text_input("🔗 API Script Web App Link:", value=st.session_state.apps_script_url)
                 
-                if st.button("💾 Save All Settings", type="primary"):
+                if st.button("💾 Save Settings", type="primary"):
                     st.session_state.dynamic_sheet_url = new_dpp_url
                     st.session_state.users_sheet_url = new_users_url
                     st.session_state.apps_script_url = new_api_url
-                    st.success("🎉 Settings app ke andar save ho gayi hain!")
+                    st.success("🎉 Settings saved!")
                     st.rerun()
