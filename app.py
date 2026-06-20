@@ -10,9 +10,10 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
-# ==========================================
-# 🛑 APNE LINKS YAHAN PASTE KAREIN (LINES 17-19) 🛑
-# ==========================================
+# =========================================================================
+# 🛑 APNE LINKS YAHAN PASTE KAREIN (IN 3 LINES KO DHYAN SE BHAREIN) 🛑
+# =========================================================================
+
 if 'dynamic_sheet_url' not in st.session_state: 
     st.session_state.dynamic_sheet_url = "https://docs.google.com/spreadsheets/d/1dc5ychco_3BXn_XcY0BGyxAlGDbczSuEel67VHYR-m4/edit?usp=sharing"
 
@@ -21,7 +22,9 @@ if 'users_sheet_url' not in st.session_state:
 
 if 'apps_script_url' not in st.session_state: 
     st.session_state.apps_script_url = "https://script.google.com/macros/s/AKfycbwToIrpZtr924Drx55s432gaQwrfMxwZ8auzsyVnusLxVgkyT7t8MUFtkjfWoj0Xt1T/exec"
-# ==========================================
+
+# =========================================================================
+
 
 # 1. SESSION STATES INITIALIZATION
 if 'logged_in' not in st.session_state: st.session_state.logged_in = False
@@ -167,7 +170,7 @@ else:
     # 🔥 SMART USER PROFILE BADGE & LOGOUT BUTTON 🔥
     role_icon = "👑 Admin Dashboard" if is_admin else "🎓 Student Portal"
     
-    # YAHI LINE MEIN ERROR THA JO AB FIX HO GAYA HAI 👇
+    # ✅ ERROR FIXED HERE: Added back properly
     col_user, col_logout = st.columns()
     with col_user:
         user_badge_html = f"""
