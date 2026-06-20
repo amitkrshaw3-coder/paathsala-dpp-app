@@ -97,14 +97,14 @@ st.set_page_config(page_title="PAATHSALA", page_icon="📚", layout="centered")
 custom_ui_css = """
 <style>
 header {visibility: hidden !important;} [data-testid="stHeader"] {background-color: transparent !important;}
-[data-testid="stAppViewContainer"]::after { content: ""; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-image: url('https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png'); background-size: 250px; background-repeat: repeat; opacity: 0.05; pointer-events: none; z-index: 999999; }
-.custom-top-bar { position: fixed; top: 0; left: 0; width: 100vw; height: 60px; background-color: #0b2265; box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2); z-index: 9999999; display: flex; justify-content: center; }
+[data-testid="stAppViewContainer"]::after { content: ""; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-image: url('https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png'); background-size: 250px; background-repeat: repeat; opacity: 0.05; pointer-events: none; z-index: -1 !important; }
+.custom-top-bar { position: fixed; top: 0; left: 0; width: 100vw; height: 60px; background-color: #0b2265; box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2); z-index: 99999; display: flex; justify-content: center; }
 .custom-logo { height: 90px; background-color: white; padding: 8px 20px; border-bottom-left-radius: 25px; border-bottom-right-radius: 25px; box-shadow: 0px 5px 15px rgba(0,0,0,0.3); margin-top: 0px; }
-.custom-bottom-pill { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(11, 34, 101, 0.95) !important; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.15); padding: 8px 24px; border-radius: 50px; box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.3); z-index: 9999999; display: flex; justify-content: center; align-items: center; }
+.custom-bottom-pill { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: rgba(11, 34, 101, 0.95) !important; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.15); padding: 8px 24px; border-radius: 50px; box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.3); z-index: 99999; display: flex; justify-content: center; align-items: center; }
 .footer-text { color: #e2e8f0 !important; font-size: 13px !important; font-family: sans-serif; display: flex; align-items: center; gap: 6px; margin: 0 !important; }
 .footer-name { color: #ffffff !important; font-weight: 700 !important; }
 .main .block-container { padding-top: 110px !important; padding-bottom: 90px !important; }
-div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #ffffff !important; border-radius: 16px !important; box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.05) !important; border: 1px solid #f1f5f9 !important; padding: 25px !important; margin-bottom: 25px !important; }
+div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #ffffff !important; border-radius: 16px !important; box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.05) !important; border: 1px solid #f1f5f9 !important; padding: 25px !important; margin-bottom: 25px !important; position: relative; z-index: 10; }
 div[data-testid="stVerticalBlockBorderWrapper"] p, div[data-testid="stVerticalBlockBorderWrapper"] label, div[data-testid="stVerticalBlockBorderWrapper"] span { color: #0b2265 !important; font-weight: 600 !important; }
 </style>
 <div class="custom-top-bar"><img class="custom-logo" src="https://raw.githubusercontent.com/amitkrshaw3-coder/paathsala-dpp-app/main/1000086036.png"></div>
@@ -124,7 +124,7 @@ if not st.session_state.logged_in:
         
         if not st.session_state.otp_sent:
             with st.form("email_form"):
-                user_input = st.text_input("Enter Registered Email ID:", placeholder="student@gmail.com")
+                user_input = st.text_input("Enter Registered Email ID:", placeholder="student@gmail.com", key="login_email_widget")
                 submit_email = st.form_submit_button("🚀 Request Login OTP")
                 
                 if submit_email:
@@ -144,7 +144,7 @@ if not st.session_state.logged_in:
         else:
             st.info(f"📩 OTP sent successfully to **{st.session_state.user_identifier}**")
             with st.form("otp_form"):
-                entered_otp = st.text_input("Enter 4-Digit OTP:", max_chars=4)
+                entered_otp = st.text_input("Enter 4-Digit OTP:", max_chars=4, key="login_otp_widget")
                 col1, col2 = st.columns(2)
                 with col1: verify_btn = st.form_submit_button("✅ Verify & Login")
                 with col2: resend_btn = st.form_submit_button("🔄 Cancel / Change Email")
@@ -167,6 +167,7 @@ else:
     # 🔥 SMART USER PROFILE BADGE & LOGOUT BUTTON 🔥
     role_icon = "👑 Admin Dashboard" if is_admin else "🎓 Student Portal"
     
+    # YAHI LINE MEIN ERROR THA JO AB FIX HO GAYA HAI 👇
     col_user, col_logout = st.columns()
     with col_user:
         user_badge_html = f"""
@@ -367,7 +368,7 @@ else:
                 
                 with col1:
                     st.markdown("##### ➕ Register New Student")
-                    new_user_email = st.text_input("Enter Student's Email:", placeholder="rahul@gmail.com").strip().lower()
+                    new_user_email = st.text_input("Enter Student's Email:", placeholder="rahul@gmail.com", key="admin_add_email_input").strip().lower()
                     if st.button("➕ Add User", type="primary", use_container_width=True):
                         if new_user_email == "":
                             st.warning("⚠️ Email box khali nahi ho sakta!")
