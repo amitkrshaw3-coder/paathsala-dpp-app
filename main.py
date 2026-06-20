@@ -151,7 +151,6 @@ else:
     is_admin = (st.session_state.user_identifier == admin_email)
     role_icon = "👑 Admin Dashboard" if is_admin else "🎓 Student Portal"
     
-    # 🔥 ERROR-FREE HEADER: Bina columns ka use kiye mast design 🔥
     st.markdown(f"""
     <div style="background-color: #f8fafc; padding: 10px 20px; border-radius: 12px; border: 1px solid #e2e8f0; border-left: 5px solid #2563eb; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
         <div>
@@ -170,7 +169,6 @@ else:
         
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # TABS FOR ADMIN AND STUDENTS
     if is_admin:
         tab1, tab2, tab3 = st.tabs(["📝 DPP Generator", "📞 Contact Us", "👑 Admin Panel"])
     else:
@@ -346,8 +344,8 @@ else:
                                 urllib.request.urlopen(f"{st.session_state.apps_script_url}?action=add&email={safe_email}") 
                                 st.success(f"Added `{new_user_email}`")
                                 st.rerun()
-                            except:
-                                st.error("API Error.")
+                            except Exception as e:
+                                st.error("Link check karein.")
                 
                 with col_del:
                     st.markdown("##### 🗑️ Remove Student")
@@ -359,8 +357,8 @@ else:
                                 urllib.request.urlopen(f"{st.session_state.apps_script_url}?action=delete&email={safe_email_del}")
                                 st.success("Removed successfully!")
                                 st.rerun()
-                            except:
-                                st.error("API Error.")
+                            except Exception as e:
+                                st.error("Link check karein.")
                     else:
                         st.info("No active users.")
 
