@@ -15,13 +15,13 @@ from email.mime.multipart import MIMEMultipart
 # =========================================================================
 
 if 'dynamic_sheet_url' not in st.session_state: 
-    st.session_state.dynamic_sheet_url = "LINK_1_DPP_SHEET"
+    st.session_state.dynamic_sheet_url = "https://docs.google.com/spreadsheets/d/1dc5ychco_3BXn_XcY0BGyxAlGDbczSuEel67VHYR-m4/edit?usp=sharing"
 
 if 'users_sheet_url' not in st.session_state: 
-    st.session_state.users_sheet_url = "LINK_2_USERS_SHEET"
+    st.session_state.users_sheet_url = "https://docs.google.com/spreadsheets/d/1mlHR5Bq0RcOqTAOaePSiLiakSasKeF9JgOrL_7nmUFI/edit?usp=sharing"
 
 if 'apps_script_url' not in st.session_state: 
-    st.session_state.apps_script_url = "LINK_3_APPS_SCRIPT"
+    st.session_state.apps_script_url = "https://script.google.com/macros/s/AKfycbwToIrpZtr924Drx55s432gaQwrfMxwZ8auzsyVnusLxVgkyT7t8MUFtkjfWoj0Xt1T/exec"
 
 # =========================================================================
 
