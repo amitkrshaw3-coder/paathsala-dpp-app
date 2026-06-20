@@ -14,8 +14,8 @@ if 'logged_in' not in st.session_state: st.session_state.logged_in = False
 if 'otp_sent' not in st.session_state: st.session_state.otp_sent = False
 if 'generated_otp' not in st.session_state: st.session_state.generated_otp = None
 if 'user_identifier' not in st.session_state: st.session_state.user_identifier = ""
-if 'dynamic_sheet_url' not in st.session_state: st.session_state.dynamic_sheet_url = "PASTE_YOUR_DPP_QUESTIONS_SHEET_LINK_HERE"
-if 'users_sheet_url' not in st.session_state: st.session_state.users_sheet_url = "PASTE_YOUR_REGISTERED_USERS_SHEET_LINK_HERE"
+if 'dynamic_sheet_url' not in st.session_state: st.session_state.dynamic_sheet_url = "https://docs.google.com/spreadsheets/d/1dc5ychco_3BXn_XcY0BGyxAlGDbczSuEel67VHYR-m4/edit?usp=sharing"
+if 'users_sheet_url' not in st.session_state: st.session_state.users_sheet_url = "https://docs.google.com/spreadsheets/d/1mlHR5Bq0RcOqTAOaePSiLiakSasKeF9JgOrL_7nmUFI/edit?usp=sharing"
 if 'live_allowed_users' not in st.session_state: st.session_state.live_allowed_users = []
 
 # Fetch Live Users from Google Sheet
