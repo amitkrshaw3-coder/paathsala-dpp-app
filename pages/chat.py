@@ -1,5 +1,6 @@
 import streamlit as st
 from supabase import create_client, Client
+from streamlit_autorefresh import st_autorefresh  # Nayi library auto-refresh ke liye
 
 # ==========================================
 # 1. PAGE CONFIGURATION
@@ -7,39 +8,43 @@ from supabase import create_client, Client
 st.set_page_config(page_title="PAATHSALA Chat", page_icon="💬", layout="centered")
 
 # ==========================================
-# 2. SECURITY LOCK (LOGIN CHECK) 🔒
+# 2. AUTO-REFRESHER (Magic Trick) 🪄
 # ==========================================
-# CHOR MIL GAYA! Yahan 'logged_in' set kar diya hai
+# Yeh line har 3000 milliseconds (3 seconds) me page ko chupchap refresh karegi
+# Jisse kisi aur ka message aate hi turant screen par dikh jayega!
+st_autorefresh(interval=3000, limit=None, key="chat_autorefresh")
+
+# ==========================================
+# 3. SECURITY LOCK (LOGIN CHECK) 🔒
+# ==========================================
 if "logged_in" not in st.session_state or st.session_state["logged_in"] == False:
     st.warning("⚠️ Access Denied! Kripya pehle PAATHSALA app me login karein.")
     st.stop() 
 
 # ==========================================
-# 3. SUPABASE CONNECTION CONFIGURATION ⚙️
+# 4. SUPABASE CONNECTION CONFIGURATION ⚙️
 # ==========================================
-# 👇 YAHAN APNI SUPABASE DETAILS WAPAS DAAL DIJIYE 👇
-
-SUPABASE_URL = "https://rmdwvrjschmeztzrestm.supabase.co" # Apni URL dalein
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtZHd2cmpzY2htZXp0enJlc3RtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwNTI2NzcsImV4cCI6MjA5NzYyODY3N30.H9hvCcDe2EUqrkukbxQdKoMSt_VNryl4Hnn7t3XZm2o"          # Apni API key dalein
-
+# 👇 Apni URL aur Key yahan daaliye 👇
+SUPABASE_URL = "https://rmdwvrjschmeztzrestm.supabase.co" 
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtZHd2cmpzY2htZXp0enJlc3RtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwNTI2NzcsImV4cCI6MjA5NzYyODY3N30.H9hvCcDe2EUqrkukbxQdKoMSt_VNryl4Hnn7t3XZm2oE"          
 # 👆 --------------------------------------- 👆
 
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 # ==========================================
-# 4. UI HEADERS & USER INFO
+# 5. UI HEADERS & USER INFO
 # ==========================================
 st.title("💬 PAATHSALA Live Discussion")
-st.caption("🚀 Welcome to PAATHSALA Live Doubt Solving Room. Aap yahan apne doubts discuss kar sakte hain.")
+st.caption("🚀 Welcome to PAATHSALA Live Doubt Solving Room.")
 
-# YAHAN BHI CHANGE KIYA HAI: Sender ka email dikhane ke liye 'user_identifier'
 current_user = st.session_state.get("user_identifier", "Student")
+
+# Yahan aapko khudka naam dikhega
 st.write(f"👤 Connected as: **{current_user}**")
 st.divider()
 
 # ==========================================
-# ==========================================
-# 5. CHAT DIKHANE KA BOX (READ FROM DATABASE) 📥
+# 6. CHAT DIKHANE KA BOX (READ FROM DATABASE) 📥
 # ==========================================
 try:
     response = supabase.table("chat_history").select("*").order("created_at").execute()
@@ -54,18 +59,17 @@ with chat_container:
     for row in chat_data:
         sender_email = row['sender']
         
-        # TRICK: Email ko '@' se tod do aur pehla hissa utha lo
-        display_name = sender_email.split('@')[0] 
+        # TRICK 1: Email ke shuruati 4 letters lo aur aage '***' laga do (Bank Level Security)
+        # Jaise 'paathsala37@gmail.com' ban jayega 'paat***'
+        display_name = sender_email[:4] + "***"
         
         if sender_email == current_user:
-            # Khud ke message me 'Aap' dikhega
             st.markdown(f"🟢 **Aap**: {row['message']}")
         else:
-            # Dusre bacchon ke message me sirf unka aage ka naam/id dikhega
             st.markdown(f"🔵 **{display_name}**: {row['message']}")
 
 # ==========================================
-# 6. MESSAGE TYPE KARNE KA BOX (WRITE TO DATABASE) 📤
+# 7. MESSAGE TYPE KARNE KA BOX (WRITE TO DATABASE) 📤
 # ==========================================
 if prompt := st.chat_input("Apna doubt ya message yahan type karein..."):
     
@@ -76,6 +80,7 @@ if prompt := st.chat_input("Apna doubt ya message yahan type karein..."):
     
     try:
         supabase.table("chat_history").insert(new_message_data).execute()
+        # Message bhejne ke turant baad refresh
         st.rerun()
     except Exception as e:
-        st.error("Message send nahi ho paya. Kripya check karein ki Supabase me table ka naam 'chat_history' hi hai na.")
+        st.error("Message send nahi ho paya. Kripya URL/Key check karein.")
