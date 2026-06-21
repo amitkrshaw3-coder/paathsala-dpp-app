@@ -13,6 +13,14 @@ st.set_page_config(
     page_title="PAATHSALA",
     page_icon="1000086036.png" 
 )
+hide_streamlit_style = """
+            <style>
+            #MainMenu {visibility: hidden;} /* Upar ka menu hide karega */
+            footer {visibility: hidden;} /* Niche ka 'Made with Streamlit' hide karega */
+            header {visibility: hidden;} /* Upar ki header line hide karega */
+            </style>
+            """
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 # =========================================================================
 # 🛑 APNE LINKS YAHAN DAALEIN 🛑
