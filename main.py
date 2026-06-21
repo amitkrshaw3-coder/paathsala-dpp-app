@@ -9,19 +9,20 @@ import streamlit.components.v1 as components
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-# Logo/Favicon update karne ke liye (Browser tab mein)
-st.set_page_config(page_title="PAATHSALA", page_icon="🎓")
-
-# Footer aur Header hide karne ka naya CSS
-hide_decor = """
+# Sirf Footer aur "Hosted by Streamlit" badge hide karne ka master code
+hide_footer_style = """
 <style>
-  [data-testid="stHeader"] {display: none !important;}
-  [data-testid="stFooter"] {display: none !important;}
-  #MainMenu {visibility: hidden !important;}
-  footer {visibility: hidden !important;}
+/* 1. Normal Streamlit footer hide karne ke liye */
+footer {visibility: hidden !important;}
+[data-testid="stFooter"] {display: none !important;}
+
+/* 2. "Hosted with Streamlit" floating badge hide karne ke liye */
+[class^="viewerBadge"] {display: none !important;}
+.viewerBadge_container__1QSob {display: none !important;}
+.styles_viewerBadge__1yB5_ {display: none !important;}
 </style>
 """
-st.markdown(hide_decor, unsafe_allow_html=True)
+st.markdown(hide_footer_style, unsafe_allow_html=True)
 
 # =========================================================================
 # 🛑 APNE LINKS YAHAN DAALEIN 🛑
