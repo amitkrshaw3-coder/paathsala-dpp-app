@@ -44,7 +44,7 @@ try:
     response = supabase.table("chat_history").select("*").order("created_at").execute()
     chat_data = response.data
 except Exception as e:
-    st.error("Database se connect karne me dikkat aa rahi hai. Kripya URL aur Key check karein.")
+    st.error(f"Asli Error: {e}")
     chat_data = []
 
 chat_container = st.container(height=450)
