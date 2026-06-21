@@ -51,6 +51,9 @@ except Exception as e:
 # ==========================================
 # 5. UI HEADERS & USER INFO
 # ==========================================
+# 👇 Yeh naya button aapko wapas main.py par le jayega 👇
+st.page_link("main.py", label="🏠 Main Menu me wapas jayein", use_container_width=False)
+
 st.title("💬 PAATHSALA Live Discussion")
 st.caption("🚀 Welcome to PAATHSALA Live Doubt Solving Room.")
 st.write(f"👤 Connected as: **{current_user}**")
