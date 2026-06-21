@@ -22,8 +22,10 @@ st_autorefresh(interval=3000, limit=None, key="chat_autorefresh")
 # 2. SECURITY LOCK (LOGIN CHECK) 🔒
 # ==========================================
 if "logged_in" not in st.session_state or st.session_state["logged_in"] == False:
-    st.warning("⚠️ Access Denied! Kripya pehle PAATHSALA app me login karein.")
-    st.stop() 
+    st.warning("⚠️ Session Expired! Aap log out ho gaye hain. Kripya wapas login karein.")
+    # 👇 Yeh button unhe wapas login page par bhej dega
+    st.page_link("main.py", label="🏠 Wapas Login karne ke liye yahan click karein", use_container_width=False)
+    st.stop()
 
 # ==========================================
 # 3. SUPABASE CONNECTION CONFIGURATION ⚙️
@@ -37,6 +39,7 @@ supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 current_user = st.session_state.get("user_identifier", "Student")
 
 # ==========================================
+# ==========================================
 # 4. 🔴 BOUNCER (BLOCK CHECK) 🔴
 # ==========================================
 try:
@@ -44,9 +47,11 @@ try:
     if len(block_check.data) > 0:
         st.error("🚫 ACCOUNT BLOCKED!")
         st.error("Aapko chat room me spam karne ya rules todne ke karan block kar diya gaya hai.")
+        # 👇 Blocked user ko bhi wapas jaane ka rasta mil jayega
+        st.page_link("main.py", label="🏠 Main Menu par wapas jayein", use_container_width=False)
         st.stop() 
 except Exception as e:
-    pass 
+    pass
 
 # ==========================================
 # 5. UI HEADERS & USER INFO
