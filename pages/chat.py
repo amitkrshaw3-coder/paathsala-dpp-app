@@ -38,23 +38,31 @@ st.write(f"👤 Connected as: **{current_user}**")
 st.divider()
 
 # ==========================================
+# ==========================================
 # 5. CHAT DIKHANE KA BOX (READ FROM DATABASE) 📥
 # ==========================================
 try:
     response = supabase.table("chat_history").select("*").order("created_at").execute()
     chat_data = response.data
 except Exception as e:
-    st.error(f"Asli Error: {e}")
+    st.error(f"Database se connect karne me dikkat aa rahi hai. Error: {e}")
     chat_data = []
 
 chat_container = st.container(height=450)
 
 with chat_container:
     for row in chat_data:
-        if row['sender'] == current_user:
+        sender_email = row['sender']
+        
+        # TRICK: Email ko '@' se tod do aur pehla hissa utha lo
+        display_name = sender_email.split('@')[0] 
+        
+        if sender_email == current_user:
+            # Khud ke message me 'Aap' dikhega
             st.markdown(f"🟢 **Aap**: {row['message']}")
         else:
-            st.markdown(f"🔵 **{row['sender']}**: {row['message']}")
+            # Dusre bacchon ke message me sirf unka aage ka naam/id dikhega
+            st.markdown(f"🔵 **{display_name}**: {row['message']}")
 
 # ==========================================
 # 6. MESSAGE TYPE KARNE KA BOX (WRITE TO DATABASE) 📤
