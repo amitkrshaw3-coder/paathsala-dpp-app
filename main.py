@@ -29,7 +29,7 @@ div[class*="viewerBadge"] {display: none !important;}
 </style>
 """
 st.markdown(hide_all_streamlit_branding, unsafe_allow_html=True)
-st.page_link("pages/chat.py", label="💬 Live Chat Room", icon="💬")
+
 
 # =========================================================================
 # 🛑 APNE LINKS YAHAN DAALEIN 🛑
@@ -189,6 +189,7 @@ else:
         st.rerun()
         
     st.markdown("<br>", unsafe_allow_html=True)
+    st.page_link("pages/chat.py", label="💬 Live Chat Room", icon="💬")
 
     if is_admin:
         tab1, tab2, tab3 = st.tabs(["📝 DPP Generator", "📞 Contact Us", "👑 Admin Panel"])
