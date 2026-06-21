@@ -6,6 +6,16 @@ from streamlit_autorefresh import st_autorefresh
 # 1. PAGE CONFIGURATION & AUTO-REFRESH
 # ==========================================
 st.set_page_config(page_title="PAATHSALA Chat", page_icon="💬", layout="centered")
+# 👇 YEH RAHA WO CSS MAGIC JO GITHUB/MENU CHUPAYEGA 👇
+hide_streamlit_style = """
+<style>
+#MainMenu {visibility: hidden;} /* Top right ka menu chupayega */
+footer {visibility: hidden;}    /* Niche ka 'Made with Streamlit' chupayega */
+header {visibility: hidden;}    /* Upar ka header jisme GitHub icon hota hai wo chupayega */
+</style>
+"""
+st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+# 👆 ----------------------------------------------- 👆
 st_autorefresh(interval=3000, limit=None, key="chat_autorefresh")
 
 # ==========================================
