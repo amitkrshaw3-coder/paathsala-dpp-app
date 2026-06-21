@@ -1,46 +1,82 @@
 import streamlit as st
-from datetime import datetime
-# --- SECURITY LOCK ---
-# Agar user ke paas login ka proof nahi hai, to usko wapas bhej do
-# (Aap check kijiye ki aapne login ke liye konsa session_state variable use kiya hai, 
-# main yahan 'logged_in' maan kar chal raha hu. Agar aapne kuch aur naam rakha hai jaise 'phone_verified', to wo likh dijiyega)
+from supabase import create_client, Client
 
-if "logged_in" not in st.session_state or st.session_state["logged_in"] == False:
-    st.warning("⚠️ Access Denied! Kripya pehle PAATHSALA me login karein.")
-    st.page_link("main.py", label="🏠 Wapas Login Page Par Jayein", icon="🔙")
-    st.stop() # Ye line code ko yahi rok degi, niche ka chat box dikhega hi nahi!
+# ==========================================
+# 1. PAGE CONFIGURATION
+# ==========================================
+st.set_page_config(page_title="PAATHSALA Chat", page_icon="💬", layout="centered")
 
-# Page ki setting
-st.set_page_config(page_title="Live Chat", page_icon="💬")
+# ==========================================
+# 2. SECURITY LOCK (LOGIN CHECK) 🔒
+# ==========================================
+# Dhyan dein: Agar aapne main.py me login verify karne ke liye 'login_proof' ki jagah 
+# koi aur variable use kiya hai (jaise 'logged_in' ya 'phone_verified'), to use niche badal lein.
+if "login_proof" not in st.session_state or st.session_state["login_proof"] == False:
+    st.warning("⚠️ Access Denied! Kripya pehle PAATHSALA app me login karein.")
+    st.stop() # Bin login wale user ke liye code yahi ruk jayega
 
+# ==========================================
+# 3. SUPABASE CONNECTION CONFIGURATION ⚙️
+# ==========================================
+# 👇 YAHAN APNI SUPABASE DETAILS UPDATE KAREIN 👇
+
+SUPABASE_URL = "https://rmdwvrjschmeztzrestm.supabase.co" # Apni Reference ID wali URL yahan dalein
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtZHd2cmpzY2htZXp0enJlc3RtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwNTI2NzcsImV4cCI6MjA5NzYyODY3N30.H9hvCcDe2EUqrkukbxQdKoMSt_VNryl4Hnn7t3XZm2o"          # Apni legacy anon key yahan paste karein
+
+# 👆 --------------------------------------- 👆
+
+# Supabase Client initialize karna
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+# ==========================================
+# 4. UI HEADERS & USER INFO
+# ==========================================
 st.title("💬 PAATHSALA Live Discussion")
-st.caption("Apne doubts yahan poochiye. Sabhi students aur admin yahan chat kar sakte hain.")
+st.caption("🚀 Welcome to PAATHSALA Live Doubt Solving Room. Aap yahan apne doubts discuss kar sakte hain.")
 
-# Chat memory initialize karna
-if "chat_messages" not in st.session_state:
-    st.session_state.chat_messages = []
+# User ka naam nikalna (Agar login system me kisi variable me naam save hai to wo utha lega, nahi to 'Student' dikhayega)
+current_user = st.session_state.get("user_name", "Student")
+st.write(f"👤 Connected as: **{current_user}**")
+st.divider()
 
-# User ka naam (Agar login se naam nahi mila, toh 'Student' dikhega)
-current_user = st.session_state.get("user_name", "Student") 
+# ==========================================
+# 5. CHAT DIKHANE KA BOX (READ FROM DATABASE) 📥
+# ==========================================
+try:
+    # Supabase ki 'chat_history' table se saare messages time ke hisaab se laana
+    response = supabase.table("chat_history").select("*").order("created_at").execute()
+    chat_data = response.data
+except Exception as e:
+    st.error("Database se connect karne me dikkat aa rahi hai. Kripya URL aur Key check karein.")
+    chat_data = []
 
-# Chat dikhane ka box
+# Ek fixed height wala container jisme saare messages scroll honge
 chat_container = st.container(height=450)
 
 with chat_container:
-    for msg in st.session_state.chat_messages:
-        role = "user" if msg["sender"] == current_user else "assistant"
-        with st.chat_message(role):
-            st.markdown(f"**{msg['sender']}**: {msg['text']}")
-            st.caption(f"{msg['time']}")
+    for row in chat_data:
+        # Agar message khud aapne bheja hai
+        if row['sender'] == current_user:
+            st.markdown(f"🟢 **Aap**: {row['message']}")
+        # Agar kisi aur registered student ne bheja hai
+        else:
+            st.markdown(f"🔵 **{row['sender']}**: {row['message']}")
 
-# Message type karne ka box
+# ==========================================
+# 6. MESSAGE TYPE KARNE KA BOX (WRITE TO DATABASE) 📤
+# ==========================================
 if prompt := st.chat_input("Apna doubt ya message yahan type karein..."):
-    current_time = datetime.now().strftime("%I:%M %p")
-    new_message = {
-        "sender": current_user, 
-        "text": prompt, 
-        "time": current_time
+    
+    # Naye message ka format taiyar karna
+    new_message_data = {
+        "sender": current_user,
+        "message": prompt
     }
     
-    st.session_state.chat_messages.append(new_message)
-    st.rerun()
+    try:
+        # Supabase me data insert karna
+        supabase.table("chat_history").insert(new_message_data).execute()
+        # Message save hote hi page ko refresh karna taaki screen par turant dikhe
+        st.rerun()
+    except Exception as e:
+        st.error("Message send nahi ho paya. Kripya check karein ki Supabase me table ka naam 'chat_history' hi hai na.")
