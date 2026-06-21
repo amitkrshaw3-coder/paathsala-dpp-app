@@ -9,20 +9,26 @@ import streamlit.components.v1 as components
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-# Sirf Footer aur "Hosted by Streamlit" badge hide karne ka master code
-hide_footer_style = """
+# Yeh Brahmastra CSS har tarah ke Streamlit branding ko block karega
+hide_all_streamlit_branding = """
 <style>
-/* 1. Normal Streamlit footer hide karne ke liye */
+/* 1. Normal Footer hide karne ke liye */
 footer {visibility: hidden !important;}
-[data-testid="stFooter"] {display: none !important;}
 
-/* 2. "Hosted with Streamlit" floating badge hide karne ke liye */
-[class^="viewerBadge"] {display: none !important;}
-.viewerBadge_container__1QSob {display: none !important;}
-.styles_viewerBadge__1yB5_ {display: none !important;}
+/* 2. Top Header aur Menu hide karne ke liye */
+header {visibility: hidden !important;}
+#MainMenu {visibility: hidden !important;}
+[data-testid="stToolbar"] {visibility: hidden !important;}
+
+/* 3. Floating "Hosted with Streamlit" badge hide karne ke liye (LINK BLOCKER) */
+a[href*="streamlit.io"] {display: none !important;}
+a[href*="streamlit.app"] {display: none !important;}
+
+/* 4. Kisi bhi 'viewerBadge' class ko force hide karne ke liye */
+div[class*="viewerBadge"] {display: none !important;}
 </style>
 """
-st.markdown(hide_footer_style, unsafe_allow_html=True)
+st.markdown(hide_all_streamlit_branding, unsafe_allow_html=True)
 
 # =========================================================================
 # 🛑 APNE LINKS YAHAN DAALEIN 🛑
