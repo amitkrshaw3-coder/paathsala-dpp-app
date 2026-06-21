@@ -9,6 +9,10 @@ import streamlit.components.v1 as components
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+st.set_page_config(
+    page_title="PAATHSALA",
+    page_icon="1000086036.png" 
+)
 
 # =========================================================================
 # 🛑 APNE LINKS YAHAN DAALEIN 🛑
