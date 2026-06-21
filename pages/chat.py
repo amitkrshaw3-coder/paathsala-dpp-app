@@ -5,6 +5,8 @@ from supabase import create_client, Client
 # 1. PAGE CONFIGURATION
 # ==========================================
 st.set_page_config(page_title="PAATHSALA Chat", page_icon="💬", layout="centered")
+# 👇 Temporary Spy Line (Pata lagane ke liye)
+st.write("Doonndh liya chor! Aapki memory mein ye variables hain:", st.session_state)
 
 # ==========================================
 # 2. SECURITY LOCK (LOGIN CHECK) 🔒
