@@ -1,5 +1,14 @@
 import streamlit as st
 from datetime import datetime
+# --- SECURITY LOCK ---
+# Agar user ke paas login ka proof nahi hai, to usko wapas bhej do
+# (Aap check kijiye ki aapne login ke liye konsa session_state variable use kiya hai, 
+# main yahan 'logged_in' maan kar chal raha hu. Agar aapne kuch aur naam rakha hai jaise 'phone_verified', to wo likh dijiyega)
+
+if "logged_in" not in st.session_state or st.session_state["logged_in"] == False:
+    st.warning("⚠️ Access Denied! Kripya pehle PAATHSALA me login karein.")
+    st.page_link("main.py", label="🏠 Wapas Login Page Par Jayein", icon="🔙")
+    st.stop() # Ye line code ko yahi rok degi, niche ka chat box dikhega hi nahi!
 
 # Page ki setting
 st.set_page_config(page_title="Live Chat", page_icon="💬")
