@@ -6,8 +6,6 @@ from streamlit_autorefresh import st_autorefresh
 # 1. PAGE CONFIGURATION & AUTO-REFRESH
 # ==========================================
 st.set_page_config(page_title="PAATHSALA Chat", page_icon="💬", layout="centered")
-
-# Har 3 second me naye messages check karne ke liye
 st_autorefresh(interval=3000, limit=None, key="chat_autorefresh")
 
 # ==========================================
@@ -36,9 +34,9 @@ try:
     if len(block_check.data) > 0:
         st.error("🚫 ACCOUNT BLOCKED!")
         st.error("Aapko chat room me spam karne ya rules todne ke karan block kar diya gaya hai.")
-        st.stop() # Blocked user ke liye code yahi ruk jayega
+        st.stop() 
 except Exception as e:
-    pass # Agar connection error ho to app crash na ho
+    pass 
 
 # ==========================================
 # 5. UI HEADERS & USER INFO
@@ -48,66 +46,81 @@ st.caption("🚀 Welcome to PAATHSALA Live Doubt Solving Room.")
 st.write(f"👤 Connected as: **{current_user}**")
 
 # ==========================================
-# 🌟 6. SECRET ADMIN PANEL (SIRF AAPKE LIYE) 🌟
+# 6. DATABASE SE MESSAGES NIKALNA 📥
+# (Chat pehle fetch karenge taaki Dropdown me list aake)
+# ==========================================
+try:
+    response = supabase.table("chat_history").select("*").order("created_at").execute()
+    chat_data = response.data
+    # Chat me aaye sabhi unique emails ki ek list banayenge (Admin ko chhodkar)
+    active_users = list(set([row['sender'] for row in chat_data if row['sender'] != "paathsala37@gmail.com"]))
+except Exception as e:
+    st.error("Database error aa raha hai.")
+    chat_data = []
+    active_users = []
+
+# ==========================================
+# 🌟 7. SMART SECRET ADMIN PANEL (NO TYPING!) 🌟
 # ==========================================
 if current_user == "paathsala37@gmail.com":
     with st.expander("🛠️ Admin Controls - Block / Unblock Users", expanded=False):
         tab1, tab2, tab3 = st.tabs(["🚫 Block", "✅ Unblock", "📋 Blocked List"])
         
+        # Block tab me chat karne walo ki Dropdown
         with tab1:
-            spammer_email = st.text_input("Spammer ka Email ID likhein:", key="block_input")
+            spammer_email = st.selectbox("Spammer ko select karein:", ["User chunein..."] + active_users, key="block_select")
             if st.button("🚫 Block User", key="block_btn"):
-                if spammer_email:
+                if spammer_email != "User chunein...":
                     try:
                         supabase.table("blocked_users").insert({"email": spammer_email}).execute()
-                        st.success(f"✅ {spammer_email} ko block kar diya gaya hai!")
+                        st.success(f"✅ {spammer_email} ko block kar diya gaya!")
                     except Exception as e:
-                        st.error("Error! Shayad user pehle se block hai.")
+                        st.error("Shayad user pehle se block hai.")
                 else:
-                    st.warning("Kripya pehle email ID type karein.")
+                    st.warning("Kripya dropdown se koi user chunein.")
                     
+        # Unblock tab me Blocked walo ki Dropdown
         with tab2:
-            unblock_email = st.text_input("User ka Email ID likhein jise azaad karna hai:", key="unblock_input")
+            try:
+                blocked_res = supabase.table("blocked_users").select("email").execute()
+                blocked_users_list = [row['email'] for row in blocked_res.data]
+            except:
+                blocked_users_list = []
+                
+            unblock_email = st.selectbox("Azaad karne ke liye select karein:", ["User chunein..."] + blocked_users_list, key="unblock_select")
             if st.button("✅ Unblock User", key="unblock_btn"):
-                if unblock_email:
+                if unblock_email != "User chunein...":
                     try:
                         supabase.table("blocked_users").delete().eq("email", unblock_email).execute()
-                        st.success(f"🎉 {unblock_email} ko unblock kar diya gaya hai!")
+                        st.success(f"🎉 {unblock_email} ko unblock kar diya gaya!")
                     except Exception as e:
                         st.error("Unblock karne me error aayi.")
                 else:
-                    st.warning("Kripya pehle email ID type karein.")
+                    st.warning("Kripya dropdown se koi user chunein.")
                     
         with tab3:
-            st.write("👇 **In users ko chat se block kiya gaya hai:**")
-            try:
-                blocked_list = supabase.table("blocked_users").select("email").execute()
-                if len(blocked_list.data) > 0:
-                    for row in blocked_list.data:
-                        st.error(f"- {row['email']}")
-                else:
-                    st.success("Abhi koi bhi user block nahi hai.")
-            except Exception as e:
-                st.write("List load nahi ho payi.")
+            st.write("👇 **In users ko block kiya gaya hai:**")
+            if len(blocked_users_list) > 0:
+                for email in blocked_users_list:
+                    st.error(f"- {email}")
+            else:
+                st.success("Abhi koi bhi user block nahi hai.")
 st.divider()
 
 # ==========================================
-# 7. CHAT DIKHANE KA BOX (READ FROM DATABASE) 📥
+# 8. CHAT DIKHANE KA BOX (SMART MASKING) 🎭
 # ==========================================
-try:
-    response = supabase.table("chat_history").select("*").order("created_at").execute()
-    chat_data = response.data
-except Exception as e:
-    st.error(f"Database se connect karne me dikkat aa rahi hai. Error: {e}")
-    chat_data = []
-
 chat_container = st.container(height=450)
 
 with chat_container:
     for row in chat_data:
         sender_email = row['sender']
-        # Bank-level security: Sirf pehle 4 letter aur uske baad ***
-        display_name = sender_email[:4] + "***"
+        
+        # 🔴 JADUI AANKHEIN (Smart Masking) 🔴
+        if current_user == "paathsala37@gmail.com":
+            display_name = sender_email # Admin ko pura naam dikhega
+        else:
+            display_name = sender_email[:4] + "***" # Bacchon ko aada dikhega
         
         if sender_email == current_user:
             st.markdown(f"🟢 **Aap**: {row['message']}")
@@ -115,7 +128,7 @@ with chat_container:
             st.markdown(f"🔵 **{display_name}**: {row['message']}")
 
 # ==========================================
-# 8. MESSAGE TYPE KARNE KA BOX (WRITE TO DATABASE) 📤
+# 9. MESSAGE TYPE KARNE KA BOX 📤
 # ==========================================
 if prompt := st.chat_input("Apna doubt ya message yahan type karein..."):
     new_message_data = {
