@@ -9,18 +9,19 @@ import streamlit.components.v1 as components
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-st.set_page_config(
-    page_title="PAATHSALA",
-    page_icon="1000086036.png" 
-)
-hide_streamlit_style = """
-            <style>
-            #MainMenu {visibility: hidden;} /* Upar ka menu hide karega */
-            footer {visibility: hidden;} /* Niche ka 'Made with Streamlit' hide karega */
-            header {visibility: hidden;} /* Upar ki header line hide karega */
-            </style>
-            """
-st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+# Logo/Favicon update karne ke liye (Browser tab mein)
+st.set_page_config(page_title="PAATHSALA", page_icon="🎓")
+
+# Footer aur Header hide karne ka naya CSS
+hide_decor = """
+<style>
+  [data-testid="stHeader"] {display: none !important;}
+  [data-testid="stFooter"] {display: none !important;}
+  #MainMenu {visibility: hidden !important;}
+  footer {visibility: hidden !important;}
+</style>
+"""
+st.markdown(hide_decor, unsafe_allow_html=True)
 
 # =========================================================================
 # 🛑 APNE LINKS YAHAN DAALEIN 🛑
