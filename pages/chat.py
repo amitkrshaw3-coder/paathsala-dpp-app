@@ -19,7 +19,7 @@ if "logged_in" not in st.session_state or st.session_state["logged_in"] == False
 # ==========================================
 # 👇 YAHAN APNI SUPABASE DETAILS WAPAS DAAL DIJIYE 👇
 
-SUPABASE_URL = "https://https://rmdwvrjschmeztzrestm.supabase.co" # Apni URL dalein
+SUPABASE_URL = "https://rmdwvrjschmeztzrestm.supabase.co" # Apni URL dalein
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtZHd2cmpzY2htZXp0enJlc3RtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwNTI2NzcsImV4cCI6MjA5NzYyODY3N30.H9hvCcDe2EUqrkukbxQdKoMSt_VNryl4Hnn7t3XZm2o"          # Apni API key dalein
 
 # 👆 --------------------------------------- 👆
