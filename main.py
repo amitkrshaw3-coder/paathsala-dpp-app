@@ -245,7 +245,7 @@ else:
                     
                     if dpp_data:
                         st.success("🎉 DPP Generated Successfully!")
-                        st.json(dpp_data)
+                        #st.json(dpp_data)
             # ----------------------------------------------
                     chapter_pool = [q for q in questions if q.get('Class') and q.get('Subject') and q.get('Chapter') and q['Class'].strip().lower() == selected_class.lower() and q['Subject'].strip().lower() == selected_subject.lower() and q['Chapter'].strip().lower() == selected_chapter.lower()]
                     mcq_pool = [q for q in chapter_pool if q.get('Type') and q['Type'].strip().upper() == 'MCQ']
