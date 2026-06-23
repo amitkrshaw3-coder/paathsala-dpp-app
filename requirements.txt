@@ -2,5 +2,4 @@ streamlit
 supabase
 streamlit-autorefresh
 streamlit
-streamlit
-fpdf2
+fpdf
