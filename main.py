@@ -9,6 +9,12 @@ import streamlit.components.v1 as components
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+
+# --- 🚀 NAYE IMPORTS YAHAN LAGAYE HAIN ---
+from dpp_generator import generate_paathsala_dpp
+from pdf_generator import create_pdf_from_json
+# ------------------------------------------
+
 # Yeh Brahmastra CSS har tarah ke Streamlit branding ko block karega
 hide_all_streamlit_branding = """
 <style>
@@ -191,10 +197,12 @@ else:
     st.markdown("<br>", unsafe_allow_html=True)
     st.page_link("pages/chat.py", label="💬 Live Chat Room", icon="💬")
 
+    # --- 🚀 TABS MEIN NAYA AI TAB ADD KIYA ---
     if is_admin:
-        tab1, tab2, tab3 = st.tabs(["📝 DPP Generator", "📞 Contact Us", "👑 Admin Panel"])
+        tab1, tab_ai, tab2, tab3 = st.tabs(["📝 Normal DPP", "👑 AI DPP (Plus)", "📞 Contact Us", "👑 Admin Panel"])
     else:
-        tab1, tab2 = st.tabs(["📝 DPP Generator", "📞 Contact Us"])
+        tab1, tab_ai, tab2 = st.tabs(["📝 Normal DPP", "👑 AI DPP (Plus)", "📞 Contact Us"])
+    # ----------------------------------------
 
     with tab1:
         st.write("Apna Class, Subject aur Chapter chunein aur turant DPP banayein!")
@@ -332,6 +340,38 @@ else:
                     </html>
                     """
                     components.html(html_template, height=800, scrolling=True)
+
+    # --- 🚀 NAYA AI TAB YAHAN ADD KIYA HAI ---
+    with tab_ai:
+        st.markdown("### 👑 Welcome to PAATHSALA Plus AI")
+        st.write("Sirf ek click mein unlimited AI-generated DPPs banayein!")
+        
+        with st.container(border=True):
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                ai_class = st.text_input("Class (e.g., 11, Dropper)", key="ai_cls")
+            with col2:
+                ai_sub = st.text_input("Subject (e.g., Mathematics)", key="ai_sub")
+            with col3:
+                ai_top = st.text_input("Topic (e.g., Integration)", key="ai_top")
+                
+            if st.button("🚀 Generate AI DPP", type="primary", use_container_width=True):
+                if ai_class and ai_sub and ai_top:
+                    with st.spinner("AI is creating your DPP... Please wait."):
+                        dpp_json = generate_paathsala_dpp(ai_sub, ai_top, ai_class)
+                        if dpp_json:
+                            pdf_path = create_pdf_from_json(dpp_json)
+                            with open(pdf_path, "rb") as f:
+                                st.download_button(
+                                    label="📥 Download Printable PDF", 
+                                    data=f, 
+                                    file_name=f"PAATHSALA_AI_{ai_top.replace(' ', '')}.pdf", 
+                                    mime="application/pdf",
+                                    use_container_width=True
+                                )
+                else:
+                    st.warning("⚠️ Kripya Class, Subject aur Topic teeno bharein!")
+    # ------------------------------------------
 
     with tab2:
         st.markdown("<br>", unsafe_allow_html=True)
