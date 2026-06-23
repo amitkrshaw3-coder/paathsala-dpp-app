@@ -42,7 +42,7 @@ current_user = st.session_state.get(
 # ======================================================
 
 # Replace these with your values for now
-SUPABASE_URL = "YOUR_SUPABASE_URL"
+SUPABASE_URL = "https://rmdwvrjschmeztzrestm.supabase.co"
 SUPABASE_KEY = "YOUR_SUPABASE_ANON_KEY"
 
 # Future:
