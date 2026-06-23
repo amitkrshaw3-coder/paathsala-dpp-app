@@ -23,7 +23,7 @@ def generate_paathsala_dpp(subject, topic, target_class):
             messages=[
                 {"role": "user", "content": prompt}
             ],
-            model="llama3-8b-8192", 
+            model="llama-3.1-8b-instant",
             temperature=0.5,
         )
         
