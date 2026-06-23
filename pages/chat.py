@@ -236,33 +236,86 @@ if current_user == ADMIN_EMAIL:
 st.divider()
 
 # ==========================================
-# CHAT DISPLAY
+# CHAT DISPLAY WITH AUTO SCROLL
 # ==========================================
-chat_box = st.container(height=450)
 
-with chat_box:
+chat_html = """
+<div id="chat-box" style="
+height:450px;
+overflow-y:auto;
+border:1px solid #ddd;
+padding:10px;
+border-radius:10px;
+background-color:white;
+">
+"""
 
-    for row in chat_data:
+for row in chat_data:
 
-        sender = row["sender"]
+    sender = row["sender"]
 
-        if current_user == ADMIN_EMAIL:
-            display_name = sender
-        else:
-            display_name = sender[:4] + "***"
+    if current_user == ADMIN_EMAIL:
+        display_name = sender
+    else:
+        display_name = sender[:4] + "***"
 
-        if sender == current_user:
+    # Apna message
+    if sender == current_user:
 
-            st.markdown(
-                f"🟢 **You:** {row['message']}"
-            )
+        chat_html += f"""
+        <div style='text-align:right;margin:8px;'>
 
-        else:
+            <span style='
+            background:#DCF8C6;
+            padding:8px 12px;
+            border-radius:12px;
+            display:inline-block;
+            max-width:80%;
+            '>
 
-            st.markdown(
-                f"🔵 **{display_name}:** "
-                f"{row['message']}"
-            )
+            <b>You</b><br>
+            {row['message']}
+
+            </span>
+
+        </div>
+        """
+
+    # Dusre ka message
+    else:
+
+        chat_html += f"""
+        <div style='margin:8px;'>
+
+            <span style='
+            background:#F1F1F1;
+            padding:8px 12px;
+            border-radius:12px;
+            display:inline-block;
+            max-width:80%;
+            '>
+
+            <b>{display_name}</b><br>
+            {row['message']}
+
+            </span>
+
+        </div>
+        """
+
+chat_html += """
+</div>
+
+<script>
+
+var chatBox = document.getElementById("chat-box");
+
+chatBox.scrollTop = chatBox.scrollHeight;
+
+</script>
+"""
+
+st.markdown(chat_html, unsafe_allow_html=True)
 
 # ==========================================
 # SPAM CONTROL
