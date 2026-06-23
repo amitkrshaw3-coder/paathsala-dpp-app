@@ -1,16 +1,15 @@
-import google.generativeai as genai
 import json
+import requests
 import streamlit as st
 
-# 🛑 Yahan humne st.secrets ka use bilkul hata diya hai
-# Seedha aapki key assign kar di hai
+# Aapki key yahan daal di gayi hai
 MY_API_KEY = "AQ.Ab8RN6JuAh1uLkTtLpBYONwYTY0ctyts2M7OL3MucnsLke4nPA"
 
-genai.configure(api_key=MY_API_KEY)
-
 def generate_paathsala_dpp(subject, topic, target_class):
-    # Model select kiya
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    # Seedha Google ke server ka direct link (Bina kisi library ke)
+    url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={MY_API_KEY}"
+    
+    headers = {'Content-Type': 'application/json'}
     
     prompt = f"""
     You are an expert exam paper setter. Create a Daily Practice Problem (DPP) for Class {target_class} on the Subject '{subject}' and Topic '{topic}'.
@@ -22,12 +21,27 @@ def generate_paathsala_dpp(subject, topic, target_class):
       "section_c": [{{"q_no": 16, "question": "Long answer", "key_point": "Detailed steps"}}]
     }}
     """
-    
+
+    # Data pack karke bhejna
+    data = {
+        "contents": [{"parts": [{"text": prompt}]}]
+    }
+
     try:
-        response = model.generate_content(prompt)
-        clean_text = response.text.replace("```json", "").replace("```", "").strip()
+        # Direct server par hit
+        response = requests.post(url, headers=headers, json=data)
+        response_json = response.json()
+        
+        # Agar Google ne koi naya bahana banaya, toh wo screen par dikhega
+        if 'error' in response_json:
+            st.error(f"Google Server Reply: {response_json['error']['message']}")
+            return None
+            
+        # Sahi data aane par extract karna
+        raw_text = response_json['candidates']['content']['parts']['text']
+        clean_text = raw_text.replace("```json", "").replace("```", "").strip()
         return json.loads(clean_text)
+        
     except Exception as e:
-        # Agar koi error aayi toh app crash nahi hogi
-        st.error(f"⚠️ Error details: {e}")
+        st.error(f"System Error: {e}")
         return None
