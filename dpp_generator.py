@@ -2,14 +2,14 @@ import google.generativeai as genai
 import json
 import streamlit as st
 
-# 1. API Key Fixer: Agar Streamlit ne galti se list bana di hai, toh pehli key utha lo
-raw_key = st.secrets["AQ.Ab8RN6JuAh1uLkTtLpBYONwYTY0ctyts2M7OL3MucnsLke4nPA"]
-safe_key = raw_key if isinstance(raw_key, list) else str(raw_key).strip()
+# 🛑 Yahan humne st.secrets ka use bilkul hata diya hai
+# Seedha aapki key assign kar di hai
+MY_API_KEY = "AQ.Ab8RN6JuAh1uLkTtLpBYONwYTY0ctyts2M7OL3MucnsLke4nPA"
 
-genai.configure(api_key=safe_key)
+genai.configure(api_key=MY_API_KEY)
 
 def generate_paathsala_dpp(subject, topic, target_class):
-    # 2. Sabse Fast aur Standard Model 
+    # Model select kiya
     model = genai.GenerativeModel('gemini-1.5-flash')
     
     prompt = f"""
@@ -28,12 +28,6 @@ def generate_paathsala_dpp(subject, topic, target_class):
         clean_text = response.text.replace("```json", "").replace("```", "").strip()
         return json.loads(clean_text)
     except Exception as e:
-        # 3. BACKUP PLAN: Agar 'flash' model API key ke karan fail hua, toh 'pro' try karega
-        try:
-            backup_model = genai.GenerativeModel('gemini-pro')
-            response = backup_model.generate_content(prompt)
-            clean_text = response.text.replace("```json", "").replace("```", "").strip()
-            return json.loads(clean_text)
-        except Exception as backup_e:
-            st.error(f"⚠️ API Error: {backup_e}. Kripya Streamlit Secrets mein check karein ki API key sahi hai.")
-            return None
+        # Agar koi error aayi toh app crash nahi hogi
+        st.error(f"⚠️ Error details: {e}")
+        return None
