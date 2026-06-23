@@ -25,20 +25,19 @@ def generate_paathsala_dpp(subject, topic, target_class):
     }}
     """
     
-    # FIX: Model ka sahi aur poora naam (-latest add kiya gaya hai)
-    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent"
-    
+    url = "https://api.groq.com/openai/v1/chat/completions"
     data = json.dumps({
-        "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {
-            "temperature": 0.5,
-            "responseMimeType": "application/json"
-        }
+        # Yahan humne AI ka Sabse Bada aur Smart model laga diya hai!
+        "model": "llama-3.3-70b-versatile",
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.5,
+        "response_format": {"type": "json_object"}
     }).encode("utf-8")
     
     headers = {
-        "x-goog-api-key": st.secrets["GEMINI_API_KEY"],
-        "Content-Type": "application/json"
+        "Authorization": f"Bearer {st.secrets['GROQ_API_KEY']}",
+        "Content-Type": "application/json",
+        "User-Agent": "Mozilla/5.0"
     }
     
     req = urllib.request.Request(url, data=data, headers=headers)
@@ -48,16 +47,29 @@ def generate_paathsala_dpp(subject, topic, target_class):
             response_text = response.read().decode("utf-8")
             result = json.loads(response_text)
             
-            # Gemini ke result se text nikalna
-            raw_text = result["candidates"]["content"]["parts"]["text"]
-            
-            clean_text = raw_text.replace("```json", "").replace("```", "").strip()
-            return json.loads(clean_text)
+            # The Ghost Scanner
+            def dhoondho_dpp(obj):
+                if isinstance(obj, dict):
+                    if 'content' in obj and isinstance(obj['content'], str) and '"header"' in obj['content']:
+                        return obj['content']
+                    for key, value in obj.items():
+                        res = dhoondho_dpp(value)
+                        if res: return res
+                elif isinstance(obj, list):
+                    for item in obj:
+                        res = dhoondho_dpp(item)
+                        if res: return res
+                return None
                 
-    except urllib.error.HTTPError as e:
-        error_msg = e.read().decode('utf-8')
-        st.error(f"⚠️ Gemini Server Error ({e.code}): {error_msg}")
-        return None
+            raw_text = dhoondho_dpp(result)
+            
+            if raw_text:
+                clean_text = raw_text.replace("```json", "").replace("```", "").strip()
+                return json.loads(clean_text)
+            else:
+                st.error("⚠️ Scanner ko AI ke data mein DPP nahi mila.")
+                return None
+                
     except Exception as e:
-        st.error(f"⚠️ Connection Error: {e}")
+        st.error(f"⚠️ Ultimate Error: {e}")
         return None
