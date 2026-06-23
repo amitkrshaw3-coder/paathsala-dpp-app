@@ -7,19 +7,18 @@ def generate_paathsala_dpp(subject, topic, target_class):
     prompt = f"""
     You are an expert exam paper setter. Create a Daily Practice Problem (DPP) for Class {target_class} on the Subject '{subject}' and Topic '{topic}'.
     
-    CRITICAL MATH FORMATTING RULES FOR PDF COMPATIBILITY:
-    1. STRICTLY DO NOT USE LaTeX. The PDF generator cannot render backslashes or dollar signs.
-    2. USE UNICODE MATH SYMBOLS DIRECTLY: 
-       - For integration, use the Unicode symbol '∫' (e.g., ∫ x² dx).
-       - For powers/exponents, use Unicode superscripts like '²' (square) and '³' (cube).
-       - For fractions, use standard slash 'a/b' format.
-       - For Greek letters, use standard Unicode symbols like 'θ', 'π', 'α', 'β'.
-    3. Ensure NO LaTeX commands or dollar signs appear in the final output.
+    CRITICAL MATH FORMATTING RULES FOR PDF COMPATIBILITY (PREVENT LATIN-1 ERROR):
+    1. STRICTLY USE ONLY BASIC ASCII KEYBOARD CHARACTERS. 
+    2. DO NOT use any special Unicode math symbols (like ∫, ², ³, θ, π). The system will CRASH if you use them.
+    3. For integrals, write the word "Integral of" or "INT()". (e.g., "Integral of x^2 dx").
+    4. For powers/exponents, use the caret symbol '^' (e.g., x^2, y^3).
+    5. For fractions, use standard slash 'a/b' format.
+    6. For Greek letters, spell them out completely in English letters (e.g., "theta", "pi", "alpha").
     
     Output ONLY valid JSON.
     {{
       "header": {{"class": "{target_class}", "subject": "{subject}", "topic": "{topic}"}},
-      "section_a": [{{"q_no": 1, "question": "Evaluate ∫ x² dx", "options": {{"a": "x³ / 3", "b": "2x", "c": "3", "d": "4"}}, "answer": "a"}}],
+      "section_a": [{{"q_no": 1, "question": "Evaluate the Integral of x^2 dx", "options": {{"a": "x^3 / 3", "b": "2x", "c": "3", "d": "4"}}, "answer": "a"}}],
       "section_b": [{{"q_no": 11, "question": "Short answer", "key_point": "Brief answer"}}],
       "section_c": [{{"q_no": 16, "question": "Long answer", "key_point": "Detailed steps"}}]
     }}
@@ -27,7 +26,7 @@ def generate_paathsala_dpp(subject, topic, target_class):
     
     url = "https://api.groq.com/openai/v1/chat/completions"
     data = json.dumps({
-        # Yahan humne AI ka Sabse Bada aur Smart model laga diya hai!
+        # AI ka Sabse Smart aur Bada model
         "model": "llama-3.3-70b-versatile",
         "messages": [{"role": "user", "content": prompt}],
         "temperature": 0.5,
