@@ -3,7 +3,7 @@ import requests
 import streamlit as st
 
 # Aapki key yahan daal di gayi hai
-MY_API_KEY = "API KEY"
+MY_API_KEY = "AQ.Ab8RN6Ln36IEB9l3rlyOR5a_Uzl-dtFTNwAMSHObkacrlBhlNA"
 
 def generate_paathsala_dpp(subject, topic, target_class):
     # Seedha Google ke server ka direct link (Bina kisi library ke)
