@@ -7,6 +7,7 @@ import urllib.parse
 import io
 import streamlit.components.v1 as components 
 import smtplib
+from dpp_generator import generate_paathsala_dpp
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
@@ -235,8 +236,17 @@ else:
                 with col3: n_long = st.number_input("No. of Long Qs:", min_value=0, value=2)
 
             st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("🚀 Generate Print-Ready PDF", type="primary", use_container_width=True):
-                with st.spinner("Apka shandar DPP ready ho raha hai..."):
+            
+            # --- YAHAN NAYA AI LOGIC LAGA DIYA GAYA HAI ---
+            if st.button("?? Generate Print-Ready PDF", type="primary", use_container_width=True):
+                with st.spinner("🤖 AI aapka DPP bana raha hai... Please wait 5-10 seconds."):
+                    # AI function ko call karna
+                    dpp_data = generate_paathsala_dpp(selected_subject, selected_chapter, selected_class)
+                    
+                    if dpp_data:
+                        st.success("🎉 DPP Generated Successfully!")
+                        st.json(dpp_data)
+            # ----------------------------------------------
                     chapter_pool = [q for q in questions if q.get('Class') and q.get('Subject') and q.get('Chapter') and q['Class'].strip().lower() == selected_class.lower() and q['Subject'].strip().lower() == selected_subject.lower() and q['Chapter'].strip().lower() == selected_chapter.lower()]
                     mcq_pool = [q for q in chapter_pool if q.get('Type') and q['Type'].strip().upper() == 'MCQ']
                     short_pool = [q for q in chapter_pool if q.get('Type') and q['Type'].strip().upper() == 'SHORT ANSWER']
