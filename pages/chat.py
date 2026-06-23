@@ -283,6 +283,15 @@ if "last_message_time" not in st.session_state:
 # ==========================================
 # SEND MESSAGE
 # ==========================================
+# ==========================================
+# SPAM CONTROL
+# ==========================================
+if "last_message_time" not in st.session_state:
+    st.session_state.last_message_time = 0
+
+# ==========================================
+# SEND MESSAGE
+# ==========================================
 prompt = st.chat_input(
     "Type your doubt..."
 )
@@ -293,16 +302,12 @@ if prompt:
 
     # Empty message check
     if not prompt:
-        st.warning(
-            "Empty message not allowed"
-        )
+        st.warning("Empty message not allowed")
         st.stop()
 
     # Length check
     if len(prompt) > 500:
-        st.warning(
-            "Maximum 500 characters allowed"
-        )
+        st.warning("Maximum 500 characters allowed")
         st.stop()
 
     # Cooldown check
@@ -316,7 +321,6 @@ if prompt:
         st.warning(
             "⚠️ Please wait 5 seconds before sending next message."
         )
-
         st.stop()
 
     # Bad words check
@@ -325,44 +329,12 @@ if prompt:
     for word in BAD_WORDS:
 
         if word in lower_msg:
-
             st.warning(
                 "⚠️ Inappropriate language detected."
             )
-
             st.stop()
 
-    # Save message
-try:
-
-    response = (
-        supabase
-        .table("chat_history")
-        .insert({
-            "sender": current_user,
-            "message": prompt
-        })
-        .execute()
-    )
-
-    st.session_state.last_message_time = current_time
-
-    # ==================================
-    # AI BOT
-    # ==================================
-
-    if prompt.lower().startswith("@ai"):
-
-        doubt = prompt.replace(
-            "@ai",
-            ""
-        ).strip()
-
-        with st.spinner(
-            "🤖 PAATHSALA AI soch raha hai..."
-        ):
-
-            # Save message
+    # Save student message
     try:
 
         response = (
