@@ -1,7 +1,6 @@
 import json
-import urllib.request
-import urllib.error
 import streamlit as st
+import google.generativeai as genai
 
 def generate_paathsala_dpp(subject, topic, target_class):
     prompt = f"""
@@ -24,46 +23,25 @@ def generate_paathsala_dpp(subject, topic, target_class):
     }}
     """
     
-    # 🚀 FIX 1: 'v1beta' ki jagah official 'v1' use kiya gaya hai.
-    # 🚀 FIX 2: API key ko direct URL mein lagaya gaya hai (Sabse trusted method).
-    api_key = st.secrets["GEMINI_API_KEY"]
-    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={api_key}"
-    
-    data = json.dumps({
-        "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {
-            "temperature": 0.5
-        }
-    }).encode("utf-8")
-    
-    # Header se 'x-goog-api-key' hata diya, kyunki ab key URL mein hai
-    headers = {
-        "Content-Type": "application/json"
-    }
-    
-    req = urllib.request.Request(url, data=data, headers=headers)
-    
     try:
-        with urllib.request.urlopen(req) as response:
-            response_text = response.read().decode("utf-8")
-            result = json.loads(response_text)
+        # 🚀 Google SDK Setup (No URLs needed anymore)
+        genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+        model = genai.GenerativeModel('gemini-1.5-flash')
+        
+        # Call Gemini
+        response = model.generate_content(prompt)
+        raw_text = response.text
+        
+        # JSON Cleaner
+        clean_text = raw_text.replace("```json", "").replace("```", "").strip()
+        start_idx = clean_text.find('{')
+        end_idx = clean_text.rfind('}') + 1
+        
+        if start_idx != -1 and end_idx != -1:
+            clean_text = clean_text[start_idx:end_idx]
             
-            raw_text = result["candidates"]["content"]["parts"]["text"]
-            
-            # Text Cleaner
-            clean_text = raw_text.replace("```json", "").replace("```", "").strip()
-            start_idx = clean_text.find('{')
-            end_idx = clean_text.rfind('}') + 1
-            
-            if start_idx != -1 and end_idx != -1:
-                clean_text = clean_text[start_idx:end_idx]
-                
-            return json.loads(clean_text)
-                
-    except urllib.error.HTTPError as e:
-        error_msg = e.read().decode('utf-8')
-        st.error(f"⚠️ Gemini Server Error ({e.code}): {error_msg}")
-        return None
+        return json.loads(clean_text)
+        
     except Exception as e:
-        st.error(f"⚠️ Connection Error: {e}")
+        st.error(f"⚠️ Gemini SDK Error: {e}")
         return None
