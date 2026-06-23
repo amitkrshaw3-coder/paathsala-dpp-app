@@ -333,27 +333,56 @@ if prompt:
             st.stop()
 
     # Save message
-    try:
+try:
 
-        response = (
-            supabase
-            .table("chat_history")
-            .insert({
-                "sender": current_user,
-                "message": prompt
-            })
-            .execute()
-        )
+    response = (
+        supabase
+        .table("chat_history")
+        .insert({
+            "sender": current_user,
+            "message": prompt
+        })
+        .execute()
+    )
 
-        st.session_state.last_message_time = current_time
+    st.session_state.last_message_time = current_time
 
-        if response.data:
-            st.toast(
-                "✅ Message Sent"
+    # ==================================
+    # AI BOT
+    # ==================================
+
+    if prompt.lower().startswith("@ai"):
+
+        doubt = prompt.replace(
+            "@ai",
+            ""
+        ).strip()
+
+        with st.spinner(
+            "🤖 PAATHSALA AI soch raha hai..."
+        ):
+
+            answer = ask_paathsala_ai(
+                doubt
             )
 
-    except Exception as e:
+        supabase.table(
+            "chat_history"
+        ).insert({
+            "sender": "PAATHSALA AI 🤖",
+            "message": answer
+        }).execute()
 
-        st.error(
-            f"Actual Error: {e}"
+    if response.data:
+
+        st.toast(
+            "✅ Message Sent"
         )
+
+    st.rerun()
+
+except Exception as e:
+
+    st.error(
+        f"Actual Error: {e}"
+    )
