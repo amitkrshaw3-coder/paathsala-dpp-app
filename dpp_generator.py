@@ -24,10 +24,10 @@ def generate_paathsala_dpp(subject, topic, target_class):
     """
     
     try:
-        # Google SDK Setup
-        genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+        # 🚀 FIX: 'transport='rest'' lagaya hai taaki Streamlit cloud par ye stuck na ho aur fast chale
+        genai.configure(api_key=st.secrets["GEMINI_API_KEY"], transport='rest')
         
-        # 🚀 FIX: Aapke screenshot mein mojood naya model use kar rahe hain
+        # Aapke panel ka naya model
         model = genai.GenerativeModel('gemini-3.5-flash')
         
         # Request generation
