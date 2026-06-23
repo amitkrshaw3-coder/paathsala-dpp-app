@@ -1,5 +1,6 @@
 import json
 import urllib.request
+import urllib.error
 import streamlit as st
 
 def generate_paathsala_dpp(subject, topic, target_class):
@@ -20,10 +21,8 @@ def generate_paathsala_dpp(subject, topic, target_class):
     }}
     """
     
-    # Direct API Endpoint (No Groq Package needed)
     url = "https://api.groq.com/openai/v1/chat/completions"
     
-    # Request setup
     data = json.dumps({
         "model": "llama-3.1-8b-instant",
         "messages": [{"role": "user", "content": prompt}],
@@ -31,24 +30,26 @@ def generate_paathsala_dpp(subject, topic, target_class):
         "response_format": {"type": "json_object"}
     }).encode("utf-8")
     
+    # 🛡️ SECURITY MASK: Groq ko lagega ki yeh kisi real browser se aa raha hai
     headers = {
         "Authorization": f"Bearer {st.secrets['GROQ_API_KEY']}",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" 
     }
     
     req = urllib.request.Request(url, data=data, headers=headers)
     
     try:
-        # Seedha server se connect karna
         with urllib.request.urlopen(req) as response:
             result = json.loads(response.read().decode("utf-8"))
-            
-            # Dictionary se extract karna (Yeh kabhi fail nahi hoga)
             raw_text = result["choices"]["message"]["content"]
-            
-            # JSON load karke wapas bhejna
             return json.loads(raw_text)
             
+    except urllib.error.HTTPError as e:
+        # Yeh line exact bata degi ki Groq kya bol raha hai
+        error_message = e.read().decode("utf-8")
+        st.error(f"⚠️ Groq Server Error ({e.code}): {error_message}")
+        return None
     except Exception as e:
         st.error(f"⚠️ Direct Connection Error: {e}")
         return None
