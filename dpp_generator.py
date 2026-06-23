@@ -7,7 +7,7 @@ genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 
 def generate_paathsala_dpp(subject, topic, target_class):
     # Google ke naye format ke hisaab se 'models/' lagana zaroori hai
-    model = genai.GenerativeModel('models/gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-1.5-flash')
     
     prompt = f"""
     You are an expert exam paper setter. Create a Daily Practice Problem (DPP) for Class {target_class} on the Subject '{subject}' and Topic '{topic}'.
