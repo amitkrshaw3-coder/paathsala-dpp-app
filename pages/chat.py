@@ -362,27 +362,53 @@ try:
             "🤖 PAATHSALA AI soch raha hai..."
         ):
 
-            answer = ask_paathsala_ai(
-                doubt
-            )
+            # Save message
+    try:
 
-        supabase.table(
-            "chat_history"
-        ).insert({
-            "sender": "PAATHSALA AI 🤖",
-            "message": answer
-        }).execute()
-
-    if response.data:
-
-        st.toast(
-            "✅ Message Sent"
+        response = (
+            supabase
+            .table("chat_history")
+            .insert({
+                "sender": current_user,
+                "message": prompt
+            })
+            .execute()
         )
 
-    st.rerun()
+        st.session_state.last_message_time = current_time
 
-except Exception as e:
+        # ==================================
+        # AI BOT
+        # ==================================
+        if prompt.lower().startswith("@ai"):
 
-    st.error(
-        f"Actual Error: {e}"
-    )
+            doubt = prompt.replace(
+                "@ai",
+                ""
+            ).strip()
+
+            with st.spinner(
+                "🤖 PAATHSALA AI soch raha hai..."
+            ):
+
+                answer = ask_paathsala_ai(
+                    doubt
+                )
+
+            supabase.table(
+                "chat_history"
+            ).insert({
+                "sender": "PAATHSALA AI 🤖",
+                "message": answer
+            }).execute()
+
+        if response.data:
+            st.toast("✅ Message Sent")
+
+        st.rerun()
+
+    except Exception as e:
+
+        st.error(
+            f"Actual Error: {e}"
+        )
