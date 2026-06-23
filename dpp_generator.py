@@ -25,10 +25,9 @@ def generate_paathsala_dpp(subject, topic, target_class):
     }}
     """
     
-    # Gemini 1.5 Flash ka direct REST API endpoint
+    # FIX: Model ka sahi aur poora naam (-latest add kiya gaya hai)
     url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent"
     
-    # Gemini ke format ke hisaab se data bhejna
     data = json.dumps({
         "contents": [{"parts": [{"text": prompt}]}],
         "generationConfig": {
@@ -37,7 +36,6 @@ def generate_paathsala_dpp(subject, topic, target_class):
         }
     }).encode("utf-8")
     
-    # Google ka naya rule: AQ. key ko 'x-goog-api-key' header mein bhejna hai
     headers = {
         "x-goog-api-key": st.secrets["GEMINI_API_KEY"],
         "Content-Type": "application/json"
@@ -51,9 +49,8 @@ def generate_paathsala_dpp(subject, topic, target_class):
             result = json.loads(response_text)
             
             # Gemini ke result se text nikalna
-            raw_text = result["candidates"][0]["content"]["parts"][0]["text"]
+            raw_text = result["candidates"]["content"]["parts"]["text"]
             
-            # JSON clean karke return karna
             clean_text = raw_text.replace("```json", "").replace("```", "").strip()
             return json.loads(clean_text)
                 
