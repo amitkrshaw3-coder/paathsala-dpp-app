@@ -1,6 +1,6 @@
 streamlit
 supabase
 streamlit-autorefresh
-google-generativeai
+google-generativeai>=0.5.2
 fpdf
 
