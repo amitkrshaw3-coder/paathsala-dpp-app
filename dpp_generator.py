@@ -18,16 +18,16 @@ def generate_paathsala_dpp(subject, topic, target_class):
     """
     
     try:
-        # Llama-3 model use kar rahe hain jo fast aur smart hai
+        # Naya aur updated Llama-3.1 model
         chat_completion = client.chat.completions.create(
             messages=[
                 {"role": "user", "content": prompt}
             ],
-            model="llama-3.1-8b-instant",
+            model="llama-3.1-8b-instant", 
             temperature=0.5,
         )
         
-        # Result ko JSON mein convert karna
+        # Exact sahi line jisme maujood hai
         raw_text = chat_completion.choices.message.content
         clean_text = raw_text.replace("```json", "").replace("```", "").strip()
         return json.loads(clean_text)
