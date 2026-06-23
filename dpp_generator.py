@@ -24,14 +24,13 @@ def generate_paathsala_dpp(subject, topic, target_class):
     }}
     """
     
-    # URL SE '-latest' HATA DIYA GAYA HAI
-    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
+    # 🚀 CHANGED TO 'gemini-pro' (Classic model, never blocked)
+    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent"
     
     data = json.dumps({
         "contents": [{"parts": [{"text": prompt}]}],
         "generationConfig": {
-            "temperature": 0.5,
-            "responseMimeType": "application/json"
+            "temperature": 0.5
         }
     }).encode("utf-8")
     
@@ -49,7 +48,14 @@ def generate_paathsala_dpp(subject, topic, target_class):
             
             raw_text = result["candidates"]["content"]["parts"]["text"]
             
+            # Text Cleaner: Agar AI ne kuch extra text likh diya ho, toh usko saaf karega
             clean_text = raw_text.replace("```json", "").replace("```", "").strip()
+            start_idx = clean_text.find('{')
+            end_idx = clean_text.rfind('}') + 1
+            
+            if start_idx != -1 and end_idx != -1:
+                clean_text = clean_text[start_idx:end_idx]
+                
             return json.loads(clean_text)
                 
     except urllib.error.HTTPError as e:
