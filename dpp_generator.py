@@ -3,7 +3,7 @@ import json
 import streamlit as st
 
 # 1. API Key Fixer: Agar Streamlit ne galti se list bana di hai, toh pehli key utha lo
-raw_key = st.secrets["GEMINI_API_KEY"]
+raw_key = st.secrets["AQ.Ab8RN6JuAh1uLkTtLpBYONwYTY0ctyts2M7OL3MucnsLke4nPA"]
 safe_key = raw_key if isinstance(raw_key, list) else str(raw_key).strip()
 
 genai.configure(api_key=safe_key)
