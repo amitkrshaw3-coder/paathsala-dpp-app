@@ -3,7 +3,7 @@ import streamlit as st
 from google import genai
 
 # Aapki wahi AQ wali key yahan daal di hai
-MY_API_KEY = "AQ.Ab8RN6JuAh1uLkTtLpBYONwYTY0ctyts2M7OL3MucnsLke4nPA" 
+MY_API_KEY = "AQ.Ab8RN6J9ZPzGewQJL_rdTow-xig26BVB9Al1RbCDcahbamTICQ" 
 
 def generate_paathsala_dpp(subject, topic, target_class):
     try:
