@@ -3,9 +3,9 @@ import streamlit as st
 from supabase import create_client, Client
 from streamlit_autorefresh import st_autorefresh
 
-# ======================================================
+# ==========================================
 # PAGE CONFIG
-# ======================================================
+# ==========================================
 st.set_page_config(
     page_title="PAATHSALA Chat",
     page_icon="💬",
@@ -19,17 +19,21 @@ footer {visibility:hidden;}
 header {visibility:hidden;}
 </style>
 """
+
 st.markdown(hide_style, unsafe_allow_html=True)
 
-# Auto refresh every 3 sec
+# Auto refresh every 3 seconds
 st_autorefresh(interval=3000, limit=None, key="chat_refresh")
 
-# ======================================================
+# ==========================================
 # LOGIN CHECK
-# ======================================================
+# ==========================================
 if "logged_in" not in st.session_state or not st.session_state.logged_in:
-    st.warning("⚠️ Session expired.")
-    st.page_link("main.py", label="🏠 Login Again")
+    st.warning("⚠️ Session Expired! Please login again.")
+    st.page_link(
+        "main.py",
+        label="🏠 Login Again"
+    )
     st.stop()
 
 current_user = st.session_state.get(
@@ -37,12 +41,11 @@ current_user = st.session_state.get(
     "Student"
 )
 
-# ======================================================
-# SUPABASE CONNECTION
-# ======================================================
-
-# Replace these with your values for now
+# ==========================================
+# SUPABASE
+# ==========================================
 SUPABASE_URL = "https://rmdwvrjschmeztzrestm.supabase.co"
+
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtZHd2cmpzY2htZXp0enJlc3RtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwNTI2NzcsImV4cCI6MjA5NzYyODY3N30.H9hvCcDe2EUqrkukbxQdKoMSt_VNryl4Hnn7t3XZm2o"
 
 # Future:
@@ -54,18 +57,20 @@ supabase: Client = create_client(
     SUPABASE_KEY
 )
 
-# ======================================================
+ADMIN_EMAIL = "paathsala37@gmail.com"
+
+# ==========================================
 # BAD WORD FILTER
-# ======================================================
+# ==========================================
 BAD_WORDS = [
     "idiot",
     "stupid",
     "abuse"
 ]
 
-# ======================================================
+# ==========================================
 # BLOCK CHECK
-# ======================================================
+# ==========================================
 try:
     blocked = (
         supabase
@@ -76,25 +81,38 @@ try:
     )
 
     if len(blocked.data) > 0:
-        st.error("🚫 Account Blocked")
-        st.page_link("main.py", label="🏠 Main Menu")
+        st.error("🚫 ACCOUNT BLOCKED")
+        st.page_link(
+            "main.py",
+            label="🏠 Main Menu"
+        )
         st.stop()
 
-except:
+except Exception:
     pass
 
-# ======================================================
+# ==========================================
 # HEADER
-# ======================================================
-st.page_link("main.py", label="🏠 Main Menu")
+# ==========================================
+st.page_link(
+    "main.py",
+    label="🏠 Main Menu"
+)
 
 st.title("💬 PAATHSALA Live Discussion")
-st.caption("Discuss doubts with other students")
+st.caption(
+    "🚀 Welcome to PAATHSALA Live Doubt Solving Room"
+)
 
-# ======================================================
+st.write(
+    f"👤 Connected as: **{current_user}**"
+)
+
+# ==========================================
 # LOAD CHAT
-# ======================================================
+# ==========================================
 try:
+
     response = (
         supabase
         .table("chat_history")
@@ -113,50 +131,62 @@ try:
         )
     )
 
-except:
-    st.error("Database Error")
+except Exception as e:
+
+    st.error(f"Database Error: {e}")
+
     chat_data = []
     active_users = []
 
-st.info(f"👥 Active Users: {len(active_users)}")
-st.write(f"👤 Logged in as: **{current_user}**")
+st.info(
+    f"👥 Active Users: {len(active_users)}"
+)
 
-# ======================================================
+# ==========================================
 # ADMIN PANEL
-# ======================================================
-ADMIN_EMAIL = "paathsala37@gmail.com"
-
+# ==========================================
 if current_user == ADMIN_EMAIL:
 
-    with st.expander("🛠 Admin Controls"):
+    with st.expander(
+        "🛠 Admin Controls",
+        expanded=False
+    ):
 
         tab1, tab2, tab3 = st.tabs(
-            ["Block", "Unblock", "Blocked"]
+            ["🚫 Block", "✅ Unblock", "📋 Blocked"]
         )
 
         with tab1:
-            user = st.selectbox(
+
+            spammer = st.selectbox(
                 "Select User",
-                ["Select"] + active_users
+                ["Select User"] + active_users
             )
 
             if st.button("🚫 Block User"):
-                if user != "Select":
+
+                if spammer != "Select User":
+
                     try:
                         supabase.table(
                             "blocked_users"
                         ).insert(
-                            {"email": user}
+                            {"email": spammer}
                         ).execute()
 
-                        st.success("Blocked")
+                        st.success(
+                            f"{spammer} blocked"
+                        )
 
                     except:
-                        st.warning("Already blocked")
+                        st.warning(
+                            "Already blocked"
+                        )
 
         with tab2:
 
             try:
+
                 blocked = (
                     supabase
                     .table("blocked_users")
@@ -165,20 +195,22 @@ if current_user == ADMIN_EMAIL:
                 )
 
                 blocked_list = [
-                    x["email"]
-                    for x in blocked.data
+                    row["email"]
+                    for row in blocked.data
                 ]
 
             except:
                 blocked_list = []
 
             selected = st.selectbox(
-                "Select",
-                ["Select"] + blocked_list
+                "Select User",
+                ["Select User"] + blocked_list
             )
 
-            if st.button("✅ Unblock"):
-                if selected != "Select":
+            if st.button("✅ Unblock User"):
+
+                if selected != "Select User":
+
                     supabase.table(
                         "blocked_users"
                     ).delete().eq(
@@ -186,21 +218,26 @@ if current_user == ADMIN_EMAIL:
                         selected
                     ).execute()
 
-                    st.success("Unblocked")
+                    st.success(
+                        f"{selected} unblocked"
+                    )
 
         with tab3:
 
             if len(blocked_list) == 0:
-                st.success("No blocked users")
+                st.success(
+                    "No blocked users"
+                )
+
             else:
-                for x in blocked_list:
-                    st.error(x)
+                for user in blocked_list:
+                    st.error(user)
 
 st.divider()
 
-# ======================================================
-# SHOW CHAT
-# ======================================================
+# ==========================================
+# CHAT DISPLAY
+# ==========================================
 chat_box = st.container(height=450)
 
 with chat_box:
@@ -215,24 +252,27 @@ with chat_box:
             display_name = sender[:4] + "***"
 
         if sender == current_user:
+
             st.markdown(
                 f"🟢 **You:** {row['message']}"
             )
+
         else:
+
             st.markdown(
                 f"🔵 **{display_name}:** "
                 f"{row['message']}"
             )
 
-# ======================================================
-# MESSAGE COOLDOWN
-# ======================================================
+# ==========================================
+# SPAM CONTROL
+# ==========================================
 if "last_message_time" not in st.session_state:
     st.session_state.last_message_time = 0
 
-# ======================================================
+# ==========================================
 # SEND MESSAGE
-# ======================================================
+# ==========================================
 prompt = st.chat_input(
     "Type your doubt..."
 )
@@ -241,9 +281,11 @@ if prompt:
 
     prompt = prompt.strip()
 
-    # Empty check
+    # Empty message check
     if not prompt:
-        st.warning("Empty message not allowed")
+        st.warning(
+            "Empty message not allowed"
+        )
         st.stop()
 
     # Length check
@@ -253,40 +295,55 @@ if prompt:
         )
         st.stop()
 
-    # Spam protection
-    now = time.time()
+    # Cooldown check
+    current_time = time.time()
 
     if (
-        now -
+        current_time -
         st.session_state.last_message_time
     ) < 5:
 
         st.warning(
-            "Please wait 5 seconds"
+            "⚠️ Please wait 5 seconds before sending next message."
         )
+
         st.stop()
 
-    # Bad words filter
+    # Bad words check
     lower_msg = prompt.lower()
 
     for word in BAD_WORDS:
+
         if word in lower_msg:
+
             st.warning(
-                "Inappropriate language detected"
+                "⚠️ Inappropriate language detected."
             )
+
             st.stop()
 
-    st.session_state.last_message_time = now
-
+    # Save message
     try:
-        supabase.table(
-            "chat_history"
-        ).insert({
-            "sender": current_user,
-            "message": prompt
-        }).execute()
 
-        st.rerun()
+        response = (
+            supabase
+            .table("chat_history")
+            .insert({
+                "sender": current_user,
+                "message": prompt
+            })
+            .execute()
+        )
 
-    except:
-        st.error("Message send failed")
+        st.session_state.last_message_time = current_time
+
+        if response.data:
+            st.toast(
+                "✅ Message Sent"
+            )
+
+    except Exception as e:
+
+        st.error(
+            f"Actual Error: {e}"
+        )
