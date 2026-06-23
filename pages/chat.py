@@ -240,6 +240,11 @@ st.divider()
 # CHAT DISPLAY
 # ==========================================
 
+
+# ==========================================
+# CHAT DISPLAY (AUTO SCROLL VERSION)
+# ==========================================
+
 chat_html = """
 <div id="chat-box" style="
 height:450px;
@@ -262,7 +267,6 @@ for row in chat_data:
 
     message = row["message"]
 
-    # Apna message
     if sender == current_user:
 
         chat_html += f"""
@@ -272,14 +276,14 @@ for row in chat_data:
                 padding:10px;
                 border-radius:12px;
                 display:inline-block;
-                max-width:80%;">
+                max-width:80%;
+                word-wrap:break-word;">
                 <b>You</b><br>
                 {message}
             </div>
         </div>
         """
 
-    # Dusre users ka message
     else:
 
         chat_html += f"""
@@ -289,7 +293,8 @@ for row in chat_data:
                 padding:10px;
                 border-radius:12px;
                 display:inline-block;
-                max-width:80%;">
+                max-width:80%;
+                word-wrap:break-word;">
                 <b>{display_name}</b><br>
                 {message}
             </div>
@@ -300,13 +305,12 @@ chat_html += """
 </div>
 
 <script>
-var objDiv = document.getElementById("chat-box");
-objDiv.scrollTop = objDiv.scrollHeight;
+var chatBox = document.getElementById("chat-box");
+chatBox.scrollTop = chatBox.scrollHeight;
 </script>
 """
 
 st.markdown(chat_html, unsafe_allow_html=True)
-
 # ==========================================
 # SPAM CONTROL
 # ==========================================
