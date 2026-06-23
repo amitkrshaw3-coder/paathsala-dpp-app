@@ -7,26 +7,22 @@ genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 
 def generate_paathsala_dpp(subject, topic, target_class):
     try:
-        # 1. API se pucho ki kaun se models available hain (Ab naam guess nahi karna padega)
-        available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+        # 1. API se pucho aur SIRF 'Gemini' models filter karo jo text generate kar sakein
+        valid_models = []
+        for m in genai.list_models():
+            if 'generateContent' in m.supported_generation_methods and 'gemini' in m.name.lower():
+                valid_models.append(m.name)
         
-        if not available_models:
-            st.error("⚠️ Error: Aapki API Key mein koi bhi text model available nahi hai. Kripya nayi API key banayein.")
+        # Agar koi Gemini model nahi milta
+        if not valid_models:
+            st.error("⚠️ Error: Aapki API Key mein Gemini models active nahi hain. Nayi API key banayein.")
             return None
             
-        # 2. Jo bhi best model mile, usko automatically chun lo
-        chosen_model = available_models # Default pehla model
-        for m in available_models:
-            if '1.5-flash' in m:
-                chosen_model = m
-                break
-            elif 'pro' in m:
-                chosen_model = m
-                
-        # 3. Model ko setup karo
+        # 2. Jo sabse pehla valid Gemini model mile (jaise models/gemini-1.5-flash), use chun lo
+        chosen_model = valid_models 
         model = genai.GenerativeModel(chosen_model)
         
-        # 4. Prompt banayein
+        # 3. AI ko instruction dena
         prompt = f"""
         You are an expert exam paper setter. Create a Daily Practice Problem (DPP) for Class {target_class} on the Subject '{subject}' and Topic '{topic}'.
         You MUST output strictly in the following JSON format. Do not add any extra text:
@@ -38,12 +34,12 @@ def generate_paathsala_dpp(subject, topic, target_class):
         }}
         """
         
-        # 5. AI se response lo aur JSON me convert karo
+        # 4. JSON generate karwana
         response = model.generate_content(prompt)
         clean_text = response.text.replace("```json", "").replace("```", "").strip()
         return json.loads(clean_text)
         
     except Exception as e:
-        # Koi bhi error aayegi toh app crash nahi hogi
+        # Koi aur error ho toh screen par dikhaye
         st.error(f"⚠️ Google AI Error: {e}")
         return None
