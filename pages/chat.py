@@ -242,75 +242,37 @@ st.divider()
 
 
 # ==========================================
-# CHAT DISPLAY (AUTO SCROLL VERSION)
+# ==========================================
+# CHAT DISPLAY (STREAMLIT NATIVE)
 # ==========================================
 
-chat_html = """
-<div id="chat-box" style="
-height:450px;
-overflow-y:auto;
-border:1px solid #ddd;
-padding:10px;
-border-radius:10px;
-background:white;
-">
-"""
+chat_container = st.container(height=450)
 
-for row in chat_data:
+with chat_container:
 
-    sender = row["sender"]
+    for row in chat_data:
 
-    if current_user == ADMIN_EMAIL:
-        display_name = sender
-    else:
-        display_name = sender[:4] + "***"
+        sender = row["sender"]
+        message = row["message"]
 
-    message = row["message"]
+        # Email masking
+        if current_user == ADMIN_EMAIL:
+            display_name = sender
+        else:
+            display_name = sender[:4] + "***"
 
-    if sender == current_user:
+        # Apna message
+        if sender == current_user:
 
-        chat_html += f"""
-        <div style="text-align:right;margin:8px;">
-            <div style="
-                background:#DCF8C6;
-                padding:10px;
-                border-radius:12px;
-                display:inline-block;
-                max-width:80%;
-                word-wrap:break-word;">
-                <b>You</b><br>
-                {message}
-            </div>
-        </div>
-        """
+            with st.chat_message("user"):
+                st.write(message)
 
-    else:
+        # Dusre users ka message
+        else:
 
-        chat_html += f"""
-        <div style="margin:8px;">
-            <div style="
-                background:#F1F1F1;
-                padding:10px;
-                border-radius:12px;
-                display:inline-block;
-                max-width:80%;
-                word-wrap:break-word;">
-                <b>{display_name}</b><br>
-                {message}
-            </div>
-        </div>
-        """
-
-chat_html += """
-</div>
-
-<script>
-var chatBox = document.getElementById("chat-box");
-chatBox.scrollTop = chatBox.scrollHeight;
-</script>
-"""
-
-st.markdown(chat_html, unsafe_allow_html=True)
+            with st.chat_message("assistant"):
+                st.markdown(f"**{display_name}**")
+                st.write(message)
 # ==========================================
 # SPAM CONTROL
 # ==========================================
