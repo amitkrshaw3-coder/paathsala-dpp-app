@@ -24,11 +24,13 @@ def generate_paathsala_dpp(subject, topic, target_class):
     """
     
     try:
-        # 🚀 Google SDK Setup (No URLs needed anymore)
+        # Google SDK Setup
         genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-        model = genai.GenerativeModel('gemini-1.5-flash')
         
-        # Call Gemini
+        # 🚀 FIX: Aapke screenshot mein mojood naya model use kar rahe hain
+        model = genai.GenerativeModel('gemini-3.5-flash')
+        
+        # Request generation
         response = model.generate_content(prompt)
         raw_text = response.text
         
