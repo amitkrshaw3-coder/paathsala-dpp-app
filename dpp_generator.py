@@ -21,8 +21,8 @@ def generate_paathsala_dpp(subject, topic, target_class):
     
     response = model.generate_content(prompt)
     try:
-        clean_text = response.text.replace("```json", "").replace("
-```", "").strip()
+        # Yahan line theek kar di gayi hai (ek hi line mein hai ab)
+        clean_text = response.text.replace("```json", "").replace("```", "").strip()
         return json.loads(clean_text)
     except Exception as e:
         st.error("Error generating DPP.")
