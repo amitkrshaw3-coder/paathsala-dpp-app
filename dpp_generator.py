@@ -30,26 +30,41 @@ def generate_paathsala_dpp(subject, topic, target_class):
         "response_format": {"type": "json_object"}
     }).encode("utf-8")
     
-    # 🛡️ SECURITY MASK: Groq ko lagega ki yeh kisi real browser se aa raha hai
     headers = {
         "Authorization": f"Bearer {st.secrets['GROQ_API_KEY']}",
         "Content-Type": "application/json",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" 
+        "User-Agent": "Mozilla/5.0"
     }
     
     req = urllib.request.Request(url, data=data, headers=headers)
     
     try:
         with urllib.request.urlopen(req) as response:
-            result = json.loads(response.read().decode("utf-8"))
-            raw_text = result["choices"]["message"]["content"]
-            return json.loads(raw_text)
+            response_data = response.read().decode("utf-8")
+            result = json.loads(response_data)
             
+            # 🛡️ X-RAY SCANNER: Agar list aayi toh usko theek karo
+            if isinstance(result, list):
+                if len(result) > 0:
+                    result = result
+                else:
+                    st.error("⚠️ Groq ne khali data bheja hai.")
+                    return None
+            
+            # Agar sahi structure hai toh extract karo
+            if "choices" in result and isinstance(result["choices"], list):
+                raw_text = result["choices"]["message"]["content"]
+                return json.loads(raw_text)
+            else:
+                # Agar kuch ajeeb aaya, toh screen par dikhao (Crash nahi hoga)
+                st.error("⚠️ Groq API ka data ajeeb hai. Screen par dekhein:")
+                st.json(result)
+                return None
+                
     except urllib.error.HTTPError as e:
-        # Yeh line exact bata degi ki Groq kya bol raha hai
-        error_message = e.read().decode("utf-8")
-        st.error(f"⚠️ Groq Server Error ({e.code}): {error_message}")
+        error_msg = e.read().decode('utf-8')
+        st.error(f"⚠️ Server Error ({e.code}): {error_msg}")
         return None
     except Exception as e:
-        st.error(f"⚠️ Direct Connection Error: {e}")
+        st.error(f"⚠️ Connection Error: {e}")
         return None
