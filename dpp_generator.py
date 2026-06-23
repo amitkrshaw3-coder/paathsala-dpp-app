@@ -22,7 +22,6 @@ def generate_paathsala_dpp(subject, topic, target_class):
     """
     
     url = "https://api.groq.com/openai/v1/chat/completions"
-    
     data = json.dumps({
         "model": "llama-3.1-8b-instant",
         "messages": [{"role": "user", "content": prompt}],
@@ -40,31 +39,36 @@ def generate_paathsala_dpp(subject, topic, target_class):
     
     try:
         with urllib.request.urlopen(req) as response:
-            response_data = response.read().decode("utf-8")
-            result = json.loads(response_data)
+            response_text = response.read().decode("utf-8")
+            result = json.loads(response_text)
             
-            # 🛡️ X-RAY SCANNER: Agar list aayi toh usko theek karo
-            if isinstance(result, list):
-                if len(result) > 0:
-                    result = result
-                else:
-                    st.error("⚠️ Groq ne khali data bheja hai.")
-                    return None
-            
-            # Agar sahi structure hai toh extract karo
-            if "choices" in result and isinstance(result["choices"], list):
-                raw_text = result["choices"]["message"]["content"]
-                return json.loads(raw_text)
-            else:
-                # Agar kuch ajeeb aaya, toh screen par dikhao (Crash nahi hoga)
-                st.error("⚠️ Groq API ka data ajeeb hai. Screen par dekhein:")
-                st.json(result)
+            # 🛡️ THE GHOST SCANNER: Yeh khud data dhoondhega bina kisi error ke!
+            def dhoondho_dpp(obj):
+                if isinstance(obj, dict):
+                    # Agar 'content' wali line mein hamara "header" shabd chhupa hai
+                    if 'content' in obj and isinstance(obj['content'], str) and '"header"' in obj['content']:
+                        return obj['content']
+                    for key, value in obj.items():
+                        res = dhoondho_dpp(value)
+                        if res: return res
+                elif isinstance(obj, list):
+                    for item in obj:
+                        res = dhoondho_dpp(item)
+                        if res: return res
                 return None
                 
-    except urllib.error.HTTPError as e:
-        error_msg = e.read().decode('utf-8')
-        st.error(f"⚠️ Server Error ({e.code}): {error_msg}")
-        return None
+            # Scanner shuru karo
+            raw_text = dhoondho_dpp(result)
+            
+            if raw_text:
+                # Kachra saaf karo aur pure JSON wapas bhejo
+                clean_text = raw_text.replace("```json", "").replace("```", "").strip()
+                return json.loads(clean_text)
+            else:
+                st.error("⚠️ Scanner ko AI ke data mein DPP nahi mila.")
+                st.json(result) # Taki hum dekh sakein aakhir AI ne bheja kya hai
+                return None
+                
     except Exception as e:
-        st.error(f"⚠️ Connection Error: {e}")
+        st.error(f"⚠️ Ultimate Error: {e}")
         return None
