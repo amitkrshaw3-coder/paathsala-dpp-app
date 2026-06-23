@@ -1,13 +1,11 @@
-import google.generativeai as genai
 import json
 import streamlit as st
+from groq import Groq
 
-# 🔒 SECURE METHOD: Ab chabi GitHub par leak nahi hogi
-genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+# Streamlit ke secure locker se Groq ki chabi lena
+client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
 def generate_paathsala_dpp(subject, topic, target_class):
-    model = genai.GenerativeModel('gemini-1.5-flash')
-    
     prompt = f"""
     You are an expert exam paper setter. Create a Daily Practice Problem (DPP) for Class {target_class} on the Subject '{subject}' and Topic '{topic}'.
     You MUST output strictly in the following JSON format. Do not add any extra text:
@@ -20,9 +18,20 @@ def generate_paathsala_dpp(subject, topic, target_class):
     """
     
     try:
-        response = model.generate_content(prompt)
-        clean_text = response.text.replace("```json", "").replace("```", "").strip()
+        # Llama-3 model use kar rahe hain jo fast aur smart hai
+        chat_completion = client.chat.completions.create(
+            messages=[
+                {"role": "user", "content": prompt}
+            ],
+            model="llama3-8b-8192", 
+            temperature=0.5,
+        )
+        
+        # Result ko JSON mein convert karna
+        raw_text = chat_completion.choices.message.content
+        clean_text = raw_text.replace("```json", "").replace("```", "").strip()
         return json.loads(clean_text)
+        
     except Exception as e:
         st.error(f"⚠️ API Error: {e}")
         return None
