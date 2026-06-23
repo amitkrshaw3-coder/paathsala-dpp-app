@@ -23,17 +23,63 @@ def generate_paathsala_dpp(subject, topic, target_class):
     """
     
     try:
-        # Groq API ko call karna
+        # API Request
         chat_completion = client.chat.completions.create(
             messages=[{"role": "user", "content": prompt}],
             model="llama-3.1-8b-instant", 
             temperature=0.5,
         )
         
-        # Standard tarike se text nikalna (List error fix)
-        raw_text = chat_completion.choices.message.content
+        raw_text = None
         
-        # Smart Scanner: Jo sirf JSON wale hisse ko bahar nikalega
+        # 🔍 STEP 1: Standard SDK method se try karein
+        try:
+            raw_text = chat_completion.choices.message.content
+        except:
+            pass
+            
+        # 🔍 STEP 2: Agar Dictionary format hai, toh usse try karein
+        if not raw_text:
+            try:
+                raw_text = chat_completion['choices']['message']['content']
+            except:
+                pass
+        
+        # 🔍 STEP 3: Deep Recursive Scanner (Agar sab fail ho jaye, toh yeh data dhoondhega)
+        if not raw_text:
+            def deep_scanner(obj):
+                if isinstance(obj, dict):
+                    if 'content' in obj and isinstance(obj['content'], str) and '{' in obj['content']:
+                        return obj['content']
+                    for v in obj.values():
+                        res = deep_scanner(v)
+                        if res: return res
+                elif isinstance(obj, list):
+                    for item in obj:
+                        res = deep_scanner(item)
+                        if res: return res
+                elif hasattr(obj, '__dict__') or dir(obj):
+                    try:
+                        if hasattr(obj, 'content') and isinstance(obj.content, str) and '{' in obj.content:
+                            return obj.content
+                    except: pass
+                    try:
+                        for attr in dir(obj):
+                            if not attr.startswith('_'):
+                                val = getattr(obj, attr)
+                                if not callable(val):
+                                    res = deep_scanner(val)
+                                    if res: return res
+                    except: pass
+                return None
+                
+            raw_text = deep_scanner(chat_completion)
+
+        if not raw_text:
+            st.error("⚠️ AI Response structure completely unrecognized.")
+            return None
+
+        # JSON Cleaning
         clean_text = raw_text.strip()
         if "```json" in clean_text:
             clean_text = clean_text.split("```json").split("```").strip()
