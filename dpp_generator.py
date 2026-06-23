@@ -24,8 +24,10 @@ def generate_paathsala_dpp(subject, topic, target_class):
     }}
     """
     
-    # 🚀 CHANGED TO 'gemini-pro' (Classic model, never blocked)
-    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent"
+    # 🚀 FIX 1: 'v1beta' ki jagah official 'v1' use kiya gaya hai.
+    # 🚀 FIX 2: API key ko direct URL mein lagaya gaya hai (Sabse trusted method).
+    api_key = st.secrets["GEMINI_API_KEY"]
+    url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={api_key}"
     
     data = json.dumps({
         "contents": [{"parts": [{"text": prompt}]}],
@@ -34,8 +36,8 @@ def generate_paathsala_dpp(subject, topic, target_class):
         }
     }).encode("utf-8")
     
+    # Header se 'x-goog-api-key' hata diya, kyunki ab key URL mein hai
     headers = {
-        "x-goog-api-key": st.secrets["GEMINI_API_KEY"],
         "Content-Type": "application/json"
     }
     
@@ -48,7 +50,7 @@ def generate_paathsala_dpp(subject, topic, target_class):
             
             raw_text = result["candidates"]["content"]["parts"]["text"]
             
-            # Text Cleaner: Agar AI ne kuch extra text likh diya ho, toh usko saaf karega
+            # Text Cleaner
             clean_text = raw_text.replace("```json", "").replace("```", "").strip()
             start_idx = clean_text.find('{')
             end_idx = clean_text.rfind('}') + 1
