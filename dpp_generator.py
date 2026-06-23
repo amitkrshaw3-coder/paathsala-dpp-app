@@ -3,10 +3,11 @@ import json
 import streamlit as st
 
 # API key configure karein
-genai.configure(api_key=st.secrets["GEMINI_API_KEY"]) # Secret se key lenge
+genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
 
 def generate_paathsala_dpp(subject, topic, target_class):
-    model = genai.GenerativeModel('gemini-pro')
+    # Google ke naye format ke hisaab se 'models/' lagana zaroori hai
+    model = genai.GenerativeModel('models/gemini-1.5-flash')
     
     prompt = f"""
     You are an expert exam paper setter. Create a Daily Practice Problem (DPP) for Class {target_class} on the Subject '{subject}' and Topic '{topic}'.
@@ -19,11 +20,11 @@ def generate_paathsala_dpp(subject, topic, target_class):
     }}
     """
     
-    response = model.generate_content(prompt)
     try:
-        # Yahan line theek kar di gayi hai (ek hi line mein hai ab)
+        response = model.generate_content(prompt)
         clean_text = response.text.replace("```json", "").replace("```", "").strip()
         return json.loads(clean_text)
     except Exception as e:
-        st.error("Error generating DPP.")
+        # Ab app crash nahi hogi, seedha screen par bata degi ki dikkat kahan hai
+        st.error(f"⚠️ Google AI Error: {e}")
         return None
