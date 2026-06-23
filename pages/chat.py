@@ -236,7 +236,8 @@ if current_user == ADMIN_EMAIL:
 st.divider()
 
 # ==========================================
-# CHAT DISPLAY WITH AUTO SCROLL
+# ==========================================
+# CHAT DISPLAY
 # ==========================================
 
 chat_html = """
@@ -246,7 +247,7 @@ overflow-y:auto;
 border:1px solid #ddd;
 padding:10px;
 border-radius:10px;
-background-color:white;
+background:white;
 ">
 """
 
@@ -259,47 +260,39 @@ for row in chat_data:
     else:
         display_name = sender[:4] + "***"
 
+    message = row["message"]
+
     # Apna message
     if sender == current_user:
 
         chat_html += f"""
-        <div style='text-align:right;margin:8px;'>
-
-            <span style='
-            background:#DCF8C6;
-            padding:8px 12px;
-            border-radius:12px;
-            display:inline-block;
-            max-width:80%;
-            '>
-
-            <b>You</b><br>
-            {row['message']}
-
-            </span>
-
+        <div style="text-align:right;margin:8px;">
+            <div style="
+                background:#DCF8C6;
+                padding:10px;
+                border-radius:12px;
+                display:inline-block;
+                max-width:80%;">
+                <b>You</b><br>
+                {message}
+            </div>
         </div>
         """
 
-    # Dusre ka message
+    # Dusre users ka message
     else:
 
         chat_html += f"""
-        <div style='margin:8px;'>
-
-            <span style='
-            background:#F1F1F1;
-            padding:8px 12px;
-            border-radius:12px;
-            display:inline-block;
-            max-width:80%;
-            '>
-
-            <b>{display_name}</b><br>
-            {row['message']}
-
-            </span>
-
+        <div style="margin:8px;">
+            <div style="
+                background:#F1F1F1;
+                padding:10px;
+                border-radius:12px;
+                display:inline-block;
+                max-width:80%;">
+                <b>{display_name}</b><br>
+                {message}
+            </div>
         </div>
         """
 
@@ -307,11 +300,8 @@ chat_html += """
 </div>
 
 <script>
-
-var chatBox = document.getElementById("chat-box");
-
-chatBox.scrollTop = chatBox.scrollHeight;
-
+var objDiv = document.getElementById("chat-box");
+objDiv.scrollTop = objDiv.scrollHeight;
 </script>
 """
 
