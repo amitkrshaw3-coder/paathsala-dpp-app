@@ -2,7 +2,6 @@ import json
 import streamlit as st
 from groq import Groq
 
-# Streamlit ke secure locker se Groq ki chabi lena
 client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
 def generate_paathsala_dpp(subject, topic, target_class):
@@ -26,25 +25,20 @@ def generate_paathsala_dpp(subject, topic, target_class):
             temperature=0.5,
         )
         
-        # 🛡️ BULLETPROOF EXTRACTION: Yeh har error ko bypass kar dega
         choices = chat_completion.choices
         
         if isinstance(choices, list) and len(choices) > 0:
             first_choice = choices[0]
             
-            # Agar object format mein hai:
             if hasattr(first_choice, 'message'):
                 raw_text = first_choice.message.content
-            # Agar dictionary format mein hai:
             else:
                 raw_text = first_choice['message']['content']
         else:
             st.error("⚠️ AI ne koi data nahi bheja.")
             return None
 
-        # Data ko JSON mein saaf karna
-        clean_text = raw_text.replace("```json", "").replace("
-```", "").strip()
+        clean_text = raw_text.replace("```json", "").replace("```", "").strip()
         return json.loads(clean_text)
         
     except Exception as e:
