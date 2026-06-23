@@ -43,7 +43,7 @@ current_user = st.session_state.get(
 
 # Replace these with your values for now
 SUPABASE_URL = "https://rmdwvrjschmeztzrestm.supabase.co"
-SUPABASE_KEY = "YOUR_SUPABASE_ANON_KEY"
+SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtZHd2cmpzY2htZXp0enJlc3RtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwNTI2NzcsImV4cCI6MjA5NzYyODY3N30.H9hvCcDe2EUqrkukbxQdKoMSt_VNryl4Hnn7t3XZm2o"
 
 # Future:
 # SUPABASE_URL = st.secrets["SUPABASE_URL"]
