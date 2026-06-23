@@ -2,6 +2,7 @@ import time
 import streamlit as st
 from supabase import create_client, Client
 from streamlit_autorefresh import st_autorefresh
+from ai_bot import ask_paathsala_ai
 
 # ==========================================
 # PAGE CONFIG
