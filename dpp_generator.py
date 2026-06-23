@@ -1,9 +1,6 @@
 import json
+import urllib.request
 import streamlit as st
-from groq import Groq
-
-# API client setup
-client = Groq(api_key=st.secrets["GROQ_API_KEY"])
 
 def generate_paathsala_dpp(subject, topic, target_class):
     prompt = f"""
@@ -23,21 +20,35 @@ def generate_paathsala_dpp(subject, topic, target_class):
     }}
     """
     
+    # Direct API Endpoint (No Groq Package needed)
+    url = "https://api.groq.com/openai/v1/chat/completions"
+    
+    # Request setup
+    data = json.dumps({
+        "model": "llama-3.1-8b-instant",
+        "messages": [{"role": "user", "content": prompt}],
+        "temperature": 0.5,
+        "response_format": {"type": "json_object"}
+    }).encode("utf-8")
+    
+    headers = {
+        "Authorization": f"Bearer {st.secrets['GROQ_API_KEY']}",
+        "Content-Type": "application/json"
+    }
+    
+    req = urllib.request.Request(url, data=data, headers=headers)
+    
     try:
-        # Standard fast API Call (Forcing JSON object)
-        chat_completion = client.chat.completions.create(
-            messages=[{"role": "user", "content": prompt}],
-            model="llama-3.1-8b-instant", 
-            temperature=0.5,
-            response_format={"type": "json_object"} # Yeh line saara magic karegi
-        )
-        
-        # Seedha JSON text nikalna
-        raw_text = chat_completion.choices.message.content
-        
-        # JSON ko load karna
-        return json.loads(raw_text)
-        
+        # Seedha server se connect karna
+        with urllib.request.urlopen(req) as response:
+            result = json.loads(response.read().decode("utf-8"))
+            
+            # Dictionary se extract karna (Yeh kabhi fail nahi hoga)
+            raw_text = result["choices"]["message"]["content"]
+            
+            # JSON load karke wapas bhejna
+            return json.loads(raw_text)
+            
     except Exception as e:
-        st.error(f"⚠️ AI Generation Error: {e}")
+        st.error(f"⚠️ Direct Connection Error: {e}")
         return None
