@@ -26,7 +26,7 @@ def generate_paathsala_dpp(subject, topic, target_class):
     """
     
     # Gemini 1.5 Flash ka direct REST API endpoint
-    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
+    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent"
     
     # Gemini ke format ke hisaab se data bhejna
     data = json.dumps({
