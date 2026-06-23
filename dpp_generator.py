@@ -24,7 +24,8 @@ def generate_paathsala_dpp(subject, topic, target_class):
     }}
     """
     
-    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent"
+    # URL SE '-latest' HATA DIYA GAYA HAI
+    url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent"
     
     data = json.dumps({
         "contents": [{"parts": [{"text": prompt}]}],
@@ -46,7 +47,6 @@ def generate_paathsala_dpp(subject, topic, target_class):
             response_text = response.read().decode("utf-8")
             result = json.loads(response_text)
             
-            # Gemini ke result se text nikalna
             raw_text = result["candidates"]["content"]["parts"]["text"]
             
             clean_text = raw_text.replace("```json", "").replace("```", "").strip()
