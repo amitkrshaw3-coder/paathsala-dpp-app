@@ -6,7 +6,7 @@ import streamlit as st
 genai.configure(api_key=st.secrets["GEMINI_API_KEY"]) # Secret se key lenge
 
 def generate_paathsala_dpp(subject, topic, target_class):
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-pro')
     
     prompt = f"""
     You are an expert exam paper setter. Create a Daily Practice Problem (DPP) for Class {target_class} on the Subject '{subject}' and Topic '{topic}'.
