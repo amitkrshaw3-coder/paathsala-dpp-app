@@ -11,7 +11,6 @@ from ai_bot import ask_paathsala_ai
 # ==========================================
 st.set_page_config(page_title="PAATHSALA Chat", page_icon="🎓", layout="centered")
 
-# Initialize Session States
 if "dark_mode" not in st.session_state:
     st.session_state.dark_mode = False
 if "ai_is_typing" not in st.session_state:
@@ -21,24 +20,19 @@ if "logged_in" not in st.session_state or not st.session_state.logged_in:
     st.page_link("main.py", label="🏠 Login Again")
     st.stop()
 
-# ==========================================
-# SIDEBAR - DARK MODE TOGGLE
-# ==========================================
-with st.sidebar:
-    st.markdown("### ⚙️ App Settings")
-    st.session_state.dark_mode = st.toggle("🌙 Dark Mode", value=st.session_state.dark_mode)
+current_user = st.session_state.get("user_identifier", "Student")
 
 # ==========================================
 # DYNAMIC CSS MAGIC
 # ==========================================
-# 1. Base CSS (Applies to both modes - contains Ghost Refresh & Structure)
+# 1. Base CSS (Structure & Ghost Refresh)
 base_css = """
 <style>
 #MainMenu {visibility:hidden;}
 footer {visibility:hidden;}
 header {visibility:hidden;}
 
-/* Ghost Refresh Magic */
+/* Ghost Refresh Magic - No Blinking */
 [data-testid="stFragment"], 
 div[data-testid="stVerticalBlockBorderWrapper"], 
 [data-testid="stVerticalBlock"],
@@ -98,7 +92,6 @@ div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #1E1E1E !imp
 </style>
 """
 
-# Apply the CSS dynamically
 st.markdown(base_css, unsafe_allow_html=True)
 if st.session_state.dark_mode:
     st.markdown(dark_css, unsafe_allow_html=True)
@@ -106,10 +99,8 @@ else:
     st.markdown(light_css, unsafe_allow_html=True)
 
 # ==========================================
-# SUPABASE SETUP & USER CHECKS
+# SUPABASE SETUP
 # ==========================================
-current_user = st.session_state.get("user_identifier", "Student")
-
 SUPABASE_URL = "https://rmdwvrjschmeztzrestm.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtZHd2cmpzY2htZXp0enJlc3RtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwNTI2NzcsImV4cCI6MjA5NzYyODY3N30.H9hvCcDe2EUqrkukbxQdKoMSt_VNryl4Hnn7t3XZm2o"
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
@@ -130,7 +121,7 @@ except Exception:
     pass
 
 # ==========================================
-# STATIC HEADER
+# HEADER & TOGGLE (Right on the main screen)
 # ==========================================
 st.markdown("""
 <div style='text-align: center; padding: 15px; background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%); border-radius: 10px; margin-bottom: 15px; color: white;'>
@@ -139,9 +130,13 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-col1, col2 = st.columns(2)
-col1.write(f"🟢 **Online:** {current_user}")
-col2.page_link("main.py", label="🏠 Go to Main Menu")
+col1, col2, col3 = st.columns([1.5, 1, 1.2])
+with col1:
+    st.write(f"🟢 **Online:** {current_user[:10]}")
+with col2:
+    st.page_link("main.py", label="🏠 Menu")
+with col3:
+    st.session_state.dark_mode = st.toggle("🌙 Dark", value=st.session_state.dark_mode)
 
 # ==========================================
 # 🛠️ ADMIN CONTROLS PANEL
