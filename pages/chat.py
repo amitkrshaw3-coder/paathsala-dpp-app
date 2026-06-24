@@ -47,12 +47,7 @@ current_user = st.session_state.get(
 # SUPABASE
 # ==========================================
 SUPABASE_URL = "https://rmdwvrjschmeztzrestm.supabase.co"
-
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtZHd2cmpzY2htZXp0enJlc3RtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwNTI2NzcsImV4cCI6MjA5NzYyODY3N30.H9hvCcDe2EUqrkukbxQdKoMSt_VNryl4Hnn7t3XZm2o"
-
-# Future:
-# SUPABASE_URL = st.secrets["SUPABASE_URL"]
-# SUPABASE_KEY = st.secrets["SUPABASE_KEY"]
 
 supabase: Client = create_client(
     SUPABASE_URL,
@@ -102,19 +97,14 @@ st.page_link(
 )
 
 st.title("💬 PAATHSALA Live Discussion")
-st.caption(
-    "🚀 Welcome to PAATHSALA Live Doubt Solving Room"
-)
+st.caption("🚀 Welcome to PAATHSALA Live Doubt Solving Room")
 
-st.write(
-    f"👤 Connected as: **{current_user}**"
-)
+st.write(f"👤 Connected as: **{current_user}**")
 
 # ==========================================
 # LOAD CHAT
 # ==========================================
 try:
-
     response = (
         supabase
         .table("chat_history")
@@ -134,103 +124,45 @@ try:
     )
 
 except Exception as e:
-
     st.error(f"Database Error: {e}")
-
     chat_data = []
     active_users = []
 
-st.info(
-    f"👥 Active Users: {len(active_users)}"
-)
+st.info(f"👥 Active Users: {len(active_users)}")
 
 # ==========================================
 # ADMIN PANEL
 # ==========================================
 if current_user == ADMIN_EMAIL:
-
-    with st.expander(
-        "🛠 Admin Controls",
-        expanded=False
-    ):
-
-        tab1, tab2, tab3 = st.tabs(
-            ["🚫 Block", "✅ Unblock", "📋 Blocked"]
-        )
+    with st.expander("🛠 Admin Controls", expanded=False):
+        tab1, tab2, tab3 = st.tabs(["🚫 Block", "✅ Unblock", "📋 Blocked"])
 
         with tab1:
-
-            spammer = st.selectbox(
-                "Select User",
-                ["Select User"] + active_users
-            )
-
+            spammer = st.selectbox("Select User", ["Select User"] + active_users)
             if st.button("🚫 Block User"):
-
                 if spammer != "Select User":
-
                     try:
-                        supabase.table(
-                            "blocked_users"
-                        ).insert(
-                            {"email": spammer}
-                        ).execute()
-
-                        st.success(
-                            f"{spammer} blocked"
-                        )
-
+                        supabase.table("blocked_users").insert({"email": spammer}).execute()
+                        st.success(f"{spammer} blocked")
                     except:
-                        st.warning(
-                            "Already blocked"
-                        )
+                        st.warning("Already blocked")
 
         with tab2:
-
             try:
-
-                blocked = (
-                    supabase
-                    .table("blocked_users")
-                    .select("email")
-                    .execute()
-                )
-
-                blocked_list = [
-                    row["email"]
-                    for row in blocked.data
-                ]
-
+                blocked = supabase.table("blocked_users").select("email").execute()
+                blocked_list = [row["email"] for row in blocked.data]
             except:
                 blocked_list = []
 
-            selected = st.selectbox(
-                "Select User",
-                ["Select User"] + blocked_list
-            )
-
+            selected = st.selectbox("Select User to Unblock", ["Select User"] + blocked_list)
             if st.button("✅ Unblock User"):
-
                 if selected != "Select User":
-
-                    supabase.table(
-                        "blocked_users"
-                    ).delete().eq(
-                        "email",
-                        selected
-                    ).execute()
-
-                    st.success(
-                        f"{selected} unblocked"
-                    )
+                    supabase.table("blocked_users").delete().eq("email", selected).execute()
+                    st.success(f"{selected} unblocked")
 
         with tab3:
-
             if len(blocked_list) == 0:
-                st.success(
-                    "No blocked users"
-                )
-
+                st.success("No blocked users")
             else:
                 for user in blocked_list:
                     st.error(user)
@@ -238,22 +170,12 @@ if current_user == ADMIN_EMAIL:
 st.divider()
 
 # ==========================================
-# ==========================================
-# CHAT DISPLAY
-# ==========================================
-
-
-# ==========================================
-# ==========================================
 # CHAT DISPLAY (STREAMLIT NATIVE)
 # ==========================================
-
 chat_container = st.container(height=450)
 
 with chat_container:
-
     for row in chat_data:
-
         sender = row["sender"]
         message = row["message"]
 
@@ -265,16 +187,14 @@ with chat_container:
 
         # Apna message
         if sender == current_user:
-
             with st.chat_message("user"):
                 st.write(message)
-
         # Dusre users ka message
         else:
-
             with st.chat_message("assistant"):
                 st.markdown(f"**{display_name}**")
                 st.write(message)
+
 # ==========================================
 # SPAM CONTROL
 # ==========================================
@@ -284,21 +204,9 @@ if "last_message_time" not in st.session_state:
 # ==========================================
 # SEND MESSAGE
 # ==========================================
-# ==========================================
-# SPAM CONTROL
-# ==========================================
-if "last_message_time" not in st.session_state:
-    st.session_state.last_message_time = 0
-
-# ==========================================
-# SEND MESSAGE
-# ==========================================
-prompt = st.chat_input(
-    "Type your doubt..."
-)
+prompt = st.chat_input("Type your doubt...")
 
 if prompt:
-
     prompt = prompt.strip()
 
     # Empty message check
@@ -313,32 +221,20 @@ if prompt:
 
     # Cooldown check
     current_time = time.time()
-
-    if (
-        current_time -
-        st.session_state.last_message_time
-    ) < 5:
-
-        st.warning(
-            "⚠️ Please wait 5 seconds before sending next message."
-        )
+    if (current_time - st.session_state.last_message_time) < 5:
+        st.warning("⚠️ Please wait 5 seconds before sending next message.")
         st.stop()
 
     # Bad words check
     lower_msg = prompt.lower()
-
     for word in BAD_WORDS:
-
         if word in lower_msg:
-            st.warning(
-                "⚠️ Inappropriate language detected."
-            )
+            st.warning("⚠️ Inappropriate language detected.")
             st.stop()
 
     # Save student message
     try:
-
-        response = (
+        db_response = (
             supabase
             .table("chat_history")
             .insert({
@@ -351,33 +247,29 @@ if prompt:
         st.session_state.last_message_time = current_time
 
         # ==================================
-        # AI BOT
-        # ==================================
-                # ==================================
         # AI BOT (BACKGROUND THREADING)
         # ==================================
         if prompt.lower().startswith("@ai"):
             
             doubt = prompt[3:].strip()
-            
-            # Helper function jo background mein chalega
+
             def ai_background_task(student_doubt):
                 answer = ask_paathsala_ai(student_doubt)
-                # Answer aate hi chupke se Supabase me save kar dega
                 supabase.table("chat_history").insert({
                     "sender": "PAATHSALA AI 🤖",
                     "message": answer
                 }).execute()
 
-            # AI ko background thread mein start karna
             bg_thread = threading.Thread(target=ai_background_task, args=(doubt,))
             bg_thread.start()
 
-            st.toast("🤖 AI is typing... answer will appear shortly!")
+            st.toast("🤖 PAATHSALA AI is typing... answer will appear shortly!")
             
         else:
-            if response.data:
+            if db_response.data:
                 st.toast("✅ Message Sent")
 
         st.rerun()
 
+    except Exception as e:
+        st.error(f"Actual Error: {e}")
