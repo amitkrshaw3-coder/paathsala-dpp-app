@@ -8,7 +8,7 @@ from streamlit_autorefresh import st_autorefresh
 from ai_bot import ask_paathsala_ai
 
 # ==========================================
-# PAGE CONFIG & ULTRA-CLEAN STYLING
+# PAGE CONFIG & FLOATING BOX STYLING
 # ==========================================
 st.set_page_config(page_title="PAATHSALA Chat", page_icon="🎓", layout="centered")
 
@@ -17,46 +17,43 @@ custom_css = """
 #MainMenu {visibility:hidden;}
 footer {visibility:hidden;}
 header {visibility:hidden;}
-[data-testid="stVerticalBlock"] { overflow-y: auto; }
 
-/* 🌟 MAGIC FIX: Make Streamlit Buttons look like plain icons (No ugly borders) */
-[data-testid="stButton"] button {
-    background-color: transparent !important;
-    border: none !important;
-    box-shadow: none !important;
-    padding: 0px !important;
-    font-size: 18px !important;
-    transition: all 0.2s ease-in-out;
-}
-[data-testid="stButton"] button:hover {
-    transform: scale(1.2);
+/* MAGIC FIX: Make the chat container look like a floating box */
+div[data-testid="stVerticalBlockBorderWrapper"] {
+    border-radius: 15px !important;
+    box-shadow: 0px 8px 24px rgba(0,0,0,0.12) !important;
+    background-color: #fafbfc;
+    padding: 10px;
+    border: 1px solid #e0e0e0 !important;
 }
 
 /* Custom Chat Bubbles */
-.chat-row { display: flex; align-items: flex-start; margin-bottom: 12px; width: 100%; }
+.chat-row { display: flex; align-items: flex-start; margin-bottom: 15px; width: 100%; }
 .chat-row.user { justify-content: flex-end; }
 .chat-row.assistant { justify-content: flex-start; }
 
 .user-msg {
     background: linear-gradient(135deg, #0078D7, #00C6FF);
-    padding: 10px 14px;
+    padding: 12px 16px;
     border-radius: 18px 18px 2px 18px;
     color: white;
     box-shadow: 0px 3px 10px rgba(0,0,0,0.1);
     max-width: 85%;
 }
 .assistant-msg {
-    background: #2D2D2D;
-    padding: 10px 14px;
+    background: #ffffff;
+    padding: 12px 16px;
     border-radius: 18px 18px 18px 2px;
-    color: white;
-    box-shadow: 0px 3px 10px rgba(0,0,0,0.1);
+    color: #333;
+    box-shadow: 0px 3px 10px rgba(0,0,0,0.08);
     max-width: 85%;
-    border: 1px solid #444;
+    border: 1px solid #eee;
 }
 
 .time-stamp { font-size: 10px; opacity: 0.7; margin-top: 5px; text-align: right; }
-.sender-name { font-size: 11px; color: #00C6FF; margin-bottom: 3px; font-weight: bold; }
+.user-time { color: #f0f0f0; }
+.bot-time { color: #888; }
+.sender-name { font-size: 12px; color: #0078D7; margin-bottom: 4px; font-weight: bold; }
 </style>
 """
 st.markdown(custom_css, unsafe_allow_html=True)
@@ -121,11 +118,6 @@ if len(chat_data) > st.session_state.total_msgs:
 
 st.info(f"👥 Active Users in Room: {len(active_users)}")
 
-# ==========================================
-# REPLY & STATE MANAGEMENT
-# ==========================================
-if "reply_to" not in st.session_state:
-    st.session_state.reply_to = None
 if "last_message_time" not in st.session_state:
     st.session_state.last_message_time = 0
 
@@ -134,16 +126,15 @@ def get_avatar_color(email):
     return colors[len(email) % len(colors)]
 
 # ==========================================
-# CHAT DISPLAY (MINIMAL UI)
+# CHAT DISPLAY (FLOATING BOX UI)
 # ==========================================
-chat_container = st.container()
+# Using st.container with a fixed height creates a scrollable floating box
+chat_container = st.container(height=550, border=True)
 
 with chat_container:
     for row in chat_data:
-        msg_id = row.get("id", 0)
         sender = row["sender"]
         message = row["message"]
-        reply_text = row.get("reply_to")
         
         # Timestamp parsing
         try:
@@ -165,50 +156,28 @@ with chat_container:
         # Avatar
         avatar_letter = sender[0].upper() if sender != "PAATHSALA AI 🤖" else "🤖"
         bg_color = get_avatar_color(sender) if sender != "PAATHSALA AI 🤖" else "#333"
-        avatar_html = f'<div style="width:32px; height:32px; border-radius:50%; background:{bg_color}; color:white; text-align:center; line-height:32px; font-size:14px; font-weight:bold; flex-shrink:0; border:2px solid #fff; margin: 0px 8px;">{avatar_letter}</div>'
+        avatar_html = f'<div style="width:32px; height:32px; border-radius:50%; background:{bg_color}; color:white; text-align:center; line-height:32px; font-size:14px; font-weight:bold; flex-shrink:0; border:2px solid #fff; margin: 0px 8px; box-shadow: 0px 2px 5px rgba(0,0,0,0.1);">{avatar_letter}</div>'
 
-        # Reply Box Format
-        reply_html = ""
-        if reply_text:
-            reply_html = f'<div style="padding:6px; border-left:3px solid #ffcc00; background:rgba(255,255,255,0.1); border-radius:5px; font-size:12px; margin-bottom:5px; color:#ddd;">↪ <b>Reply:</b> {reply_text[:50]}...</div>'
-
-        # Layout: 90% Message, 10% Action Button
-        col_main, col_btn = st.columns([9, 1])
-        
-        with col_main:
-            if sender == current_user:
-                st.markdown(
-                    f'<div class="chat-row user">'
-                    f'<div class="user-msg">{reply_html}<div style="font-size:14px;">{message}</div><div class="time-stamp">{time_str}</div></div>'
-                    f'{avatar_html}'
-                    f'</div>', unsafe_allow_html=True
-                )
-            else:
-                st.markdown(
-                    f'<div class="chat-row assistant">'
-                    f'{avatar_html}'
-                    f'<div class="assistant-msg"><div class="sender-name">{display_name}</div>{reply_html}<div style="font-size:14px;">{message}</div><div class="time-stamp">{time_str}</div></div>'
-                    f'</div>', unsafe_allow_html=True
-                )
-
-        # 🌟 Minimal Reply Icon Button
-        with col_btn:
-            st.write("") # Adjust alignment slightly
-            if st.button("↩️", key=f"r_{msg_id}"):
-                clean_name = display_name.replace(" 🟢","").replace(" 👑","").replace(" ***","")
-                st.session_state.reply_to = {"sender": clean_name, "message": message}
-                st.rerun()
+        # Render completely clean chat without any buttons
+        if sender == current_user:
+            st.markdown(
+                f'<div class="chat-row user">'
+                f'<div class="user-msg"><div style="font-size:14px;">{message}</div><div class="time-stamp user-time">{time_str}</div></div>'
+                f'{avatar_html}'
+                f'</div>', unsafe_allow_html=True
+            )
+        else:
+            st.markdown(
+                f'<div class="chat-row assistant">'
+                f'{avatar_html}'
+                f'<div class="assistant-msg"><div class="sender-name">{display_name}</div><div style="font-size:14px;">{message}</div><div class="time-stamp bot-time">{time_str}</div></div>'
+                f'</div>', unsafe_allow_html=True
+            )
 
 # ==========================================
 # SEND MESSAGE & UI
 # ==========================================
-st.divider()
-
-if st.session_state.reply_to:
-    st.info(f"↪ Replying to **{st.session_state.reply_to['sender']}**: {st.session_state.reply_to['message'][:40]}...")
-    if st.button("❌ Cancel Reply"):
-        st.session_state.reply_to = None
-        st.rerun()
+st.write("") # Just a little spacing below the floating box
 
 with st.expander("📎 Attach Image / Screenshot"):
     uploaded_image = st.file_uploader("Upload doubt image", type=['png', 'jpg', 'jpeg'])
@@ -238,28 +207,26 @@ if prompt or uploaded_image:
             st.warning("⚠️ Inappropriate language detected.")
             st.stop()
 
-    db_reply_text = f"{st.session_state.reply_to['sender']}: {st.session_state.reply_to['message']}" if st.session_state.reply_to else None
-
     try:
+        # Removed reply_to logic completely from the insert
         supabase.table("chat_history").insert({
             "sender": current_user,
-            "message": final_message,
-            "reply_to": db_reply_text
+            "message": final_message
         }).execute()
 
         st.session_state.last_message_time = current_time
-        st.session_state.reply_to = None
         st.session_state.total_msgs += 1 
 
         if prompt and prompt.lower().startswith("@ai"):
             doubt = prompt[3:].strip()
             def ai_background_task(student_doubt, original_prompt, student_email):
                 answer = ask_paathsala_ai(student_doubt)
-                ai_reply_format = f"{student_email[:5]}***: {original_prompt}"
+                ai_reply_format = f"**{student_email[:5]}*** asked:* {original_prompt}<br><br>"
+                full_ai_message = ai_reply_format + answer
+                
                 supabase.table("chat_history").insert({
                     "sender": "PAATHSALA AI 🤖",
-                    "message": answer,
-                    "reply_to": ai_reply_format
+                    "message": full_ai_message
                 }).execute()
 
             bg_thread = threading.Thread(target=ai_background_task, args=(doubt, prompt, current_user))
