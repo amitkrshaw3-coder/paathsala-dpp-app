@@ -17,11 +17,21 @@ custom_css = """
 footer {visibility:hidden;}
 header {visibility:hidden;}
 
-/* Floating Box Setup */
+/* 🌟 ANTI-FADE MAGIC: Streamlit ko loading ke waqt dim karne se rokna */
+[data-testid="stFragment"], 
+div[data-testid="stVerticalBlockBorderWrapper"], 
+.st-emotion-cache-1kyxreq, 
+[data-testid="stVerticalBlock"] {
+    opacity: 1 !important;
+    transition: none !important;
+    filter: none !important;
+}
+
+/* Floating Box Setup - CRISP WHITE BACKGROUND */
 div[data-testid="stVerticalBlockBorderWrapper"] {
     border-radius: 15px !important;
     box-shadow: 0px 8px 24px rgba(0,0,0,0.12) !important;
-    background-color: #fafbfc;
+    background-color: #ffffff !important; /* Ekdum saaf safed rang */
     padding: 10px;
     border: 1px solid #e0e0e0 !important;
 }
@@ -168,15 +178,14 @@ send_triggered = False
 final_message_html = ""
 raw_user_prompt = ""
 
-# 1. 📎 IMAGE UPLOAD SECTION (Manual Send Button)
+# 1. 📎 IMAGE UPLOAD SECTION
 with st.expander("📎 Attach Image / Screenshot"):
     uploaded_image = st.file_uploader("Upload doubt image", type=['png', 'jpg', 'jpeg'], key=st.session_state.uploader_key)
     
     if uploaded_image:
-        st.image(uploaded_image, caption="Image Preview", width=200) # Preview before sending!
+        st.image(uploaded_image, caption="Image Preview", width=200)
         img_caption = st.text_input("Add a message with image (Use @ai for AI help):")
         
-        # 🌟 EXPLICIT SEND BUTTON FOR IMAGES
         if st.button("📤 Send Image", type="primary", use_container_width=True):
             base64_img = base64.b64encode(uploaded_image.read()).decode()
             img_html = f'<br><img src="data:image/png;base64,{base64_img}" style="max-width: 100%; border-radius: 8px; margin-top: 5px;">'
@@ -185,10 +194,9 @@ with st.expander("📎 Attach Image / Screenshot"):
             final_message_html = raw_user_prompt + img_html
             send_triggered = True
             
-            # Reset Uploader Key so it clears after sending
             st.session_state.uploader_key = f"uploader_{int(time.time())}"
 
-# 2. 💬 NORMAL TEXT CHAT SECTION (Enter to Send)
+# 2. 💬 NORMAL TEXT CHAT SECTION
 chat_prompt = st.chat_input("Type your doubt... (Use @ai for AI Tutor)")
 
 if chat_prompt:
@@ -197,7 +205,7 @@ if chat_prompt:
     send_triggered = True
 
 # ==========================================
-# COMMON SEND LOGIC (Executes ONLY when triggered)
+# COMMON SEND LOGIC 
 # ==========================================
 if send_triggered:
     if len(final_message_html) > 5000000:
@@ -214,7 +222,7 @@ if send_triggered:
             st.warning("⚠️ Inappropriate language detected.")
             st.stop()
 
-    # Database Insert (Saves only 1 time!)
+    # DB Insert
     supabase.table("chat_history").insert({
         "sender": current_user,
         "message": final_message_html
