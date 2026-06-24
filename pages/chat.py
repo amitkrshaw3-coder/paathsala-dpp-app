@@ -151,41 +151,35 @@ with chat_container:
         col_main, col_btn1, col_btn2 = st.columns([7, 1, 1])
         
         with col_main:
-            # Format Reply Block
+            # Format Reply Block - 100% Single Line to avoid Streamlit Markdown bug
             reply_html = ""
             if reply_text:
-                reply_html = f"""
-                <div style="padding:6px; border-left:3px solid #ffcc00; background:rgba(255,255,255,0.1); border-radius:5px; font-size:12px; margin-bottom:5px; color:#ddd;">
-                    ↪ <b>Reply:</b> {reply_text[:60]}...
-                </div>
-                """
+                reply_html = f'<div style="padding:6px; border-left:3px solid #ffcc00; background:rgba(255,255,255,0.1); border-radius:5px; font-size:12px; margin-bottom:5px; color:#ddd;">↪ <b>Reply:</b> {reply_text[:60]}...</div>'
 
             # RIGHT ALIGNED (User)
             if sender == current_user:
-                st.markdown(f"""
-                <div style="width: 100%;">
-                    <div class="user-msg">
-                        {reply_html}
-                        <div style="font-size: 15px;">{message}</div>
-                        <div class="time-stamp">{time_str}</div>
-                    </div>
-                    <div class="clear-float"></div>
-                </div>
-                """, unsafe_allow_html=True)
+                st.markdown(
+                    f'<div style="width: 100%;">'
+                    f'<div class="user-msg">'
+                    f'{reply_html}'
+                    f'<div style="font-size: 15px;">{message}</div>'
+                    f'<div class="time-stamp">{time_str}</div>'
+                    f'</div><div class="clear-float"></div></div>', 
+                    unsafe_allow_html=True
+                )
                 
             # LEFT ALIGNED (Others & AI)
             else:
-                st.markdown(f"""
-                <div style="width: 100%;">
-                    <div class="assistant-msg">
-                        <div style="font-size: 11px; color: #00C6FF; margin-bottom: 3px;"><b>{display_name}</b></div>
-                        {reply_html}
-                        <div style="font-size: 15px;">{message}</div>
-                        <div class="time-stamp">{time_str}</div>
-                    </div>
-                    <div class="clear-float"></div>
-                </div>
-                """, unsafe_allow_html=True)
+                st.markdown(
+                    f'<div style="width: 100%;">'
+                    f'<div class="assistant-msg">'
+                    f'<div style="font-size: 11px; color: #00C6FF; margin-bottom: 3px;"><b>{display_name}</b></div>'
+                    f'{reply_html}'
+                    f'<div style="font-size: 15px;">{message}</div>'
+                    f'<div class="time-stamp">{time_str}</div>'
+                    f'</div><div class="clear-float"></div></div>', 
+                    unsafe_allow_html=True
+                )
 
         with col_btn1:
             if st.button("↩️", key=f"reply_btn_{msg_id}"):
