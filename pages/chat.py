@@ -10,13 +10,8 @@ from ai_bot import ask_paathsala_ai
 # ==========================================
 # PAGE CONFIG & PREMIUM STYLING
 # ==========================================
-st.set_page_config(
-    page_title="PAATHSALA Chat",
-    page_icon="🎓",
-    layout="centered"
-)
+st.set_page_config(page_title="PAATHSALA Chat", page_icon="🎓", layout="centered")
 
-# Premium CSS for Chat Bubbles, Hide Menus, and Native Scroll
 custom_css = """
 <style>
 #MainMenu {visibility:hidden;}
@@ -24,42 +19,37 @@ footer {visibility:hidden;}
 header {visibility:hidden;}
 [data-testid="stVerticalBlock"] { overflow-y: auto; }
 
-/* Custom Chat Bubbles */
+/* Custom Chat Bubbles with Avatar Layout */
+.chat-row { display: flex; align-items: flex-start; margin-bottom: 12px; width: 100%; }
+.chat-row.user { justify-content: flex-end; }
+.chat-row.assistant { justify-content: flex-start; }
+
 .user-msg {
     background: linear-gradient(135deg, #0078D7, #00C6FF);
-    padding: 12px 16px;
+    padding: 10px 14px;
     border-radius: 18px 18px 2px 18px;
     color: white;
-    margin-bottom: 5px;
     box-shadow: 0px 3px 10px rgba(0,0,0,0.1);
-    display: inline-block;
-    max-width: 85%;
-    float: right;
+    max-width: 80%;
+    margin-right: 8px;
 }
 .assistant-msg {
     background: #2D2D2D;
-    padding: 12px 16px;
+    padding: 10px 14px;
     border-radius: 18px 18px 18px 2px;
     color: white;
-    margin-bottom: 5px;
     box-shadow: 0px 3px 10px rgba(0,0,0,0.1);
-    display: inline-block;
-    max-width: 85%;
-    float: left;
+    max-width: 80%;
+    margin-left: 8px;
     border: 1px solid #444;
 }
-.clear-float { clear: both; }
-.time-stamp {
-    font-size: 10px;
-    opacity: 0.7;
-    margin-top: 5px;
-    text-align: right;
-}
+
+.time-stamp { font-size: 10px; opacity: 0.7; margin-top: 5px; text-align: right; }
+.sender-name { font-size: 11px; color: #00C6FF; margin-bottom: 3px; font-weight: bold; }
 </style>
 """
 st.markdown(custom_css, unsafe_allow_html=True)
 
-# Auto refresh every 3 seconds
 st_autorefresh(interval=3000, limit=None, key="chat_refresh")
 
 # ==========================================
@@ -76,7 +66,6 @@ SUPABASE_URL = "https://rmdwvrjschmeztzrestm.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtZHd2cmpzY2htZXp0enJlc3RtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwNTI2NzcsImV4cCI6MjA5NzYyODY3N30.H9hvCcDe2EUqrkukbxQdKoMSt_VNryl4Hnn7t3XZm2o"
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 ADMIN_EMAIL = "paathsala37@gmail.com"
-
 BAD_WORDS = ["idiot", "stupid", "abuse"]
 
 try:
@@ -91,27 +80,35 @@ except Exception:
 # PREMIUM HEADER
 # ==========================================
 st.markdown("""
-<div style='text-align: center; padding: 15px; background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%); border-radius: 10px; margin-bottom: 20px; color: white;'>
-    <h2 style='margin:0; color: white;'>🎓 PAATHSALA LIVE ROOM</h2>
-    <p style='margin:0; font-size: 14px;'>Learn • Discuss • Grow</p>
+<div style='text-align: center; padding: 15px; background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%); border-radius: 10px; margin-bottom: 15px; color: white;'>
+    <h3 style='margin:0; color: white;'>🎓 PAATHSALA LIVE ROOM</h3>
+    <p style='margin:0; font-size: 13px;'>Learn • Discuss • Grow</p>
 </div>
 """, unsafe_allow_html=True)
 
-st.write(f"👤 Connected as: **{current_user}**")
+st.write(f"🟢 **Online:** {current_user}")
 st.page_link("main.py", label="🏠 Go to Main Menu")
 
 # ==========================================
-# LOAD CHAT
+# LOAD CHAT & UNREAD COUNTER
 # ==========================================
 try:
     response = supabase.table("chat_history").select("*").order("created_at", desc=True).limit(100).execute()
     chat_data = response.data[::-1]
-    active_users = list(set(row["sender"] for row in chat_data))
+    active_users = list(set(row["sender"] for row in chat_data[:20])) # Last 20 messages decide active status
 except Exception as e:
     chat_data = []
     active_users = []
 
-st.info(f"👥 Active Users in Room: {len(active_users)}")
+# Unread Messages Counter
+if "total_msgs" not in st.session_state:
+    st.session_state.total_msgs = len(chat_data)
+if len(chat_data) > st.session_state.total_msgs:
+    new_msgs = len(chat_data) - st.session_state.total_msgs
+    st.toast(f"📬 {new_msgs} New Unread Message(s)!")
+    st.session_state.total_msgs = len(chat_data)
+
+st.info(f"👥 Active Users in Room: {len(active_users)} 🟢")
 
 # ==========================================
 # REPLY & STATE MANAGEMENT
@@ -120,6 +117,11 @@ if "reply_to" not in st.session_state:
     st.session_state.reply_to = None
 if "last_message_time" not in st.session_state:
     st.session_state.last_message_time = 0
+
+# Avatar Color Generator Helper
+def get_avatar_color(email):
+    colors = ["#ff595e", "#ffca3a", "#8ac926", "#1982c4", "#6a4c93", "#e07a5f"]
+    return colors[len(email) % len(colors)]
 
 # ==========================================
 # CHAT DISPLAY (PREMIUM UI)
@@ -133,8 +135,10 @@ with chat_container:
         message = row["message"]
         reply_text = row.get("reply_to")
         likes = row.get("likes", 0)
+        thumbs = row.get("thumbs_up", 0)
+        laughs = row.get("laughs", 0)
         
-        # Timestamp parsing (UTC to IST Conversion)
+        # Timestamp parsing
         try:
             utc_dt = datetime.strptime(row['created_at'][:19], "%Y-%m-%dT%H:%M:%S")
             ist_dt = utc_dt + timedelta(hours=5, minutes=30)
@@ -142,95 +146,92 @@ with chat_container:
         except:
             time_str = ""
 
-        # Display Name masking
-        if current_user == ADMIN_EMAIL or sender == "PAATHSALA AI 🤖":
-            display_name = sender
+        # Badges & Display Name
+        badge = " 🟢" if sender in active_users else " ⚫"
+        if sender == ADMIN_EMAIL:
+            display_name = "Admin 👑" + badge
+        elif sender == "PAATHSALA AI 🤖":
+            display_name = "PAATHSALA AI 🤖"
         else:
-            display_name = sender[:4] + "***"
+            display_name = sender[:5] + "***" + badge
 
-        col_main, col_btn1, col_btn2 = st.columns([7, 1, 1])
+        # Avatar Generation
+        avatar_letter = sender[0].upper() if sender != "PAATHSALA AI 🤖" else "🤖"
+        bg_color = get_avatar_color(sender) if sender != "PAATHSALA AI 🤖" else "#333"
+        avatar_html = f'<div style="width:32px; height:32px; border-radius:50%; background:{bg_color}; color:white; text-align:center; line-height:32px; font-size:14px; font-weight:bold; flex-shrink:0; border:2px solid #fff;">{avatar_letter}</div>'
+
+        reply_html = ""
+        if reply_text:
+            reply_html = f'<div style="padding:6px; border-left:3px solid #ffcc00; background:rgba(255,255,255,0.1); border-radius:5px; font-size:12px; margin-bottom:5px; color:#ddd;">↪ <b>Reply:</b> {reply_text[:50]}...</div>'
+
+        col_main, col_btn = st.columns([7, 3])
         
         with col_main:
-            # Format Reply Block - 100% Single Line to avoid Streamlit Markdown bug
-            reply_html = ""
-            if reply_text:
-                reply_html = f'<div style="padding:6px; border-left:3px solid #ffcc00; background:rgba(255,255,255,0.1); border-radius:5px; font-size:12px; margin-bottom:5px; color:#ddd;">↪ <b>Reply:</b> {reply_text[:60]}...</div>'
-
             # RIGHT ALIGNED (User)
             if sender == current_user:
                 st.markdown(
-                    f'<div style="width: 100%;">'
-                    f'<div class="user-msg">'
-                    f'{reply_html}'
-                    f'<div style="font-size: 15px;">{message}</div>'
-                    f'<div class="time-stamp">{time_str}</div>'
-                    f'</div><div class="clear-float"></div></div>', 
-                    unsafe_allow_html=True
+                    f'<div class="chat-row user">'
+                    f'<div class="user-msg">{reply_html}<div style="font-size:14px;">{message}</div><div class="time-stamp">{time_str}</div></div>'
+                    f'{avatar_html}'
+                    f'</div>', unsafe_allow_html=True
                 )
-                
             # LEFT ALIGNED (Others & AI)
             else:
                 st.markdown(
-                    f'<div style="width: 100%;">'
-                    f'<div class="assistant-msg">'
-                    f'<div style="font-size: 11px; color: #00C6FF; margin-bottom: 3px;"><b>{display_name}</b></div>'
-                    f'{reply_html}'
-                    f'<div style="font-size: 15px;">{message}</div>'
-                    f'<div class="time-stamp">{time_str}</div>'
-                    f'</div><div class="clear-float"></div></div>', 
-                    unsafe_allow_html=True
+                    f'<div class="chat-row assistant">'
+                    f'{avatar_html}'
+                    f'<div class="assistant-msg"><div class="sender-name">{display_name}</div>{reply_html}<div style="font-size:14px;">{message}</div><div class="time-stamp">{time_str}</div></div>'
+                    f'</div>', unsafe_allow_html=True
                 )
 
-        with col_btn1:
-            if st.button("↩️", key=f"reply_btn_{msg_id}"):
-                st.session_state.reply_to = {"sender": display_name, "message": message}
+        # Reactions & Reply Buttons
+        with col_btn:
+            c1, c2, c3, c4 = st.columns(4)
+            if c1.button("↩️", key=f"r_{msg_id}"):
+                st.session_state.reply_to = {"sender": display_name.replace(" 🟢","").replace(" ⚫",""), "message": message}
                 st.rerun()
-                
-        with col_btn2:
-            if st.button(f"❤️ {likes if likes > 0 else ''}", key=f"like_btn_{msg_id}"):
-                try:
-                    supabase.table("chat_history").update({"likes": likes + 1}).eq("id", msg_id).execute()
-                    st.rerun()
-                except:
-                    pass
+            if c2.button(f"👍 {thumbs if thumbs>0 else ''}", key=f"t_{msg_id}"):
+                supabase.table("chat_history").update({"thumbs_up": thumbs + 1}).eq("id", msg_id).execute()
+                st.rerun()
+            if c3.button(f"❤️ {likes if likes>0 else ''}", key=f"l_{msg_id}"):
+                supabase.table("chat_history").update({"likes": likes + 1}).eq("id", msg_id).execute()
+                st.rerun()
+            if c4.button(f"😂 {laughs if laughs>0 else ''}", key=f"h_{msg_id}"):
+                supabase.table("chat_history").update({"laughs": laughs + 1}).eq("id", msg_id).execute()
+                st.rerun()
 
 # ==========================================
-# SEND MESSAGE & IMAGE UPLOAD UI
+# SEND MESSAGE & UI
 # ==========================================
 st.divider()
 
 if st.session_state.reply_to:
-    st.info(f"↪ Replying to **{st.session_state.reply_to['sender']}**: {st.session_state.reply_to['message'][:50]}...")
+    st.info(f"↪ Replying to **{st.session_state.reply_to['sender']}**: {st.session_state.reply_to['message'][:40]}...")
     if st.button("❌ Cancel Reply"):
         st.session_state.reply_to = None
         st.rerun()
 
-# Image Uploader (Collapsible to keep UI clean)
 with st.expander("📎 Attach Image / Screenshot"):
     uploaded_image = st.file_uploader("Upload doubt image", type=['png', 'jpg', 'jpeg'])
 
 prompt = st.chat_input("Type your doubt... (Use @ai for AI Tutor)")
 
-# Trigger send if prompt has text OR an image is attached
 if prompt or uploaded_image:
-    
     final_message = prompt if prompt else "Attached an image."
     final_message = final_message.strip()
 
-    # If image exists, convert to Base64 HTML and attach to message
     if uploaded_image:
         base64_img = base64.b64encode(uploaded_image.read()).decode()
         img_html = f'<br><img src="data:image/png;base64,{base64_img}" style="max-width: 100%; border-radius: 8px; margin-top: 5px;">'
         final_message += img_html
 
-    # Validations
-    if len(final_message) > 5000: # Increased limit for image HTML
+    if len(final_message) > 5000:
         st.warning("Message too large.")
         st.stop()
 
     current_time = time.time()
     if (current_time - st.session_state.last_message_time) < 3:
-        st.warning("⚠️ Please wait a few seconds before sending.")
+        st.warning("⚠️ Please wait before sending.")
         st.stop()
 
     for word in BAD_WORDS:
@@ -238,34 +239,30 @@ if prompt or uploaded_image:
             st.warning("⚠️ Inappropriate language detected.")
             st.stop()
 
-    # Format reply string
-    db_reply_text = None
-    if st.session_state.reply_to:
-        db_reply_text = f"{st.session_state.reply_to['sender']}: {st.session_state.reply_to['message']}"
+    db_reply_text = f"{st.session_state.reply_to['sender']}: {st.session_state.reply_to['message']}" if st.session_state.reply_to else None
 
     try:
-        # DB Insert
-        db_response = supabase.table("chat_history").insert({
+        supabase.table("chat_history").insert({
             "sender": current_user,
             "message": final_message,
             "reply_to": db_reply_text,
-            "likes": 0
+            "likes": 0, "thumbs_up": 0, "laughs": 0
         }).execute()
 
         st.session_state.last_message_time = current_time
         st.session_state.reply_to = None
+        st.session_state.total_msgs += 1 # Auto-increment to prevent own message showing as unread
 
-        # AI BOT THREADING
         if prompt and prompt.lower().startswith("@ai"):
             doubt = prompt[3:].strip()
             def ai_background_task(student_doubt, original_prompt, student_email):
                 answer = ask_paathsala_ai(student_doubt)
-                ai_reply_format = f"{student_email[:4]}***: {original_prompt}"
+                ai_reply_format = f"{student_email[:5]}***: {original_prompt}"
                 supabase.table("chat_history").insert({
                     "sender": "PAATHSALA AI 🤖",
                     "message": answer,
                     "reply_to": ai_reply_format,
-                    "likes": 0
+                    "likes": 0, "thumbs_up": 0, "laughs": 0
                 }).execute()
 
             bg_thread = threading.Thread(target=ai_background_task, args=(doubt, prompt, current_user))
