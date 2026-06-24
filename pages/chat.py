@@ -21,7 +21,6 @@ footer {visibility:hidden;}
 header {visibility:hidden;}
 </style>
 """
-
 st.markdown(hide_style, unsafe_allow_html=True)
 
 # Auto refresh every 3 seconds
@@ -32,16 +31,10 @@ st_autorefresh(interval=3000, limit=None, key="chat_refresh")
 # ==========================================
 if "logged_in" not in st.session_state or not st.session_state.logged_in:
     st.warning("⚠️ Session Expired! Please login again.")
-    st.page_link(
-        "main.py",
-        label="🏠 Login Again"
-    )
+    st.page_link("main.py", label="🏠 Login Again")
     st.stop()
 
-current_user = st.session_state.get(
-    "user_identifier",
-    "Student"
-)
+current_user = st.session_state.get("user_identifier", "Student")
 
 # ==========================================
 # SUPABASE
@@ -49,56 +42,32 @@ current_user = st.session_state.get(
 SUPABASE_URL = "https://rmdwvrjschmeztzrestm.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtZHd2cmpzY2htZXp0enJlc3RtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwNTI2NzcsImV4cCI6MjA5NzYyODY3N30.H9hvCcDe2EUqrkukbxQdKoMSt_VNryl4Hnn7t3XZm2o"
 
-supabase: Client = create_client(
-    SUPABASE_URL,
-    SUPABASE_KEY
-)
-
+supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
 ADMIN_EMAIL = "paathsala37@gmail.com"
 
 # ==========================================
 # BAD WORD FILTER
 # ==========================================
-BAD_WORDS = [
-    "idiot",
-    "stupid",
-    "abuse"
-]
+BAD_WORDS = ["idiot", "stupid", "abuse"]
 
 # ==========================================
 # BLOCK CHECK
 # ==========================================
 try:
-    blocked = (
-        supabase
-        .table("blocked_users")
-        .select("*")
-        .eq("email", current_user)
-        .execute()
-    )
-
+    blocked = supabase.table("blocked_users").select("*").eq("email", current_user).execute()
     if len(blocked.data) > 0:
         st.error("🚫 ACCOUNT BLOCKED")
-        st.page_link(
-            "main.py",
-            label="🏠 Main Menu"
-        )
+        st.page_link("main.py", label="🏠 Main Menu")
         st.stop()
-
 except Exception:
     pass
 
 # ==========================================
 # HEADER
 # ==========================================
-st.page_link(
-    "main.py",
-    label="🏠 Main Menu"
-)
-
+st.page_link("main.py", label="🏠 Main Menu")
 st.title("💬 PAATHSALA Live Discussion")
 st.caption("🚀 Welcome to PAATHSALA Live Doubt Solving Room")
-
 st.write(f"👤 Connected as: **{current_user}**")
 
 # ==========================================
@@ -113,16 +82,8 @@ try:
         .limit(100)
         .execute()
     )
-
     chat_data = response.data[::-1]
-
-    active_users = list(
-        set(
-            row["sender"]
-            for row in chat_data
-        )
-    )
-
+    active_users = list(set(row["sender"] for row in chat_data))
 except Exception as e:
     st.error(f"Database Error: {e}")
     chat_data = []
@@ -153,7 +114,6 @@ if current_user == ADMIN_EMAIL:
                 blocked_list = [row["email"] for row in blocked.data]
             except:
                 blocked_list = []
-
             selected = st.selectbox("Select User to Unblock", ["Select User"] + blocked_list)
             if st.button("✅ Unblock User"):
                 if selected != "Select User":
@@ -170,7 +130,15 @@ if current_user == ADMIN_EMAIL:
 st.divider()
 
 # ==========================================
-# CHAT DISPLAY (STREAMLIT NATIVE)
+# REPLY STATE MANAGEMENT
+# ==========================================
+if "reply_to" not in st.session_state:
+    st.session_state.reply_to = None
+if "last_message_time" not in st.session_state:
+    st.session_state.last_message_time = 0
+
+# ==========================================
+# CHAT DISPLAY WITH REPLY BUTTONS
 # ==========================================
 chat_container = st.container(height=450)
 
@@ -178,43 +146,58 @@ with chat_container:
     for row in chat_data:
         sender = row["sender"]
         message = row["message"]
+        reply_text = row.get("reply_to")
 
         # Email masking
-        if current_user == ADMIN_EMAIL:
+        if current_user == ADMIN_EMAIL or sender == "PAATHSALA AI 🤖":
             display_name = sender
         else:
             display_name = sender[:4] + "***"
 
-        # Apna message
-        if sender == current_user:
-            with st.chat_message("user"):
-                st.write(message)
-        # Dusre users ka message
-        else:
-            with st.chat_message("assistant"):
-                st.markdown(f"**{display_name}**")
-                st.write(message)
+        col1, col2 = st.columns([8, 1])
+        
+        with col1:
+            # Apna message
+            if sender == current_user:
+                with st.chat_message("user"):
+                    if reply_text:
+                        st.caption(f"↪ Replying to: {reply_text[:50]}...")
+                    st.write(message)
+            # Dusre users ya AI ka message
+            else:
+                with st.chat_message("assistant"):
+                    st.markdown(f"**{display_name}**")
+                    if reply_text:
+                        st.caption(f"↪ Replying to: {reply_text[:50]}...")
+                    st.write(message)
+        
+        with col2:
+            # Har message ke bagal mein ek Reply button
+            if st.button("↩️", key=f"reply_btn_{row['id']}"):
+                st.session_state.reply_to = message
+                st.rerun()
 
 # ==========================================
-# SPAM CONTROL
+# SEND MESSAGE & REPLY UI
 # ==========================================
-if "last_message_time" not in st.session_state:
-    st.session_state.last_message_time = 0
+st.divider()
 
-# ==========================================
-# SEND MESSAGE
-# ==========================================
+# Agar kisi message ko reply kar rahe hain, toh input ke upar dikhayega
+if st.session_state.reply_to:
+    st.info(f"↪ Replying to: {st.session_state.reply_to}")
+    if st.button("❌ Cancel Reply", key="cancel_reply"):
+        st.session_state.reply_to = None
+        st.rerun()
+
 prompt = st.chat_input("Type your doubt...")
 
 if prompt:
     prompt = prompt.strip()
 
-    # Empty message check
+    # Empty message & Length check
     if not prompt:
         st.warning("Empty message not allowed")
         st.stop()
-
-    # Length check
     if len(prompt) > 500:
         st.warning("Maximum 500 characters allowed")
         st.stop()
@@ -232,35 +215,40 @@ if prompt:
             st.warning("⚠️ Inappropriate language detected.")
             st.stop()
 
-    # Save student message
+    # Save student message WITH Reply data
     try:
         db_response = (
             supabase
             .table("chat_history")
             .insert({
                 "sender": current_user,
-                "message": prompt
+                "message": prompt,
+                "reply_to": st.session_state.reply_to  # Reply column mein data save karna
             })
             .execute()
         )
 
         st.session_state.last_message_time = current_time
+        
+        # User message save hote hi reply state ko clean kar do
+        st.session_state.reply_to = None
 
         # ==================================
         # AI BOT (BACKGROUND THREADING)
         # ==================================
         if prompt.lower().startswith("@ai"):
-            
             doubt = prompt[3:].strip()
-
-            def ai_background_task(student_doubt):
+            
+            # AI ab user ke original prompt ko reply karega
+            def ai_background_task(student_doubt, original_prompt):
                 answer = ask_paathsala_ai(student_doubt)
                 supabase.table("chat_history").insert({
                     "sender": "PAATHSALA AI 🤖",
-                    "message": answer
+                    "message": answer,
+                    "reply_to": original_prompt  # AI automatically tags the student's question
                 }).execute()
 
-            bg_thread = threading.Thread(target=ai_background_task, args=(doubt,))
+            bg_thread = threading.Thread(target=ai_background_task, args=(doubt, prompt))
             bg_thread.start()
 
             st.toast("🤖 PAATHSALA AI is typing... answer will appear shortly!")
