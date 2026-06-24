@@ -1,4 +1,5 @@
 import time
+import threading
 import streamlit as st
 from supabase import create_client, Client
 from streamlit_autorefresh import st_autorefresh
