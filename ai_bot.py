@@ -1,30 +1,35 @@
-import streamlit as st
 import google.generativeai as genai
+import streamlit as st
+
+# Gemini Configure
+
+genai.configure(
+    api_key=st.secrets["GEMINI_API_KEY"]
+)
+
+model = genai.GenerativeModel(
+    "gemini-2.5-flash"
+)
 
 def ask_paathsala_ai(question):
 
     try:
-        genai.configure(
-            api_key=st.secrets["GEMINI_API_KEY"],
-            transport="rest"
-        )
-
-        model = genai.GenerativeModel("gemini-2.5-flash")
 
         prompt = f"""
-        You are PAATHSALA AI Tutor.
+        You are PAATHSALA AI.
 
-        Explain the student's doubt in simple language.
+        Answer student doubts clearly and simply.
 
-        Student question:
+        Student Question:
         {question}
-
-        Give step-by-step explanation.
         """
 
-        response = model.generate_content(prompt)
+        response = model.generate_content(
+            prompt
+        )
 
         return response.text
 
     except Exception as e:
-        return f"⚠️ AI Error: {e}"
+
+        return f"❌ AI Error: {e}"
