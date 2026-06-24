@@ -34,7 +34,6 @@ header {visibility:hidden;}
 
 /* Ghost Refresh Magic - No Blinking */
 [data-testid="stFragment"], 
-div[data-testid="stVerticalBlockBorderWrapper"], 
 [data-testid="stVerticalBlock"],
 .st-emotion-cache-1kyxreq,
 .st-emotion-cache-1wmy9hl {
@@ -64,11 +63,20 @@ div[data-testid="stVerticalBlockBorderWrapper"] {
 </style>
 """
 
-# 2. Light Theme CSS
+# 2. Light Theme CSS (Explicit resets so dark mode clears properly)
 light_css = """
 <style>
-.stApp { background-color: #f5f7fb; color: #222; }
-div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #ffffff !important; border: 1px solid #e0e0e0 !important; }
+/* Entire page light */
+html, body, [data-testid="stAppViewContainer"], [data-testid="stHeader"], [data-testid="stToolbar"], .stApp {
+    background: #f5f7fb !important; color: #222 !important;
+}
+.main .block-container { background: #f5f7fb !important; }
+
+div[data-testid="stVerticalBlockBorderWrapper"] { background: #ffffff !important; border: 1px solid #e0e0e0 !important; }
+[data-testid="stChatInput"] { background: #ffffff !important; }
+textarea { background: #ffffff !important; color: #222 !important; }
+
+.streamlit-expanderHeader { background: #ffffff !important; color: #222 !important; }
 .user-msg { background: linear-gradient(135deg, #0078D7, #00C6FF); color: white; }
 .assistant-msg { background: #ffffff; color: #333; border: 1px solid #eee; }
 .user-time { color: #f0f0f0; }
@@ -78,13 +86,22 @@ div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #ffffff !imp
 </style>
 """
 
-# 3. Dark Theme CSS
+# 3. Dark Theme CSS (User's optimized full-screen dark mode)
 dark_css = """
 <style>
-.stApp { background-color: #0E1117; color: white; }
-div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #1E1E1E !important; border: 1px solid #333 !important; }
+/* Entire page dark */
+html, body, [data-testid="stAppViewContainer"], [data-testid="stHeader"], [data-testid="stToolbar"], .stApp {
+    background: #0E1117 !important; color: white !important;
+}
+.main .block-container { background: #0E1117 !important; }
+
+div[data-testid="stVerticalBlockBorderWrapper"] { background: #1E1E1E !important; border: 1px solid #333 !important; }
+[data-testid="stChatInput"] { background: #1E1E1E !important; }
+textarea { background: #262730 !important; color: white !important; }
+
+.streamlit-expanderHeader { background: #1E1E1E !important; color: white !important; }
 .user-msg { background: linear-gradient(135deg, #0066cc, #0099ff); color: white; }
-.assistant-msg { background: #262730; color: #FFFFFF; border: 1px solid #444; }
+.assistant-msg { background: #262730; color: white; border: 1px solid #444; }
 .user-time { color: #f0f0f0; }
 .bot-time { color: #bbb; }
 .sender-name { color: #4da6ff; }
@@ -121,7 +138,7 @@ except Exception:
     pass
 
 # ==========================================
-# HEADER & TOGGLE (Right on the main screen)
+# HEADER & SMART TOGGLE
 # ==========================================
 st.markdown("""
 <div style='text-align: center; padding: 15px; background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%); border-radius: 10px; margin-bottom: 15px; color: white;'>
@@ -136,7 +153,11 @@ with col1:
 with col2:
     st.page_link("main.py", label="🏠 Menu")
 with col3:
-    st.session_state.dark_mode = st.toggle("🌙 Dark", value=st.session_state.dark_mode)
+    # Optimized Toggle Logic
+    dark = st.toggle("🌙 Dark", value=st.session_state.dark_mode, key="dark_toggle")
+    if dark != st.session_state.dark_mode:
+        st.session_state.dark_mode = dark
+        st.rerun()
 
 # ==========================================
 # 🛠️ ADMIN CONTROLS PANEL
@@ -194,9 +215,9 @@ if current_user == ADMIN_EMAIL:
 st.divider()
 
 # ==========================================
-# 🌟 INVISIBLE AUTO-REFRESH CHAT DISPLAY 
+# 🌟 INVISIBLE AUTO-REFRESH CHAT DISPLAY (4s)
 # ==========================================
-@st.fragment(run_every=2)
+@st.fragment(run_every=4)
 def render_chat_box():
     try:
         response = supabase.table("chat_history").select("*").order("created_at", desc=True).limit(100).execute()
