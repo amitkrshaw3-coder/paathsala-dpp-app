@@ -14,14 +14,19 @@ st.set_page_config(
     layout="centered"
 )
 
-hide_style = """
+# Hide Streamlit UI elements and fix container scrolling
+custom_css = """
 <style>
 #MainMenu {visibility:hidden;}
 footer {visibility:hidden;}
 header {visibility:hidden;}
+/* Make sure the main vertical block can scroll natively */
+[data-testid="stVerticalBlock"] {
+    overflow-y: auto;
+}
 </style>
 """
-st.markdown(hide_style, unsafe_allow_html=True)
+st.markdown(custom_css, unsafe_allow_html=True)
 
 # Auto refresh every 3 seconds
 st_autorefresh(interval=3000, limit=None, key="chat_refresh")
@@ -138,9 +143,10 @@ if "last_message_time" not in st.session_state:
     st.session_state.last_message_time = 0
 
 # ==========================================
-# CHAT DISPLAY WITH REPLY BUTTONS
+# CHAT DISPLAY WITH TELEGRAM-STYLE UI
 # ==========================================
-chat_container = st.container(height=450)
+# Removed height parameter to allow native, reliable auto-scrolling
+chat_container = st.container()
 
 with chat_container:
     for row in chat_data:
@@ -154,37 +160,45 @@ with chat_container:
         else:
             display_name = sender[:4] + "***"
 
-        col1, col2 = st.columns([8, 1])
-        
-        with col1:
-            # Apna message
-            if sender == current_user:
-                with st.chat_message("user"):
-                    if reply_text:
-                        st.caption(f"↪ Replying to: {reply_text[:50]}...")
-                    st.write(message)
-            # Dusre users ya AI ka message
-            else:
-                with st.chat_message("assistant"):
-                    st.markdown(f"**{display_name}**")
-                    if reply_text:
-                        st.caption(f"↪ Replying to: {reply_text[:50]}...")
-                    st.write(message)
-        
-        with col2:
-            # Har message ke bagal mein ek Reply button
-            if st.button("↩️", key=f"reply_btn_{row['id']}"):
-                st.session_state.reply_to = message
-                st.rerun()
+        # Apna message (Right-aligned native feel by Streamlit)
+        if sender == current_user:
+            with st.chat_message("user"):
+                if reply_text:
+                    st.markdown(f"""
+                    <div style="padding:8px; border-left:4px solid #00b4d8; background:#f0f2f6; border-radius:8px; font-size:14px; margin-bottom:8px; color:black;">
+                        ↪ <b>Reply:</b><br> {reply_text[:80]}
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                st.write(message)
+                if st.button("↩ Reply", key=f"reply_btn_{row['id']}"):
+                    st.session_state.reply_to = {"sender": display_name, "message": message}
+                    st.rerun()
+
+        # Dusre users ya AI ka message
+        else:
+            with st.chat_message("assistant"):
+                st.markdown(f"**{display_name}**")
+                if reply_text:
+                    st.markdown(f"""
+                    <div style="padding:8px; border-left:4px solid #00b4d8; background:#f0f2f6; border-radius:8px; font-size:14px; margin-bottom:8px; color:black;">
+                        ↪ <b>Reply:</b><br> {reply_text[:80]}
+                    </div>
+                    """, unsafe_allow_html=True)
+                
+                st.write(message)
+                if st.button("↩ Reply", key=f"reply_btn_{row['id']}"):
+                    st.session_state.reply_to = {"sender": display_name, "message": message}
+                    st.rerun()
 
 # ==========================================
 # SEND MESSAGE & REPLY UI
 # ==========================================
 st.divider()
 
-# Agar kisi message ko reply kar rahe hain, toh input ke upar dikhayega
+# Reply Context UI Container
 if st.session_state.reply_to:
-    st.info(f"↪ Replying to: {st.session_state.reply_to}")
+    st.info(f"↪ Replying to **{st.session_state.reply_to['sender']}**: {st.session_state.reply_to['message'][:50]}...")
     if st.button("❌ Cancel Reply", key="cancel_reply"):
         st.session_state.reply_to = None
         st.rerun()
@@ -215,7 +229,12 @@ if prompt:
             st.warning("⚠️ Inappropriate language detected.")
             st.stop()
 
-    # Save student message WITH Reply data
+    # Format the reply string to save in the database
+    db_reply_text = None
+    if st.session_state.reply_to:
+        db_reply_text = f"{st.session_state.reply_to['sender']}: {st.session_state.reply_to['message']}"
+
+    # Save student message
     try:
         db_response = (
             supabase
@@ -223,14 +242,14 @@ if prompt:
             .insert({
                 "sender": current_user,
                 "message": prompt,
-                "reply_to": st.session_state.reply_to  # Reply column mein data save karna
+                "reply_to": db_reply_text  # Save the formatted string in DB
             })
             .execute()
         )
 
         st.session_state.last_message_time = current_time
         
-        # User message save hote hi reply state ko clean kar do
+        # Clear reply state after sending
         st.session_state.reply_to = None
 
         # ==================================
@@ -239,16 +258,19 @@ if prompt:
         if prompt.lower().startswith("@ai"):
             doubt = prompt[3:].strip()
             
-            # AI ab user ke original prompt ko reply karega
-            def ai_background_task(student_doubt, original_prompt):
+            # AI will reply to the student's question specifically
+            def ai_background_task(student_doubt, original_prompt, student_email):
                 answer = ask_paathsala_ai(student_doubt)
+                display_name = student_email[:4] + "***"
+                ai_reply_format = f"{display_name}: {original_prompt}"
+                
                 supabase.table("chat_history").insert({
                     "sender": "PAATHSALA AI 🤖",
                     "message": answer,
-                    "reply_to": original_prompt  # AI automatically tags the student's question
+                    "reply_to": ai_reply_format
                 }).execute()
 
-            bg_thread = threading.Thread(target=ai_background_task, args=(doubt, prompt))
+            bg_thread = threading.Thread(target=ai_background_task, args=(doubt, prompt, current_user))
             bg_thread.start()
 
             st.toast("🤖 PAATHSALA AI is typing... answer will appear shortly!")
