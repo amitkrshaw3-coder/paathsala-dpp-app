@@ -17,6 +17,7 @@ custom_css = """
 footer {visibility:hidden;}
 header {visibility:hidden;}
 
+/* Floating Box Setup */
 div[data-testid="stVerticalBlockBorderWrapper"] {
     border-radius: 15px !important;
     box-shadow: 0px 8px 24px rgba(0,0,0,0.12) !important;
@@ -36,6 +37,7 @@ div[data-testid="stVerticalBlockBorderWrapper"] {
     color: white;
     box-shadow: 0px 3px 10px rgba(0,0,0,0.1);
     max-width: 85%;
+    overflow-wrap: break-word;
 }
 .assistant-msg {
     background: #ffffff;
@@ -45,6 +47,7 @@ div[data-testid="stVerticalBlockBorderWrapper"] {
     box-shadow: 0px 3px 10px rgba(0,0,0,0.08);
     max-width: 85%;
     border: 1px solid #eee;
+    overflow-wrap: break-word;
 }
 
 .time-stamp { font-size: 10px; opacity: 0.7; margin-top: 5px; text-align: right; }
@@ -83,7 +86,7 @@ if "ai_is_typing" not in st.session_state:
     st.session_state.ai_is_typing = False
 
 # ==========================================
-# STATIC HEADER (Will NOT refresh)
+# STATIC HEADER (Will NOT refresh and glitch)
 # ==========================================
 st.markdown("""
 <div style='text-align: center; padding: 15px; background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%); border-radius: 10px; margin-bottom: 15px; color: white;'>
@@ -99,7 +102,6 @@ col2.page_link("main.py", label="🏠 Go to Main Menu")
 # ==========================================
 # 🌟 MAGIC FRAGMENT: ONLY THIS BOX REFRESHES
 # ==========================================
-# Yeh function har 2.5 second mein sirf apne aap ko refresh karega, poore page ko nahi!
 @st.fragment(run_every=2.5)
 def render_chat_box():
     try:
@@ -141,7 +143,7 @@ def render_chat_box():
                     f'</div>', unsafe_allow_html=True
                 )
         
-        # Agar AI soch raha hai, toh typing animation dikhao
+        # AI Typing Indicator
         if st.session_state.ai_is_typing:
             st.markdown(
                 f'<div class="chat-row assistant">'
@@ -150,11 +152,11 @@ def render_chat_box():
                 f'</div>', unsafe_allow_html=True
             )
 
-# Fragment ko yahan call kar diya (Ye background mein auto-refresh hota rahega)
+# Execute Fragment
 render_chat_box()
 
 # ==========================================
-# MESSAGE INPUT (Static, Doesn't Glitch)
+# MESSAGE INPUT & LOGIC (Static)
 # ==========================================
 st.write("") 
 
@@ -171,11 +173,18 @@ if prompt or uploaded_image:
     final_message = final_message.strip()
 
     if uploaded_image:
+        # Base64 Encode Image
         base64_img = base64.b64encode(uploaded_image.read()).decode()
         final_message += f'<br><img src="data:image/png;base64,{base64_img}" style="max-width: 100%; border-radius: 8px; margin-top: 5px;">'
 
-    if len(final_message) > 5000:
-        st.warning("Message too large.")
+    # 🚀 FIX: Image Limit Logic
+    max_limit = 5000000 if uploaded_image else 5000
+    
+    if len(final_message) > max_limit:
+        if uploaded_image:
+            st.warning("⚠️ Image file is too large! Please upload an image under 3MB.")
+        else:
+            st.warning("⚠️ Message too large. Please keep it under 5000 characters.")
         st.stop()
 
     current_time = time.time()
@@ -183,7 +192,7 @@ if prompt or uploaded_image:
         st.warning("⚠️ Please wait before sending.")
         st.stop()
 
-    # Database mein message insert karna
+    # Database Insert
     supabase.table("chat_history").insert({
         "sender": current_user,
         "message": final_message
@@ -191,24 +200,26 @@ if prompt or uploaded_image:
 
     st.session_state.last_message_time = current_time
 
-    # 🤖 AI LOGIC - Background Thread (App Hang Nahi Hogi)
+    # 🤖 AI LOGIC - Background Thread
     if prompt and prompt.lower().startswith("@ai"):
         doubt = prompt[3:].strip()
         st.session_state.ai_is_typing = True # Typing indicator ON
         
         def fetch_ai_answer(student_doubt, original_prompt, student_email):
-            answer = ask_paathsala_ai(student_doubt)
-            full_ai_message = f"**{student_email[:5]}*** asked:* {original_prompt}<br><br>{answer}"
-            
-            supabase.table("chat_history").insert({
-                "sender": "PAATHSALA AI 🤖",
-                "message": full_ai_message
-            }).execute()
-            
-            st.session_state.ai_is_typing = False # Typing indicator OFF jab answer aa jaye
-
-        # AI ko background mein bhej diya, main app free hai!
+            try:
+                answer = ask_paathsala_ai(student_doubt)
+                full_ai_message = f"**{student_email[:5]}*** asked:* {original_prompt}<br><br>{answer}"
+                
+                supabase.table("chat_history").insert({
+                    "sender": "PAATHSALA AI 🤖",
+                    "message": full_ai_message
+                }).execute()
+            except Exception as e:
+                pass
+            finally:
+                st.session_state.ai_is_typing = False # Typing indicator OFF
+        
         threading.Thread(target=fetch_ai_answer, args=(doubt, prompt, current_user)).start()
 
-    # User ke message bhejte hi sirf ek baar page instantly update hoga
+    # Rerun to clear input and instantly show message
     st.rerun()
