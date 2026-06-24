@@ -7,11 +7,32 @@ from supabase import create_client, Client
 from ai_bot import ask_paathsala_ai
 
 # ==========================================
-# PAGE CONFIG & CSS
+# PAGE CONFIG & SESSION STATE
 # ==========================================
 st.set_page_config(page_title="PAATHSALA Chat", page_icon="🎓", layout="centered")
 
-custom_css = """
+# Initialize Session States
+if "dark_mode" not in st.session_state:
+    st.session_state.dark_mode = False
+if "ai_is_typing" not in st.session_state:
+    st.session_state.ai_is_typing = False
+if "logged_in" not in st.session_state or not st.session_state.logged_in:
+    st.warning("⚠️ Session Expired! Please login again.")
+    st.page_link("main.py", label="🏠 Login Again")
+    st.stop()
+
+# ==========================================
+# SIDEBAR - DARK MODE TOGGLE
+# ==========================================
+with st.sidebar:
+    st.markdown("### ⚙️ App Settings")
+    st.session_state.dark_mode = st.toggle("🌙 Dark Mode", value=st.session_state.dark_mode)
+
+# ==========================================
+# DYNAMIC CSS MAGIC
+# ==========================================
+# 1. Base CSS (Applies to both modes - contains Ghost Refresh & Structure)
+base_css = """
 <style>
 #MainMenu {visibility:hidden;}
 footer {visibility:hidden;}
@@ -23,64 +44,70 @@ div[data-testid="stVerticalBlockBorderWrapper"],
 [data-testid="stVerticalBlock"],
 .st-emotion-cache-1kyxreq,
 .st-emotion-cache-1wmy9hl {
-    opacity: 1 !important;
-    transition: none !important;
-    filter: none !important;
-    animation: none !important;
+    opacity: 1 !important; transition: none !important; filter: none !important; animation: none !important;
 }
 
 [data-testid="stSkeleton"] { display: none !important; }
 
-/* Floating Box Setup */
+/* Floating Box Basic Shape */
 div[data-testid="stVerticalBlockBorderWrapper"] {
-    border-radius: 15px !important;
-    box-shadow: 0px 8px 24px rgba(0,0,0,0.12) !important;
-    background-color: #ffffff !important; 
-    padding: 10px;
-    border: 1px solid #e0e0e0 !important;
+    border-radius: 15px !important; box-shadow: 0px 8px 24px rgba(0,0,0,0.12) !important; padding: 10px;
 }
 
 .chat-row { display: flex; align-items: flex-start; margin-bottom: 15px; width: 100%; }
 .chat-row.user { justify-content: flex-end; }
 .chat-row.assistant { justify-content: flex-start; }
 
-.user-msg {
-    background: linear-gradient(135deg, #0078D7, #00C6FF);
-    padding: 12px 16px;
-    border-radius: 18px 18px 2px 18px;
-    color: white;
-    box-shadow: 0px 3px 10px rgba(0,0,0,0.1);
-    max-width: 85%;
-    overflow-wrap: break-word;
+.user-msg, .assistant-msg {
+    padding: 12px 16px; box-shadow: 0px 3px 10px rgba(0,0,0,0.1); max-width: 85%; overflow-wrap: break-word;
 }
-.assistant-msg {
-    background: #ffffff;
-    padding: 12px 16px;
-    border-radius: 18px 18px 18px 2px;
-    color: #333;
-    box-shadow: 0px 3px 10px rgba(0,0,0,0.08);
-    max-width: 85%;
-    border: 1px solid #eee;
-    overflow-wrap: break-word;
-}
+.user-msg { border-radius: 18px 18px 2px 18px; }
+.assistant-msg { border-radius: 18px 18px 18px 2px; }
 
 .time-stamp { font-size: 10px; opacity: 0.7; margin-top: 5px; text-align: right; }
-.user-time { color: #f0f0f0; }
-.bot-time { color: #888; }
-.sender-name { font-size: 12px; color: #0078D7; margin-bottom: 4px; font-weight: bold; }
-.typing-text { font-size: 14px; color: #888; font-style: italic; }
+.sender-name { font-size: 12px; margin-bottom: 4px; font-weight: bold; }
+.typing-text { font-size: 14px; font-style: italic; }
 </style>
 """
-st.markdown(custom_css, unsafe_allow_html=True)
+
+# 2. Light Theme CSS
+light_css = """
+<style>
+.stApp { background-color: #f5f7fb; color: #222; }
+div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #ffffff !important; border: 1px solid #e0e0e0 !important; }
+.user-msg { background: linear-gradient(135deg, #0078D7, #00C6FF); color: white; }
+.assistant-msg { background: #ffffff; color: #333; border: 1px solid #eee; }
+.user-time { color: #f0f0f0; }
+.bot-time { color: #888; }
+.sender-name { color: #0078D7; }
+.typing-text { color: #888; }
+</style>
+"""
+
+# 3. Dark Theme CSS
+dark_css = """
+<style>
+.stApp { background-color: #0E1117; color: white; }
+div[data-testid="stVerticalBlockBorderWrapper"] { background-color: #1E1E1E !important; border: 1px solid #333 !important; }
+.user-msg { background: linear-gradient(135deg, #0066cc, #0099ff); color: white; }
+.assistant-msg { background: #262730; color: #FFFFFF; border: 1px solid #444; }
+.user-time { color: #f0f0f0; }
+.bot-time { color: #bbb; }
+.sender-name { color: #4da6ff; }
+.typing-text { color: #bbb; }
+</style>
+"""
+
+# Apply the CSS dynamically
+st.markdown(base_css, unsafe_allow_html=True)
+if st.session_state.dark_mode:
+    st.markdown(dark_css, unsafe_allow_html=True)
+else:
+    st.markdown(light_css, unsafe_allow_html=True)
 
 # ==========================================
-# SESSION & SUPABASE SETUP
+# SUPABASE SETUP & USER CHECKS
 # ==========================================
-if "logged_in" not in st.session_state or not st.session_state.logged_in:
-    st.warning("⚠️ Session Expired! Please login again.")
-    st.page_link("main.py", label="🏠 Login Again")
-    st.stop()
-
 current_user = st.session_state.get("user_identifier", "Student")
 
 SUPABASE_URL = "https://rmdwvrjschmeztzrestm.supabase.co"
@@ -92,9 +119,6 @@ BAD_WORDS = ["idiot", "stupid", "abuse"]
 def get_avatar_color(email):
     colors = ["#ff595e", "#ffca3a", "#8ac926", "#1982c4", "#6a4c93", "#e07a5f"]
     return colors[len(email) % len(colors)]
-
-if "ai_is_typing" not in st.session_state:
-    st.session_state.ai_is_typing = False
 
 # BLOCK CHECK
 try:
@@ -123,7 +147,6 @@ col2.page_link("main.py", label="🏠 Go to Main Menu")
 # 🛠️ ADMIN CONTROLS PANEL
 # ==========================================
 if current_user == ADMIN_EMAIL:
-    # Fetch active users for the dropdown
     try:
         admin_resp = supabase.table("chat_history").select("sender").limit(200).execute()
         active_users_list = list(set([row["sender"] for row in admin_resp.data if row["sender"] not in [ADMIN_EMAIL, "PAATHSALA AI 🤖"]]))
@@ -167,7 +190,6 @@ if current_user == ADMIN_EMAIL:
             st.warning("⚠️ Warning: This will permanently delete ALL messages from the database.")
             if st.button("🗑️ Clear All Chat History", type="primary", use_container_width=True):
                 try:
-                    # Deletes all rows where sender is not some dummy text (Clears entire table)
                     supabase.table("chat_history").delete().neq("sender", "DummyClearAllData123").execute()
                     st.success("✅ Entire Chat History Cleared!")
                     st.rerun()
