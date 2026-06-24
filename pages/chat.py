@@ -17,21 +17,28 @@ custom_css = """
 footer {visibility:hidden;}
 header {visibility:hidden;}
 
-/* 🌟 ANTI-FADE MAGIC: Streamlit ko loading ke waqt dim karne se rokna */
+/* 🌟 GHOST REFRESH MAGIC: Kill ALL blinking, fading, and loading spinners */
 [data-testid="stFragment"], 
 div[data-testid="stVerticalBlockBorderWrapper"], 
-.st-emotion-cache-1kyxreq, 
-[data-testid="stVerticalBlock"] {
+[data-testid="stVerticalBlock"],
+.st-emotion-cache-1kyxreq,
+.st-emotion-cache-1wmy9hl {
     opacity: 1 !important;
     transition: none !important;
     filter: none !important;
+    animation: none !important;
+}
+
+/* Hide any Streamlit loading skeletons */
+[data-testid="stSkeleton"] {
+    display: none !important;
 }
 
 /* Floating Box Setup - CRISP WHITE BACKGROUND */
 div[data-testid="stVerticalBlockBorderWrapper"] {
     border-radius: 15px !important;
     box-shadow: 0px 8px 24px rgba(0,0,0,0.12) !important;
-    background-color: #ffffff !important; /* Ekdum saaf safed rang */
+    background-color: #ffffff !important; 
     padding: 10px;
     border: 1px solid #e0e0e0 !important;
 }
@@ -65,9 +72,8 @@ div[data-testid="stVerticalBlockBorderWrapper"] {
 .bot-time { color: #888; }
 .sender-name { font-size: 12px; color: #0078D7; margin-bottom: 4px; font-weight: bold; }
 
-/* Blinking Typing Animation */
-.typing-text { font-size: 14px; color: #888; font-style: italic; animation: blink 1.5s infinite; }
-@keyframes blink { 0% { opacity: 0.4; } 50% { opacity: 1; } 100% { opacity: 0.4; } }
+/* AI Typing Text */
+.typing-text { font-size: 14px; color: #888; font-style: italic; }
 </style>
 """
 st.markdown(custom_css, unsafe_allow_html=True)
@@ -110,9 +116,9 @@ col1.write(f"🟢 **Online:** {current_user}")
 col2.page_link("main.py", label="🏠 Go to Main Menu")
 
 # ==========================================
-# 🌟 MAGIC FRAGMENT (Chat Display)
+# 🌟 INVISIBLE AUTO-REFRESH CHAT DISPLAY (Every 2 seconds)
 # ==========================================
-@st.fragment(run_every=2.5)
+@st.fragment(run_every=2)
 def render_chat_box():
     try:
         response = supabase.table("chat_history").select("*").order("created_at", desc=True).limit(100).execute()
@@ -165,7 +171,7 @@ def render_chat_box():
 render_chat_box()
 
 # ==========================================
-# SEPARATED INPUT LOGIC (Text vs Image)
+# INPUT LOGIC (Text vs Image)
 # ==========================================
 st.write("") 
 
