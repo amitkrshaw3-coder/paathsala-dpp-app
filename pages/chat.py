@@ -17,7 +17,7 @@ custom_css = """
 footer {visibility:hidden;}
 header {visibility:hidden;}
 
-/* 🌟 GHOST REFRESH MAGIC: Kill ALL blinking, fading, and loading spinners */
+/* Ghost Refresh Magic */
 [data-testid="stFragment"], 
 div[data-testid="stVerticalBlockBorderWrapper"], 
 [data-testid="stVerticalBlock"],
@@ -29,12 +29,9 @@ div[data-testid="stVerticalBlockBorderWrapper"],
     animation: none !important;
 }
 
-/* Hide any Streamlit loading skeletons */
-[data-testid="stSkeleton"] {
-    display: none !important;
-}
+[data-testid="stSkeleton"] { display: none !important; }
 
-/* Floating Box Setup - CRISP WHITE BACKGROUND */
+/* Floating Box Setup */
 div[data-testid="stVerticalBlockBorderWrapper"] {
     border-radius: 15px !important;
     box-shadow: 0px 8px 24px rgba(0,0,0,0.12) !important;
@@ -71,8 +68,6 @@ div[data-testid="stVerticalBlockBorderWrapper"] {
 .user-time { color: #f0f0f0; }
 .bot-time { color: #888; }
 .sender-name { font-size: 12px; color: #0078D7; margin-bottom: 4px; font-weight: bold; }
-
-/* AI Typing Text */
 .typing-text { font-size: 14px; color: #888; font-style: italic; }
 </style>
 """
@@ -101,6 +96,15 @@ def get_avatar_color(email):
 if "ai_is_typing" not in st.session_state:
     st.session_state.ai_is_typing = False
 
+# BLOCK CHECK
+try:
+    blocked = supabase.table("blocked_users").select("*").eq("email", current_user).execute()
+    if len(blocked.data) > 0:
+        st.error("🚫 ACCOUNT BLOCKED BY ADMIN")
+        st.stop()
+except Exception:
+    pass
+
 # ==========================================
 # STATIC HEADER
 # ==========================================
@@ -116,7 +120,64 @@ col1.write(f"🟢 **Online:** {current_user}")
 col2.page_link("main.py", label="🏠 Go to Main Menu")
 
 # ==========================================
-# 🌟 INVISIBLE AUTO-REFRESH CHAT DISPLAY (Every 2 seconds)
+# 🛠️ ADMIN CONTROLS PANEL
+# ==========================================
+if current_user == ADMIN_EMAIL:
+    # Fetch active users for the dropdown
+    try:
+        admin_resp = supabase.table("chat_history").select("sender").limit(200).execute()
+        active_users_list = list(set([row["sender"] for row in admin_resp.data if row["sender"] not in [ADMIN_EMAIL, "PAATHSALA AI 🤖"]]))
+    except:
+        active_users_list = []
+
+    with st.expander("🛠 Admin Controls (Block & Clear Data)", expanded=False):
+        tab1, tab2, tab3, tab4 = st.tabs(["🚫 Block", "✅ Unblock", "📋 Blocked List", "🗑️ Clear Chat"])
+
+        with tab1:
+            spammer = st.selectbox("Select User to Block", ["Select User"] + active_users_list)
+            if st.button("🚫 Block User", use_container_width=True):
+                if spammer != "Select User":
+                    try:
+                        supabase.table("blocked_users").insert({"email": spammer}).execute()
+                        st.success(f"{spammer} has been blocked.")
+                    except:
+                        st.warning("User is already blocked.")
+
+        with tab2:
+            try:
+                blocked_res = supabase.table("blocked_users").select("email").execute()
+                blocked_list = [row["email"] for row in blocked_res.data]
+            except:
+                blocked_list = []
+            
+            selected_unblock = st.selectbox("Select User to Unblock", ["Select User"] + blocked_list)
+            if st.button("✅ Unblock User", use_container_width=True):
+                if selected_unblock != "Select User":
+                    supabase.table("blocked_users").delete().eq("email", selected_unblock).execute()
+                    st.success(f"{selected_unblock} unblocked successfully.")
+
+        with tab3:
+            if not blocked_list:
+                st.success("No users are currently blocked.")
+            else:
+                for u in blocked_list:
+                    st.error(f"🚫 {u}")
+        
+        with tab4:
+            st.warning("⚠️ Warning: This will permanently delete ALL messages from the database.")
+            if st.button("🗑️ Clear All Chat History", type="primary", use_container_width=True):
+                try:
+                    # Deletes all rows where sender is not some dummy text (Clears entire table)
+                    supabase.table("chat_history").delete().neq("sender", "DummyClearAllData123").execute()
+                    st.success("✅ Entire Chat History Cleared!")
+                    st.rerun()
+                except Exception as e:
+                    st.error(f"Error clearing chat: {e}")
+
+st.divider()
+
+# ==========================================
+# 🌟 INVISIBLE AUTO-REFRESH CHAT DISPLAY 
 # ==========================================
 @st.fragment(run_every=2)
 def render_chat_box():
@@ -126,9 +187,12 @@ def render_chat_box():
     except Exception:
         chat_data = []
 
-    chat_container = st.container(height=500, border=True)
+    chat_container = st.container(height=450, border=True)
     
     with chat_container:
+        if not chat_data:
+            st.info("No messages yet. Be the first to start the discussion! 🚀")
+            
         for row in chat_data:
             sender = row["sender"]
             message = row["message"]
