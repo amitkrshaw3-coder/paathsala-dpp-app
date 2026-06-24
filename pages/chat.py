@@ -86,7 +86,7 @@ if "ai_is_typing" not in st.session_state:
     st.session_state.ai_is_typing = False
 
 # ==========================================
-# STATIC HEADER (Will NOT refresh and glitch)
+# STATIC HEADER
 # ==========================================
 st.markdown("""
 <div style='text-align: center; padding: 15px; background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%); border-radius: 10px; margin-bottom: 15px; color: white;'>
@@ -100,7 +100,7 @@ col1.write(f"🟢 **Online:** {current_user}")
 col2.page_link("main.py", label="🏠 Go to Main Menu")
 
 # ==========================================
-# 🌟 MAGIC FRAGMENT: ONLY THIS BOX REFRESHES
+# 🌟 MAGIC FRAGMENT (Chat Display)
 # ==========================================
 @st.fragment(run_every=2.5)
 def render_chat_box():
@@ -152,39 +152,56 @@ def render_chat_box():
                 f'</div>', unsafe_allow_html=True
             )
 
-# Execute Fragment
 render_chat_box()
 
 # ==========================================
-# MESSAGE INPUT & LOGIC (Static)
+# SEPARATED INPUT LOGIC (Text vs Image)
 # ==========================================
 st.write("") 
 
 if "last_message_time" not in st.session_state:
     st.session_state.last_message_time = 0
+if "uploader_key" not in st.session_state:
+    st.session_state.uploader_key = "uploader_1"
 
+send_triggered = False
+final_message_html = ""
+raw_user_prompt = ""
+
+# 1. 📎 IMAGE UPLOAD SECTION (Manual Send Button)
 with st.expander("📎 Attach Image / Screenshot"):
-    uploaded_image = st.file_uploader("Upload doubt image", type=['png', 'jpg', 'jpeg'])
-
-prompt = st.chat_input("Type your doubt... (Use @ai for AI Tutor)")
-
-if prompt or uploaded_image:
-    final_message = prompt if prompt else "Attached an image."
-    final_message = final_message.strip()
-
-    if uploaded_image:
-        # Base64 Encode Image
-        base64_img = base64.b64encode(uploaded_image.read()).decode()
-        final_message += f'<br><img src="data:image/png;base64,{base64_img}" style="max-width: 100%; border-radius: 8px; margin-top: 5px;">'
-
-    # 🚀 FIX: Image Limit Logic
-    max_limit = 5000000 if uploaded_image else 5000
+    uploaded_image = st.file_uploader("Upload doubt image", type=['png', 'jpg', 'jpeg'], key=st.session_state.uploader_key)
     
-    if len(final_message) > max_limit:
-        if uploaded_image:
-            st.warning("⚠️ Image file is too large! Please upload an image under 3MB.")
-        else:
-            st.warning("⚠️ Message too large. Please keep it under 5000 characters.")
+    if uploaded_image:
+        st.image(uploaded_image, caption="Image Preview", width=200) # Preview before sending!
+        img_caption = st.text_input("Add a message with image (Use @ai for AI help):")
+        
+        # 🌟 EXPLICIT SEND BUTTON FOR IMAGES
+        if st.button("📤 Send Image", type="primary", use_container_width=True):
+            base64_img = base64.b64encode(uploaded_image.read()).decode()
+            img_html = f'<br><img src="data:image/png;base64,{base64_img}" style="max-width: 100%; border-radius: 8px; margin-top: 5px;">'
+            
+            raw_user_prompt = img_caption.strip() if img_caption else "Attached an image."
+            final_message_html = raw_user_prompt + img_html
+            send_triggered = True
+            
+            # Reset Uploader Key so it clears after sending
+            st.session_state.uploader_key = f"uploader_{int(time.time())}"
+
+# 2. 💬 NORMAL TEXT CHAT SECTION (Enter to Send)
+chat_prompt = st.chat_input("Type your doubt... (Use @ai for AI Tutor)")
+
+if chat_prompt:
+    raw_user_prompt = chat_prompt.strip()
+    final_message_html = raw_user_prompt
+    send_triggered = True
+
+# ==========================================
+# COMMON SEND LOGIC (Executes ONLY when triggered)
+# ==========================================
+if send_triggered:
+    if len(final_message_html) > 5000000:
+        st.warning("⚠️ Image file is too large! Please upload under 3MB.")
         st.stop()
 
     current_time = time.time()
@@ -192,18 +209,23 @@ if prompt or uploaded_image:
         st.warning("⚠️ Please wait before sending.")
         st.stop()
 
-    # Database Insert
+    for word in BAD_WORDS:
+        if word in final_message_html.lower():
+            st.warning("⚠️ Inappropriate language detected.")
+            st.stop()
+
+    # Database Insert (Saves only 1 time!)
     supabase.table("chat_history").insert({
         "sender": current_user,
-        "message": final_message
+        "message": final_message_html
     }).execute()
 
     st.session_state.last_message_time = current_time
 
-    # 🤖 AI LOGIC - Background Thread
-    if prompt and prompt.lower().startswith("@ai"):
-        doubt = prompt[3:].strip()
-        st.session_state.ai_is_typing = True # Typing indicator ON
+    # 🤖 AI LOGIC
+    if raw_user_prompt.lower().startswith("@ai"):
+        doubt = raw_user_prompt[3:].strip()
+        st.session_state.ai_is_typing = True 
         
         def fetch_ai_answer(student_doubt, original_prompt, student_email):
             try:
@@ -214,12 +236,11 @@ if prompt or uploaded_image:
                     "sender": "PAATHSALA AI 🤖",
                     "message": full_ai_message
                 }).execute()
-            except Exception as e:
+            except Exception:
                 pass
             finally:
-                st.session_state.ai_is_typing = False # Typing indicator OFF
+                st.session_state.ai_is_typing = False 
         
-        threading.Thread(target=fetch_ai_answer, args=(doubt, prompt, current_user)).start()
+        threading.Thread(target=fetch_ai_answer, args=(doubt, raw_user_prompt, current_user)).start()
 
-    # Rerun to clear input and instantly show message
     st.rerun()
