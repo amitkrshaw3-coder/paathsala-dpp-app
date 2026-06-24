@@ -1,5 +1,4 @@
 import time
-import threading
 import base64
 from datetime import datetime, timedelta
 import streamlit as st
@@ -8,7 +7,7 @@ from streamlit_autorefresh import st_autorefresh
 from ai_bot import ask_paathsala_ai
 
 # ==========================================
-# PAGE CONFIG & FLOATING BOX STYLING
+# PAGE CONFIG & PREMIUM CSS
 # ==========================================
 st.set_page_config(page_title="PAATHSALA Chat", page_icon="🎓", layout="centered")
 
@@ -18,7 +17,7 @@ custom_css = """
 footer {visibility:hidden;}
 header {visibility:hidden;}
 
-/* MAGIC FIX: Make the chat container look like a floating box */
+/* Floating Box Setup */
 div[data-testid="stVerticalBlockBorderWrapper"] {
     border-radius: 15px !important;
     box-shadow: 0px 8px 24px rgba(0,0,0,0.12) !important;
@@ -27,7 +26,6 @@ div[data-testid="stVerticalBlockBorderWrapper"] {
     border: 1px solid #e0e0e0 !important;
 }
 
-/* Custom Chat Bubbles */
 .chat-row { display: flex; align-items: flex-start; margin-bottom: 15px; width: 100%; }
 .chat-row.user { justify-content: flex-end; }
 .chat-row.assistant { justify-content: flex-start; }
@@ -54,11 +52,26 @@ div[data-testid="stVerticalBlockBorderWrapper"] {
 .user-time { color: #f0f0f0; }
 .bot-time { color: #888; }
 .sender-name { font-size: 12px; color: #0078D7; margin-bottom: 4px; font-weight: bold; }
+
+/* 🌟 Blinking Typing Animation for AI */
+.typing-text {
+    font-size: 14px;
+    color: #888;
+    font-style: italic;
+    animation: blink 1.5s infinite;
+}
+@keyframes blink {
+    0% { opacity: 0.4; }
+    50% { opacity: 1; }
+    100% { opacity: 0.4; }
+}
 </style>
 """
 st.markdown(custom_css, unsafe_allow_html=True)
 
-st_autorefresh(interval=3000, limit=None, key="chat_refresh")
+# MAGIC TRICK: Auto-refresh rok do agar AI soch raha hai, taki app hang na ho!
+if not st.session_state.get("ai_is_typing", False):
+    st_autorefresh(interval=3000, limit=None, key="chat_refresh")
 
 # ==========================================
 # LOGIN & SUPABASE SETUP
@@ -84,106 +97,31 @@ try:
 except Exception:
     pass
 
-# ==========================================
-# PREMIUM HEADER
-# ==========================================
-st.markdown("""
-<div style='text-align: center; padding: 15px; background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%); border-radius: 10px; margin-bottom: 15px; color: white;'>
-    <h3 style='margin:0; color: white;'>🎓 PAATHSALA LIVE ROOM</h3>
-    <p style='margin:0; font-size: 13px;'>Learn • Discuss • Grow</p>
-</div>
-""", unsafe_allow_html=True)
-
-st.write(f"🟢 **Online:** {current_user}")
-st.page_link("main.py", label="🏠 Go to Main Menu")
-
-# ==========================================
-# LOAD CHAT
-# ==========================================
-try:
-    response = supabase.table("chat_history").select("*").order("created_at", desc=True).limit(100).execute()
-    chat_data = response.data[::-1]
-    active_users = list(set(row["sender"] for row in chat_data[:20])) 
-except Exception as e:
-    chat_data = []
-    active_users = []
-
-# Unread Messages Counter
-if "total_msgs" not in st.session_state:
-    st.session_state.total_msgs = len(chat_data)
-if len(chat_data) > st.session_state.total_msgs:
-    new_msgs = len(chat_data) - st.session_state.total_msgs
-    st.toast(f"📬 {new_msgs} New Message(s)!")
-    st.session_state.total_msgs = len(chat_data)
-
-st.info(f"👥 Active Users in Room: {len(active_users)}")
-
-if "last_message_time" not in st.session_state:
-    st.session_state.last_message_time = 0
-
 def get_avatar_color(email):
     colors = ["#ff595e", "#ffca3a", "#8ac926", "#1982c4", "#6a4c93", "#e07a5f"]
     return colors[len(email) % len(colors)]
 
 # ==========================================
-# CHAT DISPLAY (FLOATING BOX UI)
+# UI PLACEHOLDERS (For Instant Architecture)
 # ==========================================
-# Using st.container with a fixed height creates a scrollable floating box
+header_placeholder = st.empty()
 chat_container = st.container(height=550, border=True)
-
-with chat_container:
-    for row in chat_data:
-        sender = row["sender"]
-        message = row["message"]
-        
-        # Timestamp parsing
-        try:
-            utc_dt = datetime.strptime(row['created_at'][:19], "%Y-%m-%dT%H:%M:%S")
-            ist_dt = utc_dt + timedelta(hours=5, minutes=30)
-            time_str = ist_dt.strftime("%I:%M %p")
-        except:
-            time_str = ""
-
-        # Badges
-        badge = " 🟢" if sender in active_users else ""
-        if sender == ADMIN_EMAIL:
-            display_name = "Admin 👑" + badge
-        elif sender == "PAATHSALA AI 🤖":
-            display_name = "PAATHSALA AI 🤖"
-        else:
-            display_name = sender[:5] + "***" + badge
-
-        # Avatar
-        avatar_letter = sender[0].upper() if sender != "PAATHSALA AI 🤖" else "🤖"
-        bg_color = get_avatar_color(sender) if sender != "PAATHSALA AI 🤖" else "#333"
-        avatar_html = f'<div style="width:32px; height:32px; border-radius:50%; background:{bg_color}; color:white; text-align:center; line-height:32px; font-size:14px; font-weight:bold; flex-shrink:0; border:2px solid #fff; margin: 0px 8px; box-shadow: 0px 2px 5px rgba(0,0,0,0.1);">{avatar_letter}</div>'
-
-        # Render completely clean chat without any buttons
-        if sender == current_user:
-            st.markdown(
-                f'<div class="chat-row user">'
-                f'<div class="user-msg"><div style="font-size:14px;">{message}</div><div class="time-stamp user-time">{time_str}</div></div>'
-                f'{avatar_html}'
-                f'</div>', unsafe_allow_html=True
-            )
-        else:
-            st.markdown(
-                f'<div class="chat-row assistant">'
-                f'{avatar_html}'
-                f'<div class="assistant-msg"><div class="sender-name">{display_name}</div><div style="font-size:14px;">{message}</div><div class="time-stamp bot-time">{time_str}</div></div>'
-                f'</div>', unsafe_allow_html=True
-            )
+st.write("") # Just a little spacing below
 
 # ==========================================
-# SEND MESSAGE & UI
+# MESSAGE INPUT & INSTANT PROCESSING
 # ==========================================
-st.write("") # Just a little spacing below the floating box
+if "uploader_key" not in st.session_state:
+    st.session_state.uploader_key = "uploader_1"
+if "last_message_time" not in st.session_state:
+    st.session_state.last_message_time = 0
 
 with st.expander("📎 Attach Image / Screenshot"):
-    uploaded_image = st.file_uploader("Upload doubt image", type=['png', 'jpg', 'jpeg'])
+    uploaded_image = st.file_uploader("Upload doubt image", type=['png', 'jpg', 'jpeg'], key=st.session_state.uploader_key)
 
 prompt = st.chat_input("Type your doubt... (Use @ai for AI Tutor)")
 
+# Agar user ne kuch type kiya, toh pehle ye block chalega (BEFORE DB FETCH)
 if prompt or uploaded_image:
     final_message = prompt if prompt else "Attached an image."
     final_message = final_message.strip()
@@ -208,35 +146,125 @@ if prompt or uploaded_image:
             st.stop()
 
     try:
-        # Removed reply_to logic completely from the insert
+        # 1. Database mein message save karo
         supabase.table("chat_history").insert({
             "sender": current_user,
             "message": final_message
         }).execute()
 
         st.session_state.last_message_time = current_time
-        st.session_state.total_msgs += 1 
+        st.session_state.uploader_key = f"uploader_{int(time.time())}" # File uploader ko turant khali karne ke liye
 
+        # 2. Check karo ki kya AI ko tag kiya gaya hai?
         if prompt and prompt.lower().startswith("@ai"):
-            doubt = prompt[3:].strip()
-            def ai_background_task(student_doubt, original_prompt, student_email):
-                answer = ask_paathsala_ai(student_doubt)
-                ai_reply_format = f"**{student_email[:5]}*** asked:* {original_prompt}<br><br>"
-                full_ai_message = ai_reply_format + answer
-                
-                supabase.table("chat_history").insert({
-                    "sender": "PAATHSALA AI 🤖",
-                    "message": full_ai_message
-                }).execute()
-
-            bg_thread = threading.Thread(target=ai_background_task, args=(doubt, prompt, current_user))
-            bg_thread.start()
-            st.toast("🤖 AI is analyzing your doubt...")
-            
-        else:
-            st.toast("✅ Message Sent")
-
+            st.session_state.ai_is_typing = True
+            st.session_state.ai_query = prompt[3:].strip()
+            st.session_state.ai_original_prompt = prompt
+        
+        # 3. Streamlit ko ekdum instantly refresh kardo!
         st.rerun()
 
     except Exception as e:
-        st.error(f"Actual Error: {e}")
+        st.error(f"Error sending message: {e}")
+
+# ==========================================
+# DB FETCH (Sirf Ek Baar Hoga ab!)
+# ==========================================
+try:
+    response = supabase.table("chat_history").select("*").order("created_at", desc=True).limit(100).execute()
+    chat_data = response.data[::-1]
+    active_users = list(set(row["sender"] for row in chat_data[:20])) 
+except Exception as e:
+    chat_data = []
+    active_users = []
+
+# ==========================================
+# RENDER CHAT UI
+# ==========================================
+with header_placeholder.container():
+    st.markdown("""
+    <div style='text-align: center; padding: 15px; background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%); border-radius: 10px; margin-bottom: 15px; color: white;'>
+        <h3 style='margin:0; color: white;'>🎓 PAATHSALA LIVE ROOM</h3>
+        <p style='margin:0; font-size: 13px;'>Learn • Discuss • Grow</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    c1, c2 = st.columns(2)
+    c1.write(f"🟢 **Online:** {current_user}")
+    c2.info(f"👥 Active Users in Room: {len(active_users)}")
+    st.page_link("main.py", label="🏠 Go to Main Menu")
+
+with chat_container:
+    for row in chat_data:
+        sender = row["sender"]
+        message = row["message"]
+        
+        try:
+            utc_dt = datetime.strptime(row['created_at'][:19], "%Y-%m-%dT%H:%M:%S")
+            ist_dt = utc_dt + timedelta(hours=5, minutes=30)
+            time_str = ist_dt.strftime("%I:%M %p")
+        except:
+            time_str = ""
+
+        badge = " 🟢" if sender in active_users else ""
+        if sender == ADMIN_EMAIL:
+            display_name = "Admin 👑" + badge
+        elif sender == "PAATHSALA AI 🤖":
+            display_name = "PAATHSALA AI 🤖"
+        else:
+            display_name = sender[:5] + "***" + badge
+
+        avatar_letter = sender[0].upper() if sender != "PAATHSALA AI 🤖" else "🤖"
+        bg_color = get_avatar_color(sender) if sender != "PAATHSALA AI 🤖" else "#333"
+        avatar_html = f'<div style="width:32px; height:32px; border-radius:50%; background:{bg_color}; color:white; text-align:center; line-height:32px; font-size:14px; font-weight:bold; flex-shrink:0; border:2px solid #fff; margin: 0px 8px; box-shadow: 0px 2px 5px rgba(0,0,0,0.1);">{avatar_letter}</div>'
+
+        if sender == current_user:
+            st.markdown(
+                f'<div class="chat-row user">'
+                f'<div class="user-msg"><div style="font-size:14px;">{message}</div><div class="time-stamp user-time">{time_str}</div></div>'
+                f'{avatar_html}'
+                f'</div>', unsafe_allow_html=True
+            )
+        else:
+            st.markdown(
+                f'<div class="chat-row assistant">'
+                f'{avatar_html}'
+                f'<div class="assistant-msg"><div class="sender-name">{display_name}</div><div style="font-size:14px;">{message}</div><div class="time-stamp bot-time">{time_str}</div></div>'
+                f'</div>', unsafe_allow_html=True
+            )
+    
+    # 🌟 "AI IS TYPING..." INDICATOR BUBBLE 🌟
+    if st.session_state.get("ai_is_typing", False):
+        st.markdown(
+            f'<div class="chat-row assistant">'
+            f'<div style="width:32px; height:32px; border-radius:50%; background:#333; color:white; text-align:center; line-height:32px; font-size:14px; font-weight:bold; flex-shrink:0; border:2px solid #fff; margin: 0px 8px; box-shadow: 0px 2px 5px rgba(0,0,0,0.1);">🤖</div>'
+            f'<div class="assistant-msg"><div class="sender-name">PAATHSALA AI 🤖</div><div class="typing-text">AI is typing a magical answer... ⏳</div></div>'
+            f'</div>', unsafe_allow_html=True
+        )
+
+# ==========================================
+# AI SYNCHRONOUS PROCESSOR (Magic happens here!)
+# ==========================================
+if st.session_state.get("ai_is_typing", False):
+    try:
+        # Screen par 'Typing...' dikh raha hai, tab tak background mein answer fetch ho raha hai
+        doubt = st.session_state.ai_query
+        original_prompt = st.session_state.ai_original_prompt
+        
+        answer = ask_paathsala_ai(doubt)
+        
+        # Format karke Database mein dalo
+        full_ai_message = f"**{current_user[:5]}*** asked:* {original_prompt}<br><br>{answer}"
+        
+        supabase.table("chat_history").insert({
+            "sender": "PAATHSALA AI 🤖",
+            "message": full_ai_message
+        }).execute()
+
+    except Exception as e:
+        st.error(f"AI Fetch Error: {e}")
+    
+    finally:
+        # Jaise hi answer mila, typing state off karo aur screen turant refresh karo!
+        st.session_state.ai_is_typing = False
+        st.rerun()
