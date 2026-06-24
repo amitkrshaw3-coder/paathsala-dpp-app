@@ -8,7 +8,7 @@ from streamlit_autorefresh import st_autorefresh
 from ai_bot import ask_paathsala_ai
 
 # ==========================================
-# PAGE CONFIG & PREMIUM STYLING
+# PAGE CONFIG & ULTRA-CLEAN STYLING
 # ==========================================
 st.set_page_config(page_title="PAATHSALA Chat", page_icon="🎓", layout="centered")
 
@@ -19,7 +19,20 @@ footer {visibility:hidden;}
 header {visibility:hidden;}
 [data-testid="stVerticalBlock"] { overflow-y: auto; }
 
-/* Custom Chat Bubbles with Avatar Layout */
+/* 🌟 MAGIC FIX: Make Streamlit Buttons look like plain icons (No ugly borders) */
+[data-testid="stButton"] button {
+    background-color: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0px !important;
+    font-size: 18px !important;
+    transition: all 0.2s ease-in-out;
+}
+[data-testid="stButton"] button:hover {
+    transform: scale(1.2);
+}
+
+/* Custom Chat Bubbles */
 .chat-row { display: flex; align-items: flex-start; margin-bottom: 12px; width: 100%; }
 .chat-row.user { justify-content: flex-end; }
 .chat-row.assistant { justify-content: flex-start; }
@@ -30,8 +43,7 @@ header {visibility:hidden;}
     border-radius: 18px 18px 2px 18px;
     color: white;
     box-shadow: 0px 3px 10px rgba(0,0,0,0.1);
-    max-width: 80%;
-    margin-right: 8px;
+    max-width: 85%;
 }
 .assistant-msg {
     background: #2D2D2D;
@@ -39,8 +51,7 @@ header {visibility:hidden;}
     border-radius: 18px 18px 18px 2px;
     color: white;
     box-shadow: 0px 3px 10px rgba(0,0,0,0.1);
-    max-width: 80%;
-    margin-left: 8px;
+    max-width: 85%;
     border: 1px solid #444;
 }
 
@@ -90,12 +101,12 @@ st.write(f"🟢 **Online:** {current_user}")
 st.page_link("main.py", label="🏠 Go to Main Menu")
 
 # ==========================================
-# LOAD CHAT & UNREAD COUNTER
+# LOAD CHAT
 # ==========================================
 try:
     response = supabase.table("chat_history").select("*").order("created_at", desc=True).limit(100).execute()
     chat_data = response.data[::-1]
-    active_users = list(set(row["sender"] for row in chat_data[:20])) # Last 20 messages decide active status
+    active_users = list(set(row["sender"] for row in chat_data[:20])) 
 except Exception as e:
     chat_data = []
     active_users = []
@@ -105,10 +116,10 @@ if "total_msgs" not in st.session_state:
     st.session_state.total_msgs = len(chat_data)
 if len(chat_data) > st.session_state.total_msgs:
     new_msgs = len(chat_data) - st.session_state.total_msgs
-    st.toast(f"📬 {new_msgs} New Unread Message(s)!")
+    st.toast(f"📬 {new_msgs} New Message(s)!")
     st.session_state.total_msgs = len(chat_data)
 
-st.info(f"👥 Active Users in Room: {len(active_users)} 🟢")
+st.info(f"👥 Active Users in Room: {len(active_users)}")
 
 # ==========================================
 # REPLY & STATE MANAGEMENT
@@ -118,13 +129,12 @@ if "reply_to" not in st.session_state:
 if "last_message_time" not in st.session_state:
     st.session_state.last_message_time = 0
 
-# Avatar Color Generator Helper
 def get_avatar_color(email):
     colors = ["#ff595e", "#ffca3a", "#8ac926", "#1982c4", "#6a4c93", "#e07a5f"]
     return colors[len(email) % len(colors)]
 
 # ==========================================
-# CHAT DISPLAY (PREMIUM UI)
+# CHAT DISPLAY (MINIMAL UI)
 # ==========================================
 chat_container = st.container()
 
@@ -134,9 +144,6 @@ with chat_container:
         sender = row["sender"]
         message = row["message"]
         reply_text = row.get("reply_to")
-        likes = row.get("likes", 0)
-        thumbs = row.get("thumbs_up", 0)
-        laughs = row.get("laughs", 0)
         
         # Timestamp parsing
         try:
@@ -146,8 +153,8 @@ with chat_container:
         except:
             time_str = ""
 
-        # Badges & Display Name
-        badge = " 🟢" if sender in active_users else " ⚫"
+        # Badges
+        badge = " 🟢" if sender in active_users else ""
         if sender == ADMIN_EMAIL:
             display_name = "Admin 👑" + badge
         elif sender == "PAATHSALA AI 🤖":
@@ -155,19 +162,20 @@ with chat_container:
         else:
             display_name = sender[:5] + "***" + badge
 
-        # Avatar Generation
+        # Avatar
         avatar_letter = sender[0].upper() if sender != "PAATHSALA AI 🤖" else "🤖"
         bg_color = get_avatar_color(sender) if sender != "PAATHSALA AI 🤖" else "#333"
-        avatar_html = f'<div style="width:32px; height:32px; border-radius:50%; background:{bg_color}; color:white; text-align:center; line-height:32px; font-size:14px; font-weight:bold; flex-shrink:0; border:2px solid #fff;">{avatar_letter}</div>'
+        avatar_html = f'<div style="width:32px; height:32px; border-radius:50%; background:{bg_color}; color:white; text-align:center; line-height:32px; font-size:14px; font-weight:bold; flex-shrink:0; border:2px solid #fff; margin: 0px 8px;">{avatar_letter}</div>'
 
+        # Reply Box Format
         reply_html = ""
         if reply_text:
             reply_html = f'<div style="padding:6px; border-left:3px solid #ffcc00; background:rgba(255,255,255,0.1); border-radius:5px; font-size:12px; margin-bottom:5px; color:#ddd;">↪ <b>Reply:</b> {reply_text[:50]}...</div>'
 
-        col_main, col_btn = st.columns([7, 3])
+        # Layout: 90% Message, 10% Action Button
+        col_main, col_btn = st.columns([9, 1])
         
         with col_main:
-            # RIGHT ALIGNED (User)
             if sender == current_user:
                 st.markdown(
                     f'<div class="chat-row user">'
@@ -175,7 +183,6 @@ with chat_container:
                     f'{avatar_html}'
                     f'</div>', unsafe_allow_html=True
                 )
-            # LEFT ALIGNED (Others & AI)
             else:
                 st.markdown(
                     f'<div class="chat-row assistant">'
@@ -184,20 +191,12 @@ with chat_container:
                     f'</div>', unsafe_allow_html=True
                 )
 
-        # Reactions & Reply Buttons
+        # 🌟 Minimal Reply Icon Button
         with col_btn:
-            c1, c2, c3, c4 = st.columns(4)
-            if c1.button("↩️", key=f"r_{msg_id}"):
-                st.session_state.reply_to = {"sender": display_name.replace(" 🟢","").replace(" ⚫",""), "message": message}
-                st.rerun()
-            if c2.button(f"👍 {thumbs if thumbs>0 else ''}", key=f"t_{msg_id}"):
-                supabase.table("chat_history").update({"thumbs_up": thumbs + 1}).eq("id", msg_id).execute()
-                st.rerun()
-            if c3.button(f"❤️ {likes if likes>0 else ''}", key=f"l_{msg_id}"):
-                supabase.table("chat_history").update({"likes": likes + 1}).eq("id", msg_id).execute()
-                st.rerun()
-            if c4.button(f"😂 {laughs if laughs>0 else ''}", key=f"h_{msg_id}"):
-                supabase.table("chat_history").update({"laughs": laughs + 1}).eq("id", msg_id).execute()
+            st.write("") # Adjust alignment slightly
+            if st.button("↩️", key=f"r_{msg_id}"):
+                clean_name = display_name.replace(" 🟢","").replace(" 👑","").replace(" ***","")
+                st.session_state.reply_to = {"sender": clean_name, "message": message}
                 st.rerun()
 
 # ==========================================
@@ -245,13 +244,12 @@ if prompt or uploaded_image:
         supabase.table("chat_history").insert({
             "sender": current_user,
             "message": final_message,
-            "reply_to": db_reply_text,
-            "likes": 0, "thumbs_up": 0, "laughs": 0
+            "reply_to": db_reply_text
         }).execute()
 
         st.session_state.last_message_time = current_time
         st.session_state.reply_to = None
-        st.session_state.total_msgs += 1 # Auto-increment to prevent own message showing as unread
+        st.session_state.total_msgs += 1 
 
         if prompt and prompt.lower().startswith("@ai"):
             doubt = prompt[3:].strip()
@@ -261,8 +259,7 @@ if prompt or uploaded_image:
                 supabase.table("chat_history").insert({
                     "sender": "PAATHSALA AI 🤖",
                     "message": answer,
-                    "reply_to": ai_reply_format,
-                    "likes": 0, "thumbs_up": 0, "laughs": 0
+                    "reply_to": ai_reply_format
                 }).execute()
 
             bg_thread = threading.Thread(target=ai_background_task, args=(doubt, prompt, current_user))
