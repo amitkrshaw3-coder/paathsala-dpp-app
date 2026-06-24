@@ -353,35 +353,31 @@ if prompt:
         # ==================================
         # AI BOT
         # ==================================
+                # ==================================
+        # AI BOT (BACKGROUND THREADING)
+        # ==================================
         if prompt.lower().startswith("@ai"):
+            
+            doubt = prompt[3:].strip()
+            
+            # Helper function jo background mein chalega
+            def ai_background_task(student_doubt):
+                answer = ask_paathsala_ai(student_doubt)
+                # Answer aate hi chupke se Supabase me save kar dega
+                supabase.table("chat_history").insert({
+                    "sender": "PAATHSALA AI 🤖",
+                    "message": answer
+                }).execute()
 
-            doubt = prompt.replace(
-                "@ai",
-                ""
-            ).strip()
+            # AI ko background thread mein start karna
+            bg_thread = threading.Thread(target=ai_background_task, args=(doubt,))
+            bg_thread.start()
 
-            with st.spinner(
-                "🤖 PAATHSALA AI soch raha hai..."
-            ):
-
-                answer = ask_paathsala_ai(
-                    doubt
-                )
-
-            supabase.table(
-                "chat_history"
-            ).insert({
-                "sender": "PAATHSALA AI 🤖",
-                "message": answer
-            }).execute()
-
-        if response.data:
-            st.toast("✅ Message Sent")
+            st.toast("🤖 AI is typing... answer will appear shortly!")
+            
+        else:
+            if response.data:
+                st.toast("✅ Message Sent")
 
         st.rerun()
 
-    except Exception as e:
-
-        st.error(
-            f"Actual Error: {e}"
-        )
