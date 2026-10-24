@@ -6,7 +6,7 @@ import random
 from datetime import datetime
 
 # ==========================================
-# FAST & TIMEOUT-PROOF FREE AI CALL
+# HIGH-ACCURACY FREE AI CALL (NO HALLUCINATION)
 # ==========================================
 def call_ai_api(system_prompt, user_msg):
     messages = [
@@ -16,56 +16,56 @@ def call_ai_api(system_prompt, user_msg):
 
     headers = {
         "Content-Type": "application/json",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36",
         "Accept": "*/*"
     }
 
-    # Fast models first
-    models_to_try = ["openai-fast", "mistral", "llama", "openai"]
+    # 🌟 SIRF SMART MODELS: 'mistral' hata diya kyunki wo Indian exams me galat info deta hai
+    # 'searchgpt' aur 'openai' (GPT-4o-mini) ko Indian exams ka accurate data pata hota hai
+    accurate_models = ["openai", "searchgpt", "openai-large"]
 
-    for model_name in models_to_try:
+    for model_name in accurate_models:
         try:
             url = "https://text.pollinations.ai/"
             payload = json.dumps({
                 "messages": messages,
                 "model": model_name,
+                "temperature": 0.1,  # Strict factual mode (Tukka maarna band)
                 "seed": random.randint(1, 99999)
             }).encode("utf-8")
 
             req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
-            # 🌟 FIX 1: Timeout badha kar 45 seconds kar diya hai
-            with urllib.request.urlopen(req, timeout=45) as response:
+            with urllib.request.urlopen(req, timeout=40) as response:
                 if response.getcode() == 200:
                     body = response.read().decode("utf-8").strip()
                     if body and "Payment Required" not in body:
                         return True, body
-        except urllib.error.HTTPError:
-            continue
         except Exception:
             continue
 
     # ==========================================
-    # BACKUP: Direct GET Endpoint (45s timeout)
+    # BACKUP: Direct GET with OpenAI Model
     # ==========================================
     try:
         combined_prompt = f"{system_prompt}\n\nQuestion: {user_msg}"
         encoded_prompt = urllib.parse.quote(combined_prompt)
-        get_url = f"https://text.pollinations.ai/{encoded_prompt}?model=mistral"
+        # Yahan bhi model=openai rakha hai taaki accuracy kharab na ho
+        get_url = f"https://text.pollinations.ai/{encoded_prompt}?model=openai&seed={random.randint(1,9999)}"
 
         req = urllib.request.Request(
             get_url,
             headers={"User-Agent": headers["User-Agent"]},
             method="GET"
         )
-        with urllib.request.urlopen(req, timeout=45) as response:
+        with urllib.request.urlopen(req, timeout=40) as response:
             if response.getcode() == 200:
                 body = response.read().decode("utf-8").strip()
-                if body:
+                if body and "Payment Required" not in body:
                     return True, body
     except Exception as e:
-        return False, f"Server Timeout ({str(e)})"
+        return False, f"Server busy ({str(e)})"
 
-    return False, "Server abhi busy hai, kripya dobara try karein."
+    return False, "Abhi AI server busy hai, kripya 10 second baad dobara puchein."
 
 
 # ==========================================
@@ -79,16 +79,20 @@ def ask_paathsala_ai(question):
 
         now_str = datetime.now().strftime("%d %B %Y")
 
-        # 🌟 FIX 2: AI ko crisp aur point-to-point bolne ki instruction (taaki 4-5 sec mein reply aaye)
+        # 🌟 STRICT INDIAN EXAM PROMPT: Galat dates ya fake pattern banane se rokne ke liye
         system_prompt = (
-            f"You are PAATHSALA AI Tutor (Date: {now_str}). "
-            "Help Indian students with RRB Group D, NTPC, UPSC, SSC, IBPS, and CTET doubts. "
-            "IMPORTANT: Keep your answer concise, crisp, and under 150 words using bullet points in simple Hinglish so it loads quickly."
+            f"You are PAATHSALA AI Tutor, an expert on Indian Competitive Exams (Current Date: {now_str}). "
+            "Follow these strict rules:\n"
+            "1. Give 100% factual, official information about Indian exams (RRB Group D/NTPC, SSC, UPSC, IBPS, CTET).\n"
+            "2. NEVER invent fake exam dates, fake counselling rounds, or fake interview stages.\n"
+            "3. Remember: RRB Group D (Level-1) requires 10th pass/ITI, age 18-33 years, and selection is via CBT, PET (Physical), and DV/Medical (NO interview).\n"
+            "4. If official dates for a year are not announced, clearly say 'Official dates abhi announce nahi hui hain'.\n"
+            "5. Reply in clear, concise Hinglish using bullet points (under 150 words)."
         )
 
         ok, ai_reply = call_ai_api(system_prompt, user_msg)
         if not ok:
-            return f"⚠️ AI Error: {ai_reply}"
+            return f"⚠️ AI Notice: {ai_reply}"
 
         return ai_reply
 
