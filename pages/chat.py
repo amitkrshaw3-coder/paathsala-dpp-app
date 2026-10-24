@@ -4,78 +4,18 @@ import base64
 from datetime import datetime, timedelta
 import streamlit as st
 from supabase import create_client, Client
-from ai_bot import ask_paathsala_ai
+from streamlit.runtime.scriptrunner import add_script_run_ctx
+from ai_bot import ask_paathsala_ai, submit_student_feedback, run_evaluation_suite
 
 # ==========================================
-# PAGE CONFIG & CSS
+# PAGE CONFIG & SESSION STATE
 # ==========================================
 st.set_page_config(page_title="PAATHSALA Chat", page_icon="🎓", layout="centered")
 
-custom_css = """
-<style>
-#MainMenu {visibility:hidden;}
-footer {visibility:hidden;}
-header {visibility:hidden;}
-
-/* Ghost Refresh Magic */
-[data-testid="stFragment"], 
-div[data-testid="stVerticalBlockBorderWrapper"], 
-[data-testid="stVerticalBlock"],
-.st-emotion-cache-1kyxreq,
-.st-emotion-cache-1wmy9hl {
-    opacity: 1 !important;
-    transition: none !important;
-    filter: none !important;
-    animation: none !important;
-}
-
-[data-testid="stSkeleton"] { display: none !important; }
-
-/* Floating Box Setup */
-div[data-testid="stVerticalBlockBorderWrapper"] {
-    border-radius: 15px !important;
-    box-shadow: 0px 8px 24px rgba(0,0,0,0.12) !important;
-    background-color: #ffffff !important; 
-    padding: 10px;
-    border: 1px solid #e0e0e0 !important;
-}
-
-.chat-row { display: flex; align-items: flex-start; margin-bottom: 15px; width: 100%; }
-.chat-row.user { justify-content: flex-end; }
-.chat-row.assistant { justify-content: flex-start; }
-
-.user-msg {
-    background: linear-gradient(135deg, #0078D7, #00C6FF);
-    padding: 12px 16px;
-    border-radius: 18px 18px 2px 18px;
-    color: white;
-    box-shadow: 0px 3px 10px rgba(0,0,0,0.1);
-    max-width: 85%;
-    overflow-wrap: break-word;
-}
-.assistant-msg {
-    background: #ffffff;
-    padding: 12px 16px;
-    border-radius: 18px 18px 18px 2px;
-    color: #333;
-    box-shadow: 0px 3px 10px rgba(0,0,0,0.08);
-    max-width: 85%;
-    border: 1px solid #eee;
-    overflow-wrap: break-word;
-}
-
-.time-stamp { font-size: 10px; opacity: 0.7; margin-top: 5px; text-align: right; }
-.user-time { color: #f0f0f0; }
-.bot-time { color: #888; }
-.sender-name { font-size: 12px; color: #0078D7; margin-bottom: 4px; font-weight: bold; }
-.typing-text { font-size: 14px; color: #888; font-style: italic; }
-</style>
-"""
-st.markdown(custom_css, unsafe_allow_html=True)
-
-# ==========================================
-# SESSION & SUPABASE SETUP
-# ==========================================
+if "dark_mode" not in st.session_state:
+    st.session_state.dark_mode = False
+if "ai_is_typing" not in st.session_state:
+    st.session_state.ai_is_typing = False
 if "logged_in" not in st.session_state or not st.session_state.logged_in:
     st.warning("⚠️ Session Expired! Please login again.")
     st.page_link("main.py", label="🏠 Login Again")
@@ -83,6 +23,90 @@ if "logged_in" not in st.session_state or not st.session_state.logged_in:
 
 current_user = st.session_state.get("user_identifier", "Student")
 
+# ==========================================
+# DYNAMIC CSS (Ghost Refresh & Themes)
+# ==========================================
+base_css = """
+<style>
+#MainMenu {visibility:hidden;}
+footer {visibility:hidden;}
+header {visibility:hidden;}
+
+/* Ghost Refresh Magic */
+[data-testid="stFragment"], 
+[data-testid="stVerticalBlock"],
+.st-emotion-cache-1kyxreq,
+.st-emotion-cache-1wmy9hl {
+    opacity: 1 !important; transition: none !important; filter: none !important; animation: none !important;
+}
+
+[data-testid="stSkeleton"] { display: none !important; }
+
+div[data-testid="stVerticalBlockBorderWrapper"] {
+    border-radius: 15px !important; box-shadow: 0px 8px 24px rgba(0,0,0,0.12) !important; padding: 10px;
+}
+
+.chat-row { display: flex; align-items: flex-start; margin-bottom: 15px; width: 100%; }
+.chat-row.user { justify-content: flex-end; }
+.chat-row.assistant { justify-content: flex-start; }
+
+.user-msg, .assistant-msg {
+    padding: 12px 16px; box-shadow: 0px 3px 10px rgba(0,0,0,0.1); max-width: 85%; overflow-wrap: break-word;
+}
+.user-msg { border-radius: 18px 18px 2px 18px; }
+.assistant-msg { border-radius: 18px 18px 18px 2px; }
+
+.time-stamp { font-size: 10px; opacity: 0.7; margin-top: 5px; text-align: right; }
+.sender-name { font-size: 12px; margin-bottom: 4px; font-weight: bold; }
+.typing-text { font-size: 14px; font-style: italic; }
+</style>
+"""
+
+light_css = """
+<style>
+html, body, [data-testid="stAppViewContainer"], [data-testid="stHeader"], [data-testid="stToolbar"], .stApp {
+    background: #f5f7fb !important; color: #222 !important;
+}
+.main .block-container { background: #f5f7fb !important; }
+div[data-testid="stVerticalBlockBorderWrapper"] { background: #ffffff !important; border: 1px solid #e0e0e0 !important; }
+[data-testid="stChatInput"] { background: #ffffff !important; }
+textarea { background: #ffffff !important; color: #222 !important; }
+.user-msg { background: linear-gradient(135deg, #0078D7, #00C6FF); color: white; }
+.assistant-msg { background: #ffffff; color: #333; border: 1px solid #eee; }
+.user-time { color: #f0f0f0; }
+.bot-time { color: #888; }
+.sender-name { color: #0078D7; }
+.typing-text { color: #888; }
+</style>
+"""
+
+dark_css = """
+<style>
+html, body, [data-testid="stAppViewContainer"], [data-testid="stHeader"], [data-testid="stToolbar"], .stApp {
+    background: #0E1117 !important; color: white !important;
+}
+.main .block-container { background: #0E1117 !important; }
+div[data-testid="stVerticalBlockBorderWrapper"] { background: #1E1E1E !important; border: 1px solid #333 !important; }
+[data-testid="stChatInput"] { background: #1E1E1E !important; }
+textarea { background: #262730 !important; color: white !important; }
+.user-msg { background: linear-gradient(135deg, #0066cc, #0099ff); color: white; }
+.assistant-msg { background: #262730; color: white; border: 1px solid #444; }
+.user-time { color: #f0f0f0; }
+.bot-time { color: #bbb; }
+.sender-name { color: #4da6ff; }
+.typing-text { color: #bbb; }
+</style>
+"""
+
+st.markdown(base_css, unsafe_allow_html=True)
+if st.session_state.dark_mode:
+    st.markdown(dark_css, unsafe_allow_html=True)
+else:
+    st.markdown(light_css, unsafe_allow_html=True)
+
+# ==========================================
+# SUPABASE SETUP
+# ==========================================
 SUPABASE_URL = "https://rmdwvrjschmeztzrestm.supabase.co"
 SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJtZHd2cmpzY2htZXp0enJlc3RtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODIwNTI2NzcsImV4cCI6MjA5NzYyODY3N30.H9hvCcDe2EUqrkukbxQdKoMSt_VNryl4Hnn7t3XZm2o"
 supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
@@ -92,9 +116,6 @@ BAD_WORDS = ["idiot", "stupid", "abuse"]
 def get_avatar_color(email):
     colors = ["#ff595e", "#ffca3a", "#8ac926", "#1982c4", "#6a4c93", "#e07a5f"]
     return colors[len(email) % len(colors)]
-
-if "ai_is_typing" not in st.session_state:
-    st.session_state.ai_is_typing = False
 
 # BLOCK CHECK
 try:
@@ -106,7 +127,7 @@ except Exception:
     pass
 
 # ==========================================
-# STATIC HEADER
+# STATIC HEADER & SMART TOGGLE
 # ==========================================
 st.markdown("""
 <div style='text-align: center; padding: 15px; background: linear-gradient(90deg, #1e3c72 0%, #2a5298 100%); border-radius: 10px; margin-bottom: 15px; color: white;'>
@@ -115,23 +136,29 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-col1, col2 = st.columns(2)
-col1.write(f"🟢 **Online:** {current_user}")
-col2.page_link("main.py", label="🏠 Go to Main Menu")
+col1, col2, col3 = st.columns([1.5, 1, 1.2])
+with col1:
+    st.write(f"🟢 **Online:** {current_user[:10]}")
+with col2:
+    st.page_link("main.py", label="🏠 Menu")
+with col3:
+    dark = st.toggle("🌙 Dark", value=st.session_state.dark_mode, key="dark_toggle")
+    if dark != st.session_state.dark_mode:
+        st.session_state.dark_mode = dark
+        st.rerun()
 
 # ==========================================
-# 🛠️ ADMIN CONTROLS PANEL
+# 🛠️ ADMIN CONTROLS PANEL (With AI Eval Tab)
 # ==========================================
 if current_user == ADMIN_EMAIL:
-    # Fetch active users for the dropdown
     try:
         admin_resp = supabase.table("chat_history").select("sender").limit(200).execute()
         active_users_list = list(set([row["sender"] for row in admin_resp.data if row["sender"] not in [ADMIN_EMAIL, "PAATHSALA AI 🤖"]]))
     except:
         active_users_list = []
 
-    with st.expander("🛠 Admin Controls (Block & Clear Data)", expanded=False):
-        tab1, tab2, tab3, tab4 = st.tabs(["🚫 Block", "✅ Unblock", "📋 Blocked List", "🗑️ Clear Chat"])
+    with st.expander("🛠 Admin Controls (Block, Clear & AI Brain)", expanded=False):
+        tab1, tab2, tab3, tab4, tab5 = st.tabs(["🚫 Block", "✅ Unblock", "📋 Blocked", "🗑️ Clear Chat", "🧠 AI Eval"])
 
         with tab1:
             spammer = st.selectbox("Select User to Block", ["Select User"] + active_users_list)
@@ -158,28 +185,35 @@ if current_user == ADMIN_EMAIL:
 
         with tab3:
             if not blocked_list:
-                st.success("No users are currently blocked.")
+                st.success("No users blocked.")
             else:
                 for u in blocked_list:
                     st.error(f"🚫 {u}")
         
         with tab4:
-            st.warning("⚠️ Warning: This will permanently delete ALL messages from the database.")
+            st.warning("⚠️ Warning: Permanently deletes ALL messages.")
             if st.button("🗑️ Clear All Chat History", type="primary", use_container_width=True):
                 try:
-                    # Deletes all rows where sender is not some dummy text (Clears entire table)
                     supabase.table("chat_history").delete().neq("sender", "DummyClearAllData123").execute()
-                    st.success("✅ Entire Chat History Cleared!")
+                    st.success("✅ Chat Cleared!")
                     st.rerun()
                 except Exception as e:
-                    st.error(f"Error clearing chat: {e}")
+                    st.error(f"Error: {e}")
+
+        with tab5:
+            st.write("### 🧪 AI Benchmark & Evaluation")
+            if st.button("🚀 Run AI Accuracy Benchmark", use_container_width=True):
+                with st.spinner("Testing AI responses against benchmark questions..."):
+                    eval_results = run_evaluation_suite()
+                    for res in eval_results:
+                        st.info(f"**Q:** {res['question']}\n\n**Score:** {res['score']} | **Matched:** {res['matched_keywords']}")
 
 st.divider()
 
 # ==========================================
-# 🌟 INVISIBLE AUTO-REFRESH CHAT DISPLAY 
+# 🌟 AUTO-REFRESH CHAT DISPLAY (4s)
 # ==========================================
-@st.fragment(run_every=2)
+@st.fragment(run_every=4)
 def render_chat_box():
     try:
         response = supabase.table("chat_history").select("*").order("created_at", desc=True).limit(100).execute()
@@ -191,7 +225,7 @@ def render_chat_box():
     
     with chat_container:
         if not chat_data:
-            st.info("No messages yet. Be the first to start the discussion! 🚀")
+            st.info("No messages yet. Start the discussion! 🚀")
             
         for row in chat_data:
             sender = row["sender"]
@@ -223,19 +257,18 @@ def render_chat_box():
                     f'</div>', unsafe_allow_html=True
                 )
         
-        # AI Typing Indicator
         if st.session_state.ai_is_typing:
             st.markdown(
                 f'<div class="chat-row assistant">'
                 f'<div style="width:32px; height:32px; border-radius:50%; background:#333; color:white; text-align:center; line-height:32px; font-size:14px; font-weight:bold; flex-shrink:0; border:2px solid #fff; margin: 0px 8px;">🤖</div>'
-                f'<div class="assistant-msg"><div class="sender-name">PAATHSALA AI 🤖</div><div class="typing-text">AI is thinking... ⏳</div></div>'
+                f'<div class="assistant-msg"><div class="sender-name">PAATHSALA AI 🤖</div><div class="typing-text">AI is searching Knowledge Base... ⏳</div></div>'
                 f'</div>', unsafe_allow_html=True
             )
 
 render_chat_box()
 
 # ==========================================
-# INPUT LOGIC (Text vs Image)
+# INPUT LOGIC (Image, Text & AI Feedback)
 # ==========================================
 st.write("") 
 
@@ -263,10 +296,21 @@ with st.expander("📎 Attach Image / Screenshot"):
             raw_user_prompt = img_caption.strip() if img_caption else "Attached an image."
             final_message_html = raw_user_prompt + img_html
             send_triggered = True
-            
             st.session_state.uploader_key = f"uploader_{int(time.time())}"
 
-# 2. 💬 NORMAL TEXT CHAT SECTION
+# 2. 🧠 AI FEEDBACK / REPORT SECTION
+with st.expander("🚩 Report AI Error / Give Feedback"):
+    fb_q = st.text_input("Pucha gaya sawal:", key="fb_question_input")
+    fb_corr = st.text_area("Sahi jawab kya hona chahiye tha?:", key="fb_correction_input")
+    col_f1, col_f2 = st.columns(2)
+    if col_f1.button("👍 Helpful Answer", use_container_width=True) and fb_q:
+        submit_student_feedback(current_user, fb_q, "", "helpful")
+        st.success("Feedback recorded successfully!")
+    if col_f2.button("Report Incorrect AI", use_container_width=True) and fb_q:
+        submit_student_feedback(current_user, fb_q, "", "report_error", fb_corr)
+        st.success("Report submitted to Admin for verification!")
+
+# 3. 💬 NORMAL TEXT CHAT SECTION
 chat_prompt = st.chat_input("Type your doubt... (Use @ai for AI Tutor)")
 
 if chat_prompt:
@@ -292,15 +336,19 @@ if send_triggered:
             st.warning("⚠️ Inappropriate language detected.")
             st.stop()
 
-    # DB Insert
-    supabase.table("chat_history").insert({
-        "sender": current_user,
-        "message": final_message_html
-    }).execute()
+    # DB Insert (Crash-Proof)
+    try:
+        supabase.table("chat_history").insert({
+            "sender": current_user,
+            "message": final_message_html
+        }).execute()
+    except Exception:
+        st.error("⚠️ Database error. Please check Supabase connection.")
+        st.stop()
 
     st.session_state.last_message_time = current_time
 
-    # 🤖 AI LOGIC
+    # 🤖 AI LOGIC (RAG + Thread Safe)
     if raw_user_prompt.lower().startswith("@ai"):
         doubt = raw_user_prompt[3:].strip()
         st.session_state.ai_is_typing = True 
@@ -319,6 +367,8 @@ if send_triggered:
             finally:
                 st.session_state.ai_is_typing = False 
         
-        threading.Thread(target=fetch_ai_answer, args=(doubt, raw_user_prompt, current_user)).start()
+        ai_thread = threading.Thread(target=fetch_ai_answer, args=(doubt, raw_user_prompt, current_user))
+        add_script_run_ctx(ai_thread)
+        ai_thread.start()
 
     st.rerun()
