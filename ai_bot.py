@@ -35,7 +35,7 @@ def call_ai_api(system_prompt, user_msg):
             }).encode("utf-8")
 
             req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
-            with urllib.request.urlopen(req, timeout=15) as response:
+            with urllib.request.urlopen(req, timeout=25) as response:
                 if response.getcode() == 200:
                     body = response.read().decode("utf-8").strip()
                     if body and "Payment Required" not in body:
