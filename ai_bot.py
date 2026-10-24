@@ -1,127 +1,77 @@
 import json
-import sqlite3
 import urllib.request
 import urllib.error
-import re
-import os
+import urllib.parse
 from datetime import datetime
 
 # ==========================================
-# 1. PERMANENT SQLITE MEMORY SETUP
+# SMART MULTI-FALLBACK FREE AI CALL
 # ==========================================
-BASE_DIR = os.path.dirname(os.path.abspath(__file__)) if "__file__" in globals() else os.getcwd()
-DB_FILE = os.path.join(BASE_DIR, "bot_brain.db")
+def call_ai_api(system_prompt, user_msg):
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_msg}
+    ]
 
-def init_db():
-    conn = sqlite3.connect(DB_FILE)
-    c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS memories (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    category TEXT DEFAULT 'general',
-                    fact TEXT UNIQUE,
-                    source TEXT DEFAULT 'user',
-                    created_at TEXT
-                )''')
-    c.execute('''CREATE TABLE IF NOT EXISTS corrections (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    user_query TEXT,
-                    wrong_reply TEXT,
-                    correct_reply TEXT,
-                    created_at TEXT
-                )''')
-    conn.commit()
-    conn.close()
+    # Browser headers taaki Cloud IP block na ho
+    headers = {
+        "Content-Type": "application/json",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        "Accept": "*/*",
+        "Origin": "https://pollinations.ai",
+        "Referer": "https://pollinations.ai/"
+    }
 
-init_db()
+    # Try multiple free models in order (Open-source models don't give 402 easily)
+    models_to_try = ["mistral", "llama", "openai"]
 
-# ==========================================
-# 2. SMART MEMORY & CORRECTION SEARCH
-# ==========================================
-def get_relevant_context(user_text):
+    for model_name in models_to_try:
+        try:
+            url = "https://text.pollinations.ai/"
+            payload = json.dumps({
+                "messages": messages,
+                "model": model_name,
+                "seed": 42
+            }).encode("utf-8")
+
+            req = urllib.request.Request(url, data=payload, headers=headers, method="POST")
+            with urllib.request.urlopen(req, timeout=15) as response:
+                if response.getcode() == 200:
+                    body = response.read().decode("utf-8").strip()
+                    if body and "Payment Required" not in body:
+                        return True, body
+        except urllib.error.HTTPError as e:
+            # Agar 402 ya 429 aaye toh rukna nahi hai, agla model try karna hai
+            continue
+        except Exception:
+            continue
+
+    # ==========================================
+    # FINAL BACKUP: Direct GET Request Endpoint
+    # ==========================================
     try:
-        conn = sqlite3.connect(DB_FILE)
-        c = conn.cursor()
-        
-        c.execute("SELECT id, category, fact FROM memories ORDER BY id DESC")
-        all_memories = c.fetchall()
-        
-        c.execute("SELECT user_query, correct_reply FROM corrections ORDER BY id DESC")
-        all_corrections = c.fetchall()
-        conn.close()
+        combined_prompt = f"{system_prompt}\n\nStudent Question: {user_msg}"
+        encoded_prompt = urllib.parse.quote(combined_prompt)
+        get_url = f"https://text.pollinations.ai/{encoded_prompt}"
 
-        words = set(re.findall(r'\w+', user_text.lower()))
-        
-        scored_memories = []
-        for mid, cat, fact in all_memories:
-            fact_words = set(re.findall(r'\w+', fact.lower()))
-            overlap = len(words.intersection(fact_words))
-            if overlap > 0 or cat in ['rule', 'profile']:
-                scored_memories.append((overlap, f"[{cat.upper()}] {fact}"))
-        
-        scored_memories.sort(key=lambda x: x[0], reverse=True)
-        selected_memories = [m[1] for m in scored_memories[:8]]
-
-        relevant_corrections = []
-        for uq, cr in all_corrections:
-            uq_words = set(re.findall(r'\w+', uq.lower()))
-            if len(words.intersection(uq_words)) > 0:
-                relevant_corrections.append(f"Q: '{uq}' -> Sahi Jawab: '{cr}'")
-
-        return selected_memories, relevant_corrections[:4]
-    except Exception:
-        return [], []
-
-def save_learned_fact(fact):
-    try:
-        conn = sqlite3.connect(DB_FILE)
-        c = conn.cursor()
-        c.execute(
-            "INSERT OR IGNORE INTO memories (category, fact, created_at) VALUES (?, ?, ?)",
-            ("auto_learned", fact, datetime.now().isoformat())
+        req = urllib.request.Request(
+            get_url,
+            headers={"User-Agent": headers["User-Agent"]},
+            method="GET"
         )
-        conn.commit()
-        conn.close()
-    except Exception:
-        pass
-
-# ==========================================
-# 3. FREE POLLINATIONS AI API CALL
-# ==========================================
-def call_ai_api(messages):
-    url = "https://text.pollinations.ai/"
-    payload = json.dumps({
-        "messages": messages,
-        "model": "openai"
-    }).encode("utf-8")
-
-    req = urllib.request.Request(
-        url, 
-        data=payload, 
-        headers={
-            "Content-Type": "application/json",
-            "User-Agent": "PaathsalaAIBot/2.0"
-        },
-        method="POST"
-    )
-    
-    try:
-        with urllib.request.urlopen(req, timeout=25) as response:
-            status_code = response.getcode()
-            body = response.read().decode("utf-8").strip()
-            if status_code != 200:
-                return False, f"API HTTP Error: Status {status_code}"
-            if not body:
-                return False, "API ne khali response bheja."
-            return True, body
-    except urllib.error.HTTPError as e:
-        return False, f"HTTP Error {e.code}: {e.reason}"
-    except urllib.error.URLError as e:
-        return False, f"Network Error: Internet check karein ({e.reason})"
+        with urllib.request.urlopen(req, timeout=15) as response:
+            if response.getcode() == 200:
+                body = response.read().decode("utf-8").strip()
+                if body:
+                    return True, body
     except Exception as e:
-        return False, f"System Error: {str(e)}"
+        return False, f"Server Busy ({str(e)})"
+
+    return False, "Abhi free AI server busy hai, kripya 10 second baad dobara try karein."
+
 
 # ==========================================
-# 4. MAIN FUNCTION FOR PAATHSALA CHAT.PY
+# MAIN FUNCTION FOR PAATHSALA CHAT.PY
 # ==========================================
 def ask_paathsala_ai(question):
     try:
@@ -129,38 +79,19 @@ def ask_paathsala_ai(question):
         if not user_msg:
             return "⚠️ Kripya `@ai` ke baad apna sawal likhein."
 
-        relevant_mems, relevant_corrs = get_relevant_context(user_msg)
-        now_str = datetime.now().strftime("%A, %d %B %Y, %I:%M %p")
+        now_str = datetime.now().strftime("%d %B %Y")
 
-        sys_parts = [
-            f"Tumhara naam PAATHSALA AI Tutor hai. Current Date/Time: {now_str}.",
-            "Tum competitive exams (UPSC, RRB, IBPS, SSC, CTET) ki taiyari karne wale students ke doubts solve karte ho.",
-            "Student ke doubt ko simple, clear aur step-by-step Hinglish ya English mein samjhao.",
-            "Agar student koi zaroori exam rule ya fact bataye, toh reply ke bilkul end mein [LEARN: fact] likho."
-        ]
-        
-        if relevant_mems:
-            sys_parts.append("\n[RELEVANT PERMANENT MEMORIES]:\n" + "\n".join(relevant_mems))
-        if relevant_corrs:
-            sys_parts.append("\n[PAST MISTAKES TO AVOID / LEARNED ANSWERS]:\n" + "\n".join(relevant_corrs))
+        system_prompt = (
+            f"You are PAATHSALA AI Tutor (Date: {now_str}). "
+            "You help Indian students preparing for competitive exams like RRB Group D, NTPC, UPSC, SSC, IBPS, and CTET. "
+            "Explain the student's doubt clearly, step-by-step in simple Hinglish."
+        )
 
-        api_messages = [
-            {"role": "system", "content": "\n".join(sys_parts)},
-            {"role": "user", "content": user_msg}
-        ]
-
-        ok, ai_reply = call_ai_api(api_messages)
+        ok, ai_reply = call_ai_api(system_prompt, user_msg)
         if not ok:
-            return f"⚠️ AI Error: {ai_reply}"
+            return f"⚠️ AI Notice: {ai_reply}"
 
-        # Agar AI ne kuch naya seekha hai ([LEARN: ...]), toh use SQLite mein save kar lo aur text se hata do
-        learn_regex = re.compile(r'\[LEARN:\s*(.*?)\]', re.IGNORECASE)
-        suggested = [m.strip() for m in learn_regex.findall(ai_reply) if m.strip()]
-        for fact in suggested:
-            save_learned_fact(fact)
-
-        clean_reply = learn_regex.sub("", ai_reply).strip()
-        return clean_reply
+        return ai_reply
 
     except Exception as e:
         return f"⚠️ AI Error: {e}"
