@@ -1,106 +1,164 @@
 import json
 import streamlit as st
-import google.generativeai as genai
 
 
-# ---------------------------------------------------------
+# =========================================================
 # PAATHSALA AI DPP GENERATOR
 # Developed by Amit Kumar Shaw
-# ---------------------------------------------------------
+# =========================================================
+
+
+def parse_dpp_json(raw_text):
+    """Safely parse JSON returned by the AI."""
+
+    if not raw_text or not raw_text.strip():
+        return None
+
+    cleaned = raw_text.strip()
+
+    # Remove accidental Markdown fences.
+    if cleaned.startswith("```"):
+        cleaned = cleaned.replace("```json", "", 1)
+        cleaned = cleaned.replace("```", "").strip()
+
+    # Extract the JSON object if extra text is present.
+    start = cleaned.find("{")
+    end = cleaned.rfind("}")
+
+    if start == -1 or end == -1 or end < start:
+        return None
+
+    try:
+        return json.loads(cleaned[start:end + 1])
+    except (json.JSONDecodeError, TypeError, ValueError):
+        return None
+
+
+def validate_dpp(data):
+    """Check the basic DPP structure before returning it."""
+
+    if not isinstance(data, dict):
+        return False
+
+    section_a = data.get("section_a")
+    section_b = data.get("section_b")
+    section_c = data.get("section_c")
+
+    if not isinstance(section_a, list):
+        return False
+
+    if not isinstance(section_b, list):
+        return False
+
+    if not isinstance(section_c, list):
+        return False
+
+    if len(section_a) != 10:
+        return False
+
+    if len(section_b) != 5:
+        return False
+
+    if len(section_c) != 5:
+        return False
+
+    return True
+
 
 @st.cache_data(ttl=86400, show_spinner=False)
 def generate_paathsala_dpp(subject, topic, target_class):
 
-    prompt = f"""
+    try:
+        # Import inside the function so an SDK import error
+        # can be handled without breaking other app pages.
+        import google.generativeai as genai
+
+        # Read the API key safely.
+        api_key = st.secrets.get("GEMINI_API_KEY", "")
+
+        if not api_key:
+            st.error(
+                "Gemini API key is missing. "
+                "Add GEMINI_API_KEY to Streamlit Secrets."
+            )
+            return None
+
+        prompt = f"""
 You are an expert CBSE, JEE, NEET and competitive exam paper setter.
 
-Create a Daily Practice Problem (DPP) for:
+Create a Daily Practice Problem (DPP).
 
 Class: {target_class}
 Subject: {subject}
 Topic: {topic}
 
-IMPORTANT RULES:
+STRICT REQUIREMENTS:
 
-1. Generate exactly:
-   - 10 Multiple Choice Questions
-   - 5 Short Answer Questions
-   - 5 Long Answer Questions
+1. Generate exactly 10 Multiple Choice Questions.
+2. Generate exactly 5 Short Answer Questions.
+3. Generate exactly 5 Long Answer Questions.
+4. Questions must be conceptually correct and suitable for the given class.
+5. Use ASCII characters only in generated question content.
+6. Do not use Unicode mathematical symbols.
+7. Write powers as x^2 or y^3.
+8. Write fractions as a/b.
+9. Write integrals as "Integral of x^2 dx".
+10. Write Greek symbols as theta, alpha, beta or pi.
+11. MCQs must have four options: a, b, c and d.
+12. Each MCQ answer must identify the correct option.
+13. Short and long questions must include a concise key_point.
+14. Do not repeat questions.
+15. Return valid JSON only. Do not include Markdown or explanations.
 
-2. Questions must be conceptually correct and suitable for Class {target_class}.
-
-3. STRICTLY use ONLY ASCII characters.
-
-4. Never use Unicode mathematical symbols.
-
-5. For powers use:
-   x^2, y^3
-
-6. For fractions use:
-   a/b
-
-7. For integrals use:
-   "Integral of x^2 dx"
-
-8. For Greek symbols write:
-   theta, alpha, beta, pi
-
-9. Return ONLY JSON.
-
-JSON FORMAT:
+Use exactly this JSON structure:
 
 {{
   "header": {{
-      "class": "{target_class}",
-      "subject": "{subject}",
-      "topic": "{topic}"
+    "class": "{target_class}",
+    "subject": "{subject}",
+    "topic": "{topic}"
   }},
-
   "section_a": [
-      {{
-          "q_no": 1,
-          "question": "",
-          "options": {{
-              "a": "",
-              "b": "",
-              "c": "",
-              "d": ""
-          }},
-          "answer": ""
-      }}
+    {{
+      "q_no": 1,
+      "question": "Question text",
+      "options": {{
+        "a": "Option A",
+        "b": "Option B",
+        "c": "Option C",
+        "d": "Option D"
+      }},
+      "answer": "a"
+    }}
   ],
-
   "section_b": [
-      {{
-          "q_no": 11,
-          "question": "",
-          "key_point": ""
-      }}
+    {{
+      "q_no": 11,
+      "question": "Question text",
+      "key_point": "Expected answer"
+    }}
   ],
-
   "section_c": [
-      {{
-          "q_no": 16,
-          "question": "",
-          "key_point": ""
-      }}
+    {{
+      "q_no": 16,
+      "question": "Question text",
+      "key_point": "Expected answer"
+    }}
   ]
 }}
 
-Do not include markdown.
-Do not include explanation.
-Return ONLY JSON.
+The arrays above show example objects only.
+Generate exactly 10 objects in section_a,
+5 objects in section_b, and 5 objects in section_c.
+
+Return ONLY valid JSON.
 """
 
-    try:
-
-        # Configure Gemini
         genai.configure(
-            api_key=st.secrets["GEMINI_API_KEY"],
+            api_key=api_key,
             transport="rest"
         )
 
-        # Fast and free-tier friendly model
         model = genai.GenerativeModel(
             model_name="gemini-1.5-flash"
         )
@@ -108,44 +166,41 @@ Return ONLY JSON.
         response = model.generate_content(
             prompt,
             generation_config={
-                "temperature": 0.7,
-                "max_output_tokens": 4096,
+                "temperature": 0.5,
+                "max_output_tokens": 8192,
                 "response_mime_type": "application/json"
             }
         )
 
-        if not response.text:
-            st.error("⚠️ Empty response received from Gemini.")
+        raw_text = getattr(response, "text", None)
+
+        if not raw_text:
+            st.error(
+                "AI returned an empty response. Please try again."
+            )
             return None
 
-        raw_text = response.text.strip()
+        dpp_json = parse_dpp_json(raw_text)
 
-        try:
-            dpp_json = json.loads(raw_text)
-            return dpp_json
-
-        except json.JSONDecodeError:
-
-            # Backup cleaner
-            cleaned = (
-                raw_text
-                .replace("```json", "")
-                .replace("```", "")
-                .strip()
+        if dpp_json is None:
+            st.error(
+                "AI returned invalid JSON. Please generate the DPP again."
             )
+            return None
 
-            start = cleaned.find("{")
-            end = cleaned.rfind("}") + 1
+        if not validate_dpp(dpp_json):
+            st.error(
+                "The generated DPP has an incorrect question count "
+                "or JSON structure. Please try again."
+            )
+            return None
 
-            if start != -1 and end != -1:
-                cleaned = cleaned[start:end]
-
-            return json.loads(cleaned)
-
-    except json.JSONDecodeError:
-        st.error("⚠️ AI returned invalid JSON.")
-        return None
+        return dpp_json
 
     except Exception as e:
-        st.error(f"⚠️ Gemini API Error: {str(e)}")
+        # Handle API, configuration, network and SDK errors.
+        st.error(
+            "DPP generation failed. Please try again later. "
+            f"Error: {str(e)[:300]}"
+        )
         return None
