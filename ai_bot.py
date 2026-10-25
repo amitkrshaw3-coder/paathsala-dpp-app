@@ -1,8 +1,6 @@
-PAATHSALA AI Tutor
-- Supabase credentials are read from Streamlit secrets or environment variables.
-- Uses a small verified-knowledge retrieval layer and Pollinations fallback.
-- Saves generated answers as UNVERIFIED; student feedback never auto-trains the model.
-"""
+# PAATHSALA AI Tutor
+# Credentials are read from Streamlit secrets or environment variables.
+# Generated answers are stored as UNVERIFIED; feedback does not auto-train the model.
 import os
 import re
 import time
@@ -17,7 +15,7 @@ from supabase import create_client, Client
 
 
 def _setting(name, default=None):
-    """Read from environment first, then Streamlit secrets."""
+    # Read from environment first, then Streamlit secrets.
     value = os.getenv(name)
     if value:
         return value
@@ -47,20 +45,20 @@ STOP_WORDS = {
     "explain", "please", "can", "you", "does", "do", "a", "an", "to", "and"
 }
 
-OFFICIAL_EXAM_FACTS = """
-Use caution with exam facts and state when a rule may vary by notification.
-Common reference facts (verify against the latest official notification):
-- RRB Group D / Level-1: eligibility and stages depend on the current CEN; commonly CBT,
-  PET (where applicable), document verification and medical examination. No interview.
-- RRB NTPC: undergraduate and graduate posts have different educational eligibility.
-  Selection stages depend on the post and notification; no interview in the usual process.
-- SSC CGL, CHSL and MTS: selection normally does not include an interview.
-- UPSC Civil Services: graduation is required; selection normally includes Prelims,
-  Mains and Personality Test. Age limits and relaxations depend on category/rules.
-- CTET: no negative marking; qualifying criteria and validity should be checked against
-  the current official CTET information bulletin and applicable rules.
-Do not present these general notes as a substitute for the latest official notification.
-"""
+OFFICIAL_EXAM_FACTS = (
+    "Use caution with exam facts and state when a rule may vary by notification.\n"
+    "Common reference facts (verify against the latest official notification):\n"
+    "- RRB Group D / Level-1: eligibility and stages depend on the current CEN; commonly CBT, "
+    "PET (where applicable), document verification and medical examination. No interview.\n"
+    "- RRB NTPC: undergraduate and graduate posts have different educational eligibility. "
+    "Selection stages depend on the post and notification; no interview in the usual process.\n"
+    "- SSC CGL, CHSL and MTS: selection normally does not include an interview.\n"
+    "- UPSC Civil Services: graduation is required; selection normally includes Prelims, "
+    "Mains and Personality Test. Age limits and relaxations depend on category/rules.\n"
+    "- CTET: no negative marking; qualifying criteria and validity should be checked against "
+    "the current official CTET information bulletin and applicable rules.\n"
+    "Do not present these general notes as a substitute for the latest official notification."
+)
 
 
 def _get_supabase():
@@ -75,7 +73,7 @@ def extract_keywords(text):
 
 
 def retrieve_knowledge(user_question):
-    """Return an exact verified answer or up to three relevant context snippets."""
+    # Return an exact verified answer or up to three relevant context snippets.
     try:
         db = _get_supabase()
         res = (
@@ -116,7 +114,7 @@ def retrieve_knowledge(user_question):
 
 
 def verify_and_clean_answer(question, ai_answer):
-    """Add a caution note rather than pretending keyword checks prove correctness."""
+    # Add a caution note rather than pretending keyword checks prove correctness.
     q = question.lower()
     answer = ai_answer.strip()
     exam_terms = ("group d", "ntpc", "ssc")
@@ -133,7 +131,7 @@ def verify_and_clean_answer(question, ai_answer):
 
 
 def call_pollinations_engine(system_prompt, user_msg):
-    """Try the OpenAI-compatible endpoint, then a GET fallback."""
+    # Try the OpenAI-compatible endpoint, then a GET fallback.
     headers = {
         "Content-Type": "application/json",
         "User-Agent": "PAATHSALA-AI/1.0"
@@ -186,13 +184,13 @@ def call_pollinations_engine(system_prompt, user_msg):
 def ask_paathsala_ai(question):
     user_msg = str(question or "").strip()
     if not user_msg:
-        return "鈿狅笍 Kripya `@ai` ke baad apna sawal likhein."
+        return "⚠️ Kripya `@ai` ke baad apna sawal likhein."
     if len(user_msg) > 6000:
-        return "鈿狅笍 Sawal bahut lamba hai. Kripya 6000 characters se kam mein bhejein."
+        return "⚠️ Sawal bahut lamba hai. Kripya 6000 characters se kam mein bhejein."
 
     verified_answer, retrieved_context = retrieve_knowledge(user_msg)
     if verified_answer:
-        return f"{verified_answer}\n\n*(鈿� Verified PAATHSALA Knowledge Base)*"
+        return f"{verified_answer}\n\n*(⚡ Verified PAATHSALA Knowledge Base)*"
 
     now_str = datetime.now().strftime("%d %B %Y")
     context_str = "\n".join(retrieved_context) if retrieved_context else "No relevant past knowledge found."
@@ -209,7 +207,7 @@ def ask_paathsala_ai(question):
 
     acquired = ai_traffic_limiter.acquire(timeout=20)
     if not acquired:
-        return "鈿狅笍 Abhi AI par zyada load hai. Kripya 10鈥�20 second baad try karein."
+        return "⚠️ Abhi AI par zyada load hai. Kripya 10–20 second baad try karein."
 
     try:
         ok, raw_reply = call_pollinations_engine(system_prompt, user_msg)
@@ -217,7 +215,7 @@ def ask_paathsala_ai(question):
         ai_traffic_limiter.release()
 
     if not ok:
-        return f"鈿狅笍 AI Notice: {raw_reply}"
+        return f"⚠️ AI Notice: {raw_reply}"
 
     final_reply = verify_and_clean_answer(user_msg, raw_reply)
 
@@ -238,7 +236,7 @@ def ask_paathsala_ai(question):
 
 
 def submit_student_feedback(student_email, question, ai_answer, feedback_type, suggested_correction=""):
-    """Store feedback; this does not automatically train the model."""
+    # Store feedback; this does not automatically train the model.
     try:
         db = _get_supabase()
         db.table("ai_feedback").insert({
@@ -255,10 +253,8 @@ def submit_student_feedback(student_email, question, ai_answer, feedback_type, s
 
 
 def approve_correction_to_kb(feedback_id, question, corrected_answer):
-    """
-    Admin-only enforcement must be implemented in the database/RLS or a trusted server.
-    Do not expose this function to students.
-    """
+    # Admin-only enforcement must be implemented in database RLS or a trusted server.
+    # Do not expose this function to students.
     try:
         db = _get_supabase()
         keywords = " ".join(sorted(extract_keywords(question)))
@@ -293,3 +289,7 @@ def run_evaluation_suite():
             "sample_answer": answer[:300]
         })
     return results
+
+
+# Backward-compatible alias for older chat.py versions.
+run_eval = run_evaluation_suite
